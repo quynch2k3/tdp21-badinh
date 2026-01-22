@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Trị - Tổ Dân Phố 21</title>
+    <!-- CACHE BUSTING ADDED -->
+    <link rel="stylesheet" href="admin.css?v=FIX_REALTIME_V1">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.2/tinymce.min.js" referrerpolicy="origin"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="db.js"></script>
+
+    <!-- EMERGENCY STYLE OVERRIDE FOR LOGIN BACKGROUND -->
+    <style>
+        #login-overlay::before {
+            /* Updated background image as requested */
+            background-image: linear-gradient(to bottom, rgba(20, 10, 10, 0.4), rgba(40, 20, 20, 0.6)), url('https://media-cdn-v2.laodong.vn/storage/newsportal/2023/11/9/1265053/Ha-Noi-Mua-La-Rung-7.jpg') !important;
+            filter: blur(3px) brightness(0.9) !important;
+        }
+
+        #login-overlay * {
+            font-family: Arial, Helvetica, sans-serif !important;
+        }
+    </style>
+    <style>
+        /* --- MODAL WIDE & GRID LAYOUT --- */
+        .modal-large {
+            max-width: 1000px !important;
+            width: 95% !important;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 25px;
+            margin-top: 10px;
+        }
+
+        .modal-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-column-right {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            height: fit-content;
+        }
+
+        @media (max-width: 768px) {
+            .modal-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-large {
+                padding: 20px;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- LOGIN OVERLAY -->
+    <!-- LOGIN OVERLAY (Redesigned) -->
+    <div id="login-overlay">
+        <div class="login-container">
+            <div class="login-glass">
+                <div class="login-header">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Vietnam.svg/1200px-Emblem_of_Vietnam.svg.png"
+                        alt="Quốc Huy">
+                    <h3>HỆ THỐNG QUẢN TRỊ SỐ</h3>
+                    <p>TỔ DÂN PHỐ 21 - P. BA ĐÌNH</p>
+                </div>
+                <div class="login-body">
+                    <div class="input-group">
+                        <i class="fa-solid fa-user-shield"></i>
+                        <input type="text" id="login-input" placeholder="Email hoặc Tên đăng nhập"
+                            onkeyup="if(event.key==='Enter') document.getElementById('login-pass').focus()">
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-key"></i>
+                        <input type="password" id="login-pass" placeholder="Mật khẩu bảo mật"
+                            onkeyup="if(event.key==='Enter') attemptLogin()">
+                    </div>
+
+                    <button type="button" class="btn-login" onclick="attemptLogin()">
+                        <span>ĐĂNG NHẬP</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+
+                    <a href="javascript:void(0)" onclick="toggleResetUI()"
+                        style="display:block; text-align:right; margin-top:10px; color:#fff; font-size:13px; text-decoration:none;">Quên
+                        mật khẩu?</a>
+
+                    <p id="login-msg" class="login-alert"></p>
+                </div>
+
+                <!-- RESET PASSWORD FORM (Hidden by default) -->
+                <div class="login-body" id="reset-ui" style="display:none;">
+                    <p style="color:white; font-size:13px; margin-bottom:15px; text-align:center;">Nhập Email của bạn để
+                        nhận liên kết đặt lại mật khẩu.</p>
+                    <div class="input-group">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" id="reset-email" placeholder="Email đăng ký"
+                            onkeyup="if(event.key==='Enter') sendResetEmail()">
+                    </div>
+
+                    <button type="button" class="btn-login" onclick="sendResetEmail()"
+                        style="background:var(--primary-blue);">
+                        <span>GỬI YÊU CẦU</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+
+                    <a href="javascript:void(0)" onclick="toggleResetUI()"
+                        style="display:block; text-align:center; margin-top:15px; color:#fff; font-size:13px; text-decoration:underline;">Quay
+                        lại Đăng nhập</a>
+                    <p id="reset-msg" class="login-alert"></p>
+                </div>
+                <div class="login-footer">
+                    <small>Thiết kế & Phát triển bởi <b class="highlight-text">Chi Đoàn 21</b> - Bảo mật bởi
+                        Google</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Vietnam.svg/1200px-Emblem_of_Vietnam.svg.png"
+                alt="Logo">
+            <span class="sidebar-title">QUẢN TRỊ VIÊN</span>
+        </div>
+        <ul class="nav-links">
+            <div class="menu-item active" onclick="switchView('view-dashboard', this)">
+                <i class="fa-solid fa-gauge"></i> <span>Bảng điều khiển</span>
+            </div>
+            <div class="menu-item" onclick="switchView('view-articles', this)">
+                <i class="fa-solid fa-newspaper"></i> <span>Quản lý tin bài</span>
+            </div>
+            <div class="menu-item" onclick="switchView('view-pages', this)">
+                <i class="fa-solid fa-file-lines"></i> <span>Quản lý trang</span>
+            </div>
+            <div class="menu-item" onclick="switchView('view-feedback', this)">
+                <i class="fa-solid fa-envelope-open-text"></i> <span>Hộp Thư Góp Ý</span>
+            </div>
+            <div class="menu-item" onclick="switchView('view-funds', this)">
+                <i class="fa-solid fa-hand-holding-dollar"></i> <span>Quản lý khoản thu</span>
+            </div>
+            <div class="menu-item" onclick="switchView('view-donations', this)">
+                <i class="fa-solid fa-hand-holding-heart"></i> <span>Duyệt đóng góp</span>
+            </div>
+            <div class="menu-item" onclick="switchView('view-settings', this)">
+                <i class="fa-solid fa-gears"></i> <span>Cấu hình hệ thống</span>
+            </div>
+            <div class="menu-item" onclick="switchView('view-users', this)">
+                <i class="fa-solid fa-users-gear"></i> <span>Quản lý thành viên</span>
+            </div>
+            <li class="nav-separator"></li>
+            <li><a href="index.html" target="_blank"><i class="fa-solid fa-external-link-alt"></i> Xem Trang Chủ</a>
+            </li>
+            <div class="menu-item mt-auto" onclick="logout()">
+                <i class="fa-solid fa-right-from-bracket"></i> <span>Đăng xuất</span>
+            </div>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <header>
+            <div style="display:flex; align-items:center;">
+                <button type="button" class="btn-toggle-sidebar" onclick="toggleSidebar()"><i
+                        class="fa-solid fa-bars"></i></button>
+                <h2 id="page-header" style="margin:0; text-transform: uppercase; letter-spacing: 1px;">TRUNG TÂM ĐIỀU
+                    HÀNH HỆ THỐNG</h2>
+            </div>
+            <div class="header-right">
+                <!-- Language Switcher Removed to enforce Vietnamese -->
+                <span id="admin-welcome" data-i18n="admin_welcome">Chào mừng, Admin!</span>
+                <div class="profile-dropdown" style="position:relative;">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=0056be&color=fff" alt="User"
+                        onclick="toggleProfileMenu()" id="header-avatar">
+                    <div id="profile-menu" class="dropdown-menu"
+                        style="display:none; position:absolute; right:0; top:120%; background:#fff; width:200px; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); border:1px solid #e2e8f0; overflow:hidden; z-index:1001;">
+                        <a href="javascript:void(0)" onclick="openMyProfile()"
+                            style="display:block; padding:10px 15px; color:#333; text-decoration:none; border-bottom:1px solid #f1f5f9;"><i
+                                class="fa-solid fa-user-circle"></i> Hồ sơ của tôi</a>
+                        <a href="javascript:void(0)" onclick="toggleResetUI(); logout();"
+                            style="display:block; padding:10px 15px; color:#333; text-decoration:none; border-bottom:1px solid #f1f5f9;"><i
+                                class="fa-solid fa-key"></i> Đổi mật khẩu</a>
+                        <a href="javascript:void(0)" onclick="logout()"
+                            style="display:block; padding:10px 15px; color:#ef4444; text-decoration:none;"><i
+                                class="fa-solid fa-right-from-bracket"></i> Đăng xuất</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- VIEW: DASHBOARD -->
+        <div id="view-dashboard" class="tab-view active" style="display:block;">
+            <div
+                style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:25px; margin-bottom:30px;">
+                <div class="stat-card">
+                    <div style="font-size: 40px; opacity: 0.2; position: absolute; right: 20px; bottom: 10px;"><i
+                            class="fa-solid fa-newspaper"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-title">Bài Viết</div>
+                        <div class="stat-value" id="stat-articles">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-size: 40px; opacity: 0.2; position: absolute; right: 20px; bottom: 10px;"><i
+                            class="fa-solid fa-file-invoice"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-title">Trang Đang Chạy</div>
+                        <div class="stat-value" id="stat-pages">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div style="font-size: 40px; opacity: 0.2; position: absolute; right: 20px; bottom: 10px;"><i
+                            class="fa-solid fa-chart-line"></i></div>
+                    <div class="stat-info">
+                        <div class="stat-title">Lượt Truy Cập</div>
+                        <div class="stat-value" id="stat-views">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top:0;">Tin Tức Mới Nhất</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tiêu Đề</th>
+                            <th>Ngày Đăng</th>
+                            <th>Chuyên Mục</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashboard-recent-news">
+                        <!-- Loaded by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VIEW: ARTICLES -->
+        <div id="view-articles" class="tab-view">
+            <div class="actions-bar" style="display: flex; gap: 10px; align-items:center; flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary" onclick="openEditor()"><i class="fa-solid fa-plus"></i>
+                    <span data-i18n="btn_compose">Soạn Thảo Bài Viết Mới</span></button>
+
+                <!-- Bulk Actions Toolbar (Hidden by default) -->
+                <div id="bulk-actions-toolbar"
+                    style="display:none; gap: 10px; margin-left: 20px; padding-left: 20px; border-left: 2px solid #ddd; align-items:center;">
+                    <span style="font-weight:bold; color:#555;">Đang chọn: <span id="selected-count"
+                            style="color:var(--primary-blue);">0</span></span>
+
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="bulkUpdateDate()"
+                        title="Cập nhật ngày đăng">
+                        <i class="fa-solid fa-calendar"></i> Sửa Ngày
+                    </button>
+
+                    <button type="button" class="btn btn-info btn-sm" onclick="bulkUpdateStatus()"
+                        title="Đổi trạng thái">
+                        <i class="fa-solid fa-toggle-on"></i> Đổi Trạng Thái
+                    </button>
+
+                    <button type="button" class="btn btn-warning btn-sm" onclick="bulkUpdateCategory()"
+                        title="Chuyển chuyên mục">
+                        <i class="fa-solid fa-folder"></i> Chuyển Mục
+                    </button>
+
+                    <button type="button" class="btn btn-danger btn-sm" id="btn-bulk-delete"
+                        onclick="deleteSelectedArticles()">
+                        <i class="fa-solid fa-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align:center;"><input type="checkbox" id="selectAllArticles"
+                                    onchange="toggleSelectAll(this)"></th>
+                            <th style="width: 50px;">ID</th>
+                            <th style="width: 100px;">Ngày Đăng</th>
+                            <th>Tiêu Đề</th>
+                            <th style="width: 120px;">Danh Mục</th>
+                            <th style="width: 100px;">Trạng Thái</th>
+                            <th style="width: 80px;">Views</th>
+                            <th style="width: 100px; text-align:right;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="article-list">
+                        <!-- Loaded by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VIEW: PAGES -->
+        <div id="view-pages" class="tab-view">
+            <div class="actions-bar">
+                <button type="button" class="btn btn-primary" onclick="openPageEditor()"><i
+                        class="fa-solid fa-plus"></i> <span data-i18n="btn_add_page">Thêm Trang Thông
+                        Tin</span></button>
+            </div>
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Slug</th>
+                            <th>Tên Trang</th>
+                            <th>Thứ Tự</th>
+                            <th>Menu</th>
+                            <th>Nguồn</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="page-list">
+                        <!-- Loaded by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VIEW: FEEDBACK -->
+        <div id="view-feedback" class="tab-view">
+            <div class="card">
+                <h3 style="margin-bottom: 20px;">Danh Sách Ý Kiến / Phản Ánh</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Ngày Gửi</th>
+                            <th>Người Gửi (Liên Hệ)</th>
+                            <th>Tiêu Đề</th>
+                            <th>Nội Dung</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedback-list">
+                        <tr>
+                            <td colspan="6" style="text-align:center;">Đang tải dữ liệu...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VIEW: SETTINGS (Upgraded) -->
+        <div id="view-settings" class="tab-view">
+            <div class="actions-bar">
+                <h3 style="margin:0;">Cấu Hình Hệ Thống</h3>
+                <button type="button" class="btn btn-primary" onclick="saveAllSettings()"><i
+                        class="fa-solid fa-save"></i> Lưu Toàn Bộ
+                    Cấu Hình</button>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <!-- Column 1: General Info -->
+                <div class="card">
+                    <h4 style="border-bottom:1px solid #eee; padding-bottom:10px; margin-top:0;">Thông Tin Chung</h4>
+                    <div class="form-group">
+                        <label>Tiêu đề Website (Title)</label>
+                        <input type="text" id="set-website_title" class="form-control" placeholder="Tổ Dân Phố 21...">
+                    </div>
+                    <div class="form-group">
+                        <label>Mô tả ngắn (Description)</label>
+                        <textarea id="set-website_desc" class="form-control" rows="2"
+                            placeholder="Website chính thức..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Logo URL</label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="set-logo_url" class="form-control" placeholder="Link ảnh logo...">
+                            <button type="button" class="btn btn-secondary"
+                                onclick="window.open(document.getElementById('set-logo_url').value)" title="Xem"><i
+                                    class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Hình nền Header (Banner)</label>
+                        <input type="text" id="set-banner_url" class="form-control"
+                            placeholder="Link ảnh banner top...">
+                    </div>
+                </div>
+
+                <!-- Column 2: Contact Info -->
+                <div class="card">
+                    <h4 style="border-bottom:1px solid #eee; padding-bottom:10px; margin-top:0;">Thông Tin Liên Hệ</h4>
+                    <div class="form-group">
+                        <label>Hotline / SĐT</label>
+                        <input type="text" id="set-hotline" class="form-control" placeholder="098...">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Liên Hệ</label>
+                        <input type="text" id="set-email" class="form-control" placeholder="contact@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Địa Chỉ</label>
+                        <input type="text" id="set-address" class="form-control" placeholder="Số nhà, đường...">
+                    </div>
+                    <div class="form-group">
+                        <label>Link Facebook Fanpage</label>
+                        <input type="text" id="set-facebook" class="form-control"
+                            placeholder="https://facebook.com/...">
+                    </div>
+                    <div class="form-group">
+                        <label>Link Youtube</label>
+                        <input type="text" id="set-youtube" class="form-control" placeholder="https://youtube.com/...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced / System Tools -->
+            <div class="card" style="margin-top:20px;">
+                <h4 style="border-bottom:1px solid #eee; padding-bottom:10px; margin-top:0;">Nâng Cao & Công Cụ</h4>
+
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="width: 48%;">
+                        <div class="form-group">
+                            <label>Dòng thông báo chạy (Marquee)</label>
+                            <textarea id="set-marquee" class="form-control" rows="3"
+                                placeholder="Thông báo: ..."></textarea>
+                        </div>
+                    </div>
+                    <div style="width: 48%;">
+                        <label>Công cụ hệ thống</label>
+                        <div style="background:#f9f9f9; padding:15px; border-radius:5px;">
+                            <button type="button" class="btn btn-secondary" onclick="window.testFirebaseConnection()"><i
+                                    class="fa-solid fa-network-wired"></i> Kiểm Tra Kết Nối Firebase</button>
+                            <button type="button" class="btn btn-danger"
+                                onclick="if(confirm('Xóa Cache sẽ tải lại dữ liệu mới nhất. Tiếp tục?')) { localStorage.clear(); location.reload(); }"
+                                style="margin-left:10px;"><i class="fa-solid fa-sync"></i> Xóa Cache & Reload</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: EDITOR (V3 - Redesigned) -->
+        <div id="view-editor" class="tab-view" style="padding: 0;">
+            <!-- Sticky Header -->
+            <div class="sticky-bar">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <a href="javascript:void(0)" onclick="closeEditor()" style="color:#666; font-size:18px;"><i
+                            class="fa-solid fa-arrow-left"></i></a>
+                    <h3 style="margin:0;" id="editor-heading">Soạn Thảo Bài Viết</h3>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button type="button" class="btn btn-info" onclick="autoTranslate()"
+                        title="Dịch tự động sang Tiếng Anh chuẩn"><i class="fa-solid fa-language"></i> Dịch & Chuẩn
+                        Hóa</button>
+                    <button type="button" class="btn btn-secondary" onclick="previewArticle()"><i
+                            class="fa-solid fa-eye"></i> Xem
+                        Trước</button>
+                    <button type="button" class="btn btn-success" onclick="saveArticle()"><i
+                            class="fa-solid fa-save"></i> Đăng
+                        Bài</button>
+                </div>
+            </div>
+
+            <div class="editor-wrapper">
+                <!-- MAIN CONTENT (Left) - 75% -->
+                <div class="editor-main">
+                    <!-- LANGUAGE TABS -->
+                    <div class="editor-tabs"
+                        style="margin-bottom: 15px; border-bottom: 2px solid #eee; display: flex; gap: 20px;">
+                        <div class="tab-item active" onclick="switchEditorLang('vn', this)"
+                            style="padding: 10px; cursor: pointer; border-bottom: 2px solid var(--primary-red); font-weight: bold;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Flag_of_Vietnam.svg/20px-Flag_of_Vietnam.svg.png"
+                                style="vertical-align: middle;"> Tiếng Việt
+                        </div>
+                        <div class="tab-item" onclick="switchEditorLang('en', this)"
+                            style="padding: 10px; cursor: pointer; color: #888;">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Flag_of_the_United_States.svg/20px-Flag_of_the_United_States.svg.png"
+                                style="vertical-align: middle;"> Tiếng Anh (English)
+                        </div>
+                    </div>
+
+                    <!-- VIETNAMESE FIELDS -->
+                    <div id="editor-vn">
+                        <!-- Title & Slug -->
+                        <div style="margin-bottom: 20px;">
+                            <input type="text" id="art-title" class="input-title"
+                                placeholder="NHẬP TIÊU ĐỀ BÀI VIẾT (VI) TẠI ĐÂY..." onkeyup="generateSlug()"
+                                autocomplete="off">
+                            <div style="margin-top:8px; display:flex; align-items:center; gap:5px;">
+                                <span style="font-size:13px; color:#999;"><i class="fa-solid fa-link"></i> Link:</span>
+                                <div
+                                    style="background:#f0f2f5; padding:4px 8px; border-radius:4px; font-size:13px; color:#555; flex:1;">
+                                    <span style="color:#888;">https://todanpho21.vn/bai-viet/</span>
+                                    <input type="text" id="art-slug" class="input-slug" placeholder="tie-de-bai-viet"
+                                        readonly ondblclick="this.readOnly=false"
+                                        style="background:transparent; border:none; width:auto; min-width:300px; color:#333; font-weight:500;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Excerpt/Summary (Moved Up) -->
+                        <div class="form-group">
+                            <label style="font-weight:600; text-transform:uppercase; font-size:12px; color:#666;">Mô tả
+                                ngắn
+                                (Sapo)</label>
+                            <textarea id="art-summary" class="form-control" rows="3"
+                                placeholder="Tóm tắt nội dung chính của bài viết (Hiển thị đầu bài và trên danh sách tin)..."
+                                style="font-size:15px; line-height:1.5;"></textarea>
+                        </div>
+
+                        <!-- Editor -->
+                        <div
+                            style="flex:1; display:flex; flex-direction:column; min-height: 500px; border:1px solid #ddd; border-top:3px solid var(--primary-blue); border-radius:4px;">
+                            <textarea id="art-editor"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- ENGLISH FIELDS (Initially Hidden) -->
+                    <div id="editor-en" style="display: none;">
+                        <div style="margin-bottom: 20px;">
+                            <input type="text" id="art-title-en" class="input-title"
+                                placeholder="ENTER ARTICLE TITLE (EN) HERE..." autocomplete="off">
+                        </div>
+
+                        <div class="form-group">
+                            <label style="font-weight:600; text-transform:uppercase; font-size:12px; color:#666;">Short
+                                Description (Sapo EN)</label>
+                            <textarea id="art-summary-en" class="form-control" rows="3"
+                                placeholder="Short summary of the article..."
+                                style="font-size:15px; line-height:1.5;"></textarea>
+                        </div>
+
+                        <div
+                            style="flex:1; display:flex; flex-direction:column; min-height: 500px; border:1px solid #ddd; border-top:3px solid var(--primary-blue); border-radius:4px;">
+                            <textarea id="art-editor-en"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SIDEBAR (Right) - 25% -->
+                <div class="editor-sidebar">
+
+                    <!-- Section: Google Docs Import -->
+                    <div class="sidebar-section" style="border: 2px dashed #4285F4; background: #f8fbff;">
+                        <h4 class="section-title" style="color:#d93025;"><i class="fa-brands fa-google-drive"></i> Nhập
+                            từ Google Docs</h4>
+                        <div class="form-group">
+                            <label style="font-size:12px;">Dán Link (Chế độ: Publish to web)</label>
+                            <input type="text" id="gdoc-url" class="form-control"
+                                placeholder="https://docs.google.com/document/d/.../pub">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="importGoogleDoc()" style="width:100%;">
+                            <i class="fa-solid fa-cloud-download-alt"></i> Tải Nội Dung Ngay
+                        </button>
+                        <small style="display:block; margin-top:5px; color:#666; font-size:11px;">
+                            * Lưu ý: Hãy dùng link <b>"File -> Share -> Publish to web"</b> để có kết quả tốt nhất.
+                        </small>
+                    </div>
+
+                    <!-- Section: Publish -->
+                    <div class="sidebar-section">
+                        <h4 class="section-title"><i class="fa-solid fa-globe"></i> Đăng Tải</h4>
+                        <div class="form-group">
+                            <label>Trạng Thái</label>
+                            <select id="art-status" class="form-control">
+                                <option value="Published">Công Khai (Hiển thị ngay)</option>
+                                <option value="Draft">Bản Nháp (Lưu tạm)</option>
+                                <option value="Private">Riêng Tư (Chỉ Admin xem)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ngày Đăng</label>
+                            <input type="date" id="art-date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Tác Giả</label>
+                            <input type="text" id="art-author" class="form-control" placeholder="Tên người viết...">
+                        </div>
+                        <div class="form-group">
+                            <label
+                                style="display:flex; align-items:center; cursor:pointer; background:#f9f9f9; padding:8px; border-radius:4px;">
+                                <input type="checkbox" id="art-featured" style="margin-right:10px;"> Đặt làm Tin Nổi Bật
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Section: Category -->
+                    <div class="sidebar-section">
+                        <h4 class="section-title"><i class="fa-solid fa-folder"></i> Phân Loại</h4>
+                        <div class="form-group">
+                            <label>Chuyên Mục <span class="required">*</span></label>
+                            <select id="art-category" class="form-control" size="8" style="height:auto;">
+                                <option value="TRANG_CHU">📰 Tin Tức & Sự Kiện Chung</option>
+                                <option value="THONG_BAO">📢 Thông Báo Quan Trọng (Chạy chữ)</option>
+                                <option value="CB">☭ Chi Bộ ĐCS</option>
+                                <option value="MT">🚩 Mặt Trận Tổ Quốc</option>
+                                <option value="PHU_NU">🌸 Hội Liên Hiệp Phụ Nữ</option>
+                                <option value="CCB">🎖️ Hội Cựu Chiến Binh</option>
+                                <option value="TN">👕 Đoàn Thanh Niên</option>
+                                <option value="NCT">👴 Hội Người Cao Tuổi</option>
+                                <option value="KH">📚 Ban Khuyến Học</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Thẻ (Tags)</label>
+                            <input type="text" id="art-tags" class="form-control"
+                                placeholder="VD: nghị quyết, đại hội...">
+                        </div>
+                    </div>
+
+                    <!-- Section: Image -->
+                    <div class="sidebar-section">
+                        <h4 class="section-title"><i class="fa-solid fa-image"></i> Ảnh Đại Diện</h4>
+                        <div class="image-upload-box" onclick="triggerImageUpload()" style="height: 180px;">
+                            <div id="upload-placeholder">
+                                <i class="fa-solid fa-cloud-upload-alt"></i>
+                                <div>Chọn ảnh từ máy</div>
+                            </div>
+                            <img id="art-img-preview" class="image-upload-preview">
+                            <div class="remove-img-btn" onclick="removeImage(event)">&times;</div>
+                        </div>
+                        <input type="text" id="art-image" class="form-control form-control-sm"
+                            placeholder="Hoặc dán URL ảnh..." style="margin-top:10px; font-size:12px;"
+                            onchange="previewImageFromUrl(this.value)">
+                    </div>
+
+                    <!-- Section: Media & SEO -->
+                    <div class="sidebar-section">
+                        <h4 class="section-title"><i class="fa-solid fa-paperclip"></i> Media & SEO</h4>
+                        <div class="form-group">
+                            <label>Video (Youtube Link)</label>
+                            <input type="text" id="art-video" class="form-control"
+                                placeholder="https://youtube.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label>File Đính Kèm</label>
+                            <input type="text" id="art-attachments" class="form-control">
+                        </div>
+                        <div style="border-top:1px dashed #ddd; margin:10px 0;"></div>
+                        <div class="form-group">
+                            <label>SEO Title</label>
+                            <input type="text" id="art-seo-title" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>SEO Description</label>
+                            <textarea id="art-seo-desc" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: PAGE EDITOR -->
+        <div id="view-page-editor" class="tab-view">
+            <div class="actions-bar">
+                <h3 style="margin:0;" id="page-editor-heading">Cấu Hình Trang</h3>
+                <div>
+                    <button type="button" class="btn btn-secondary" onclick="closePageEditor()">Hủy Bỏ</button>
+                    <button type="button" class="btn btn-success" onclick="savePage()"><i class="fa-solid fa-save"></i>
+                        Lưu
+                        Trang</button>
+                </div>
+            </div>
+            <div style="display:flex; gap:20px;">
+                <div style="flex:2; background:white; padding:20px; border-radius:5px;">
+                    <div class="form-group">
+                        <label>Tiêu Đề Trang <span class="required">*</span></label>
+                        <input type="text" id="page-title" class="form-control">
+                    </div>
+                    <textarea id="page-editor"></textarea>
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:15px;">
+                    <div class="card">
+                        <div class="form-group">
+                            <label>Đường dẫn (Slug) <span class="required">*</span></label>
+                            <input type="text" id="page-slug" class="form-control" placeholder="gioi-thieu">
+                        </div>
+                        <div class="form-group">
+                            <label>Thứ tự hiển thị</label>
+                            <input type="number" id="page-order" class="form-control" value="99">
+                        </div>
+                        <div class="form-group">
+                            <label><input type="checkbox" id="page-menu" checked> Hiển thị trên Menu</label>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="form-group">
+                            <label>Banner Ảnh (URL)</label>
+                            <input type="text" id="page-banner" class="form-control">
+                            <img id="page-banner-preview" src="" style="width:100%; margin-top:5px; display:none;">
+                        </div>
+                        <div class="form-group">
+                            <label>Link Văn Bản Gốc (nếu có)</label>
+                            <input type="text" id="page-doc" class="form-control">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: DONATIONS MANAGEMENT -->
+        <!-- VIEW: DONATIONS MANAGEMENT (Drill-down Redesign) -->
+        <div id="view-donations" class="tab-view">
+
+            <!-- MODE 1: SELECT FUND -->
+            <div id="donations-fund-list">
+                <div class="actions-bar">
+                    <h3 style="margin:0;"><i class="fa-solid fa-circle-check" style="color:var(--primary-blue);"></i>
+                        Duyệt Đóng Góp - Chọn Quỹ</h3>
+                    <button type="button" class="btn btn-secondary" onclick="loadDonationFundsMode()"><i
+                            class="fa-solid fa-rotate"></i> Làm mới</button>
+                </div>
+
+                <style>
+                    .fund-select-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                        gap: 20px;
+                    }
+
+                    .fund-select-card {
+                        background: white;
+                        border-radius: 12px;
+                        padding: 20px;
+                        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+                        border: 1px solid #e2e8f0;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                        position: relative;
+                        overflow: hidden;
+                    }
+
+                    .fund-select-card:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+                        border-color: var(--primary-blue);
+                    }
+
+                    .fund-select-card::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 4px;
+                        height: 100%;
+                        background: var(--primary-blue);
+                        opacity: 0.5;
+                    }
+
+                    .f-card-title {
+                        font-weight: 700;
+                        font-size: 16px;
+                        margin-bottom: 5px;
+                        color: #1e293b;
+                    }
+
+                    .f-card-stats {
+                        font-size: 13px;
+                        color: #64748b;
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 15px;
+                        padding-top: 10px;
+                        border-top: 1px dashed #e2e8f0;
+                    }
+                </style>
+
+                <div id="admin-fund-grid" class="fund-select-grid">
+                    <!-- Loaded by JS -->
+                    <div class="fund-select-card">
+                        <div class="f-card-title">Đang tải danh sách quỹ...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODE 2: DETAIL LIST -->
+            <div id="donations-detail-list" style="display:none;">
+                <div class="actions-bar">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <button class="btn btn-secondary" onclick="backToFundList()" title="Quay lại"><i
+                                class="fa-solid fa-arrow-left"></i></button>
+                        <div>
+                            <h3 style="margin:0;" id="detail-fund-name">Chi Tiết Đóng Góp</h3>
+                            <small style="color:#666;" id="detail-fund-desc">---</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="refreshCurrentDonationList()"><i
+                            class="fa-solid fa-rotate"></i> Tải lại</button>
+                </div>
+
+                <div class="card">
+                    <div
+                        style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; justify-content: space-between;">
+                        <div class="status-filters">
+                            <button class="btn btn-sm btn-primary" onclick="setDonationStatusFilter('all')">Tất
+                                cả</button>
+                            <button class="btn btn-sm btn-warning" onclick="setDonationStatusFilter('pending')">Chờ
+                                duyệt</button>
+                            <button class="btn btn-sm btn-success" onclick="setDonationStatusFilter('verified')">Đã
+                                duyệt</button>
+                        </div>
+                        <input type="text" id="admin-donation-search" class="form-control" style="width: 250px;"
+                            placeholder="🔍 Tìm kiếm..." onkeyup="filterAdminDonations()">
+                    </div>
+
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;"><input type="checkbox" onchange="toggleSelectAll(this)"></th>
+                                <th>Thời gian</th>
+                                <th>Mã GD</th>
+                                <th>Người ủng hộ</th>
+                                <th>Số tiền</th>
+                                <th>Trạng thái</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="donation-list">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- VIEW: USER MANAGEMENT -->
+        <div id="view-users" class="tab-view">
+            <div class="actions-bar">
+                <h3 style="margin:0;"><i class="fa-solid fa-users-gear" style="color:var(--primary-blue);"></i> Quản Lý
+                    Thành Viên</h3>
+                <button type="button" class="btn btn-primary" onclick="openUserModal()"><i
+                        class="fa-solid fa-user-plus"></i> Thêm Thành Viên</button>
+            </div>
+
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Họ và Tên</th>
+                            <th>Email (Tài khoản)</th>
+                            <th>Chức Vụ</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-list">
+                        <!-- Loaded via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- USER MODAL -->
+        <div id="user-modal" class="modal">
+            <div class="modal-content" style="max-width: 500px;">
+                <h3 id="user-modal-title" style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">Thêm
+                    Thành Viên</h3>
+                <div class="form-group">
+                    <label>Họ và Tên <span class="required">*</span></label>
+                    <input type="text" id="u-name" class="form-control" placeholder="Nguyễn Văn A">
+                </div>
+                <div class="form-group">
+                    <label>Email (Đăng nhập) <span class="required">*</span></label>
+                    <input type="email" id="u-email" class="form-control" placeholder="email@example.com">
+                    <small style="color:#666;">* User cần dùng Email này để tạo tài khoản/đăng nhập.</small>
+                </div>
+                <div class="form-group">
+                    <label>Chức Vụ / Vai Trò</label>
+                    <select id="u-role" class="form-control">
+                        <option value="admin">Quản Trị Viên (Toàn quyền)</option>
+                        <option value="moderator">Cán Bộ Xác Minh (Duyệt đóng góp & Hộp thư)</option>
+                        <option value="editor">Ban Biên Tập (Quản lý tin bài & Trang)</option>
+                    </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                    <div class="form-group">
+                        <label>Số Điện Thoại</label>
+                        <input type="text" id="u-phone" class="form-control" placeholder="098...">
+                    </div>
+                    <div class="form-group">
+                        <label>Link Avatar (Ảnh)</label>
+                        <input type="text" id="u-avatar" class="form-control" placeholder="https://...">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Mật Khẩu / Bảo Mật</label>
+                    <button type="button" class="btn btn-warning" onclick="sendPasswordResetForUser()"
+                        style="width:100%; font-size:13px;">
+                        <i class="fa-solid fa-envelope"></i> Gửi Email Đặt Lại Mật Khẩu
+                    </button>
+                    <small style="display:block; margin-top:5px; color:#666;">* Hệ thống sẽ gửi link đổi mật khẩu cho
+                        User này.</small>
+                </div>
+
+                <div class="form-group">
+                    <label><input type="checkbox" id="u-active" checked> Kích hoạt tài khoản</label>
+                </div>
+
+                <div style="text-align:right; margin-top:20px;">
+                    <button class="btn btn-secondary" onclick="closeUserModal()">Hủy</button>
+                    <button class="btn btn-success" onclick="saveUser()">Lưu Lại</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: FUNDS MANAGEMENT -->
+        <div id="view-funds" class="tab-view">
+            <div class="actions-bar">
+                <button type="button" class="btn btn-primary" onclick="openFundModal()"><i class="fa-solid fa-plus"></i>
+                    Thêm Khoản Thu Mới</button>
+            </div>
+            <div class="card">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Tên Khoản Thu/Quỹ</th>
+                            <th>Phân Loại (Đơn vị)</th>
+                            <th>Mã Tên Quỹ</th>
+                            <th>Trạng Thái</th>
+                            <th>Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fund-list"></tbody>
+                </table>
+            </div>
+
+            <!-- FUND MODAL -->
+            <div id="fund-modal" class="modal-overlay" style="display:none;">
+                <div class="modal-box modal-large">
+                    <div class="login-glass" style="padding:0; text-align:left; max-width: 100%;">
+                        <h3
+                            style="margin-top:0; color:var(--primary-red); border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 25px;">
+                            <i class="fa-solid fa-hand-holding-dollar"></i> Cấu Hình Khoản Thu / Quỹ Vận Động
+                        </h3>
+                        <input type="hidden" id="fund-id">
+
+                        <div class="modal-grid">
+                            <!-- LEFT COLUMN: Main Content -->
+                            <div class="modal-column">
+                                <div class="form-group">
+                                    <label>Tên Quỹ / Khoản Thu <span class="required"
+                                            style="color:red;">*</span></label>
+                                    <input type="text" id="fund-title" class="form-control"
+                                        placeholder="VD: Quỹ Vì Người Nghèo 2024">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Mô tả ngắn (Hiển thị ở danh sách)</label>
+                                    <textarea id="fund-summary" class="form-control" rows="2"
+                                        placeholder="Tóm tắt vị cuộc vận động này..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Nội dung chi tiết (Bài viết vận động)</label>
+                                    <textarea id="fund-editor" class="form-control" style="height: 350px;"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT COLUMN: Settings & Banking -->
+                            <div class="modal-column">
+                                <div class="modal-column-right">
+                                    <div class="form-group">
+                                        <label>Hiển thị tại trang (Đơn vị) <span class="required"
+                                                style="color:red;">*</span></label>
+                                        <select id="fund-category" class="form-control">
+                                            <option value="ALL">Tất cả (Trang chủ)</option>
+                                            <option value="MT">Mặt Trận Tổ Quốc</option>
+                                            <option value="KH">Ban Khuyến Học</option>
+                                            <option value="TN">Đoàn Thanh Niên</option>
+                                            <option value="PHU_NU">Hội Phụ Nữ</option>
+                                            <option value="CCB">Hội Cựu Chiến Binh</option>
+                                            <option value="NCT">Hội Người Cao Tuổi</option>
+                                            <option value="CB">Chi Bộ</option>
+                                        </select>
+                                    </div>
+
+                                    <div
+                                        style="padding: 15px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
+                                        <h5
+                                            style="margin: 0 0 15px 0; font-size: 14px; color: var(--primary-red); border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                                            THÔNG TIN MÃ QUỸ</h5>
+
+                                        <div class="form-group">
+                                            <label>Mã Tên Quỹ (Dùng cho nội dung CK)</label>
+                                            <input type="text" id="fund-code" class="form-control"
+                                                placeholder="VD: QUYNGUOINGHEO">
+                                            <small style="color:#666; font-size: 11px;">Mã này sẽ được dùng trong cú
+                                                pháp chuyển khoản: UH [Mã Giao Dịch] [Tên Quỹ]</small>
+                                        </div>
+
+                                        <div class="form-group" style="margin-bottom: 0;">
+                                            <label>Cú pháp nội dung mẫu (Gợi ý)</label>
+                                            <input type="text" id="fund-template" class="form-control"
+                                                placeholder="TDP21 UNGHONGHEO">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group"
+                                        style="background: #fff5f5; padding: 10px; border-radius: 8px;">
+                                        <label
+                                            style="margin-bottom: 0; display: flex; align-items: center; gap: 8px; color: #b91c1c;">
+                                            <input type="checkbox" id="fund-active" checked
+                                                style="width: 18px; height: 18px;">
+                                            Đang kích hoạt (Cho phép đóng góp)
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+                                    <button type="button" class="btn btn-secondary"
+                                        style="height: 45px; padding: 0 25px;"
+                                        onclick="document.getElementById('fund-modal').style.display='none'">Hủy</button>
+                                    <button type="button" class="btn btn-success"
+                                        style="height: 45px; padding: 0 35px; font-weight: 800;"
+                                        onclick="saveFund()">Lưu Lại</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- UTILS: Toast Container -->
+        <div id="toast-container"></div>
+
+        <!-- App Logic -->
+        <script src="lang.js?v=20260112_FIX_EMAIL"></script>
+        <script src="admin.js?v=FIX_SIDEBAR_V1"></script>
+
+        <!-- EMERGENCY LOGIN FIX (INLINE TO BYPASS CACHE) -->
+        <script>
+            // Override the external function immediately
+            async function attemptLogin() {
+                let emailInput = document.getElementById('login-input');
+                let passInput = document.getElementById('login-pass');
+                let msg = document.getElementById('login-msg');
+
+                let email = emailInput.value;
+                let pass = passInput.value;
+
+                // 1. VISUAL DEBUGGING
+                console.log("Original Email:", email);
+
+                // 2. AGGRESSIVE CLEANING (Whitelist)
+                // Remove anything that is NOT a letter, number, @, dot, underscore, or dash
+                let cleanEmail = email.replace(/[^a-zA-Z0-9@._-]/g, '');
+
+                // 3. UPDATE INPUT & LOG
+                emailInput.value = cleanEmail;
+                console.log("Cleaned Email:", cleanEmail);
+
+                if (!cleanEmail || !pass) {
+                    msg.innerText = "Vui lòng nhập đầy đủ thông tin!";
+                    return;
+                }
+
+                msg.innerText = "Đang kết nối (Bản vá lỗi)...";
+
+                try {
+                    await firebase.auth().signInWithEmailAndPassword(cleanEmail, pass);
+                    // onAuthStateChanged in admin.js will catch the success
+                    console.log("Login command sent successfully.");
+                } catch (e) {
+                    console.error("Login Error:", e);
+                    // Translate common errors
+                    let errorText = e.message;
+                    if (e.code === 'auth/invalid-email') errorText = "Email không đúng định dạng (Dù đã lọc).";
+                    if (e.code === 'auth/user-not-found') errorText = "Email này chưa được đăng ký.";
+                    if (e.code === 'auth/wrong-password') errorText = "Sai mật khẩu!";
+
+                    msg.innerText = "Lỗi: " + errorText;
+                    alert("Chi tiết lỗi: " + errorText + "\nEmail gửi đi: [" + cleanEmail + "]");
+                }
+            }
+        </script>
+        <script src="fix_text.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+
+
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CỔNG THÔNG TIN Tổ Dân Phố 21 - Phường Ba Đình</title>
+
+    <link rel="stylesheet" href="style.css?v=SPIN_FIX_V1">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts Removed (Blocking Resource) -->
+
+    <style>
+        body,
+
+        h1,
+
+        h2,
+
+        h3,
+
+        h4,
+
+        h5,
+
+        h6,
+
+        p,
+
+        span,
+
+        div,
+
+        a {
+
+            font-family: Tahoma, Arial, sans-serif !important;
+
+        }
+    </style>
+
+</head>
+
+
+
+<body>
+
+    <div class="wrapper">
+
+        <!-- UTILITY BAR (OFFICIAL FEEL) -->
+
+        <div class="utility-bar">
+
+            <div class="utility-left">
+
+                <i class="fa-solid fa-cloud-sun"></i>
+
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+
+                <span class="utility-divider">|</span>
+
+                <i class="fa-regular fa-calendar-check"></i>
+
+                <span id="current-date">Đang tải ngày...</span>
+
+                <span class="utility-divider">|</span>
+
+                <i class="fa-regular fa-clock"></i>
+
+                <span id="current-time">--:--:--</span>
+
+            </div>
+
+
+
+            <div class="utility-center">
+
+                <span class="utility-text-scroll" data-i18n="welcome_msg">CHÀO MỪNG QUÝ KHÁCH ĐẾN VỚI CỔNG THÔNG TIN
+
+                    ĐIỆN TỬ TỔ DÂN PHỐ Số 21</span>
+
+            </div>
+
+
+
+            <div class="utility-right">
+                <!-- Language System Removed -->
+            </div>
+
+        </div>
+
+
+
+        <!-- HEADER -->
+
+        <header class="top-banner">
+
+            <div class="banner-content">
+
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Vietnam.svg/1200px-Emblem_of_Vietnam.svg.png"
+                    alt="Quốc Huy" class="logo-img">
+
+                <div class="banner-text">
+
+                    <div class="org-name-1" data-i18n="org_sub">Ủy Ban Nhân Dân Phường Ba Đình</div>
+
+                    <h1 class="org-name-2" data-i18n="page_header">CỔNG THÔNG TIN ĐIỆN TỬ TỔ DÂN PHỐ Số 21</h1>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="main-nav" id="main-nav">
+
+            <ul>
+
+                <li><a href="index.html" class="nav-item active"><i class="fa-solid fa-home"></i> <span
+                            data-i18n="nav_home">Trang Chủ</span></a></li>
+
+                <li><a href="dong-gop.html" class="nav-item" style="background-color: var(--primary-red);"><i
+                            class="fa-solid fa-hand-holding-heart"></i> <span>ĐÓNG GÓP & VẬN ĐỘNG</span></a></li>
+
+                <li class="dropdown">
+
+                    <a href="cac-doan-the.html" class="nav-item"><i class="fa-solid fa-users"></i> <span
+                            data-i18n="nav_groups">CÁC ĐOÀN THỂ</span> <i class="fa-solid fa-caret-down"
+                            style="margin-left:5px;"></i></a>
+
+                    <div class="dropdown-content">
+
+                        <!-- CHI BỘ -->
+
+                        <div class="dropdown-sub">
+
+                            <a href="chi-bo.html?category=CB" data-i18n="group_chibo">Chi Bộ</a>
+
+                            <div class="dropdown-sub-content">
+
+                                <a href="chi-bo.html?category=CB" data-i18n="intro_general">Giới Thiệu Chung</a>
+
+                                <a href="tin-tuc.html?category=CB" data-i18n="news_chibo">Tin Tức Chi Bộ</a>
+
+                                <a href="chi-bo.html?category=CB&section=notify" data-i18n="doc_guidelines">Văn Bản -
+
+                                    Chỉ Đạo</a>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- MẶT TRẬN TỔ QUỐC -->
+
+                        <div class="dropdown-sub">
+
+                            <a href="mat-tran-to-quoc.html?category=MT" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
+
+                            <div class="dropdown-sub-content">
+
+                                <a href="mat-tran-to-quoc.html?category=MT" data-i18n="intro_general">Giới Thiệu
+
+                                    Chung</a>
+
+                                <a href="tin-tuc.html?category=MT" data-i18n="news_mttq">Tin Tức - Sự Kiện</a>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- HỘI PHỤ NỮ -->
+
+                        <div class="dropdown-sub">
+
+                            <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="group_phunu">Hội Phụ Nữ</a>
+
+                            <div class="dropdown-sub-content">
+
+                                <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="intro_general">Giới Thiệu Chung</a>
+
+                                <a href="tin-tuc.html?category=PHU_NU" data-i18n="news_phunu">Tin Tức Hội Phụ Nữ</a>
+
+                                <a href="hoi-phu-nu.html?category=PHU_NU&section=movements"
+                                    data-i18n="movement_phong_trao">Phong Trào Thi Đua</a>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- HỘI CỰU CHIẾN BINH -->
+
+                        <div class="dropdown-sub">
+
+                            <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="group_ccb">Hội Cựu Chiến Binh</a>
+
+                            <div class="dropdown-sub-content">
+
+                                <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="intro_general">Giới Thiệu
+
+                                    Chung</a>
+
+                                <a href="tin-tuc.html?category=CCB" data-i18n="news_ccb">Tin Tức CCB</a>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- ĐOÀN THANH NIÊN -->
+
+                        <div class="dropdown-sub">
+
+                            <a href="doan-thanh-nien.html?category=TN" data-i18n="group_thanhnien">Đoàn Thanh Niên</a>
+
+                            <div class="dropdown-sub-content">
+
+                                <a href="doan-thanh-nien.html?category=TN" data-i18n="intro_general">Giới Thiệu
+
+                                    Chung</a>
+
+                                <a href="tin-tuc.html?category=TN" data-i18n="news_thanhnien">Tin Tức - Hoạt Động</a>
+
+                                <a href="doan-thanh-nien.html?category=TN&section=youth" data-i18n="youth_corner">Góc
+
+                                    Thanh Niên</a>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- HỘI NGƯỜI CAO TUỔI -->
+
+                        <div class="dropdown-sub">
+
+                            <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="group_nct">Hội Người Cao Tuổi</a>
+
+                            <div class="dropdown-sub-content">
+
+                                <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="intro_general">Giới Thiệu
+
+                                    Chung</a>
+
+                                <a href="tin-tuc.html?category=NCT" data-i18n="news_nct">Tin Tức NCT</a>
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- BAN KHUYẾN HỌC -->
+
+                        <div class="dropdown-sub">
+
+                            <a href="ban-khuyen-hoc.html?category=KH" data-i18n="group_khuyenhoc">Ban Khuyến Học</a>
+
+                            <div class="dropdown-sub-content">
+
+                                <a href="ban-khuyen-hoc.html?category=KH" data-i18n="intro_general">Giới Thiệu Chung</a>
+
+                                <a href="tin-tuc.html?category=KH" data-i18n="news_khuyenhoc">Tin Tức Khuyến Học</a>
+
+                            </div>
+
+                        </div>
+
+
+
+                    </div>
+
+                </li>
+
+
+
+                <li><a href="lien-he.html" class="nav-item"><i class="fa-solid fa-address-book"></i> <span
+                            data-i18n="nav_contact">Liên Hệ</span></a></li>
+
+                <li class="login-item" style="margin-left: auto;"><a href="admin.html"><i
+                            class="fa-solid fa-user-gear"></i> <span data-i18n="nav_login">Đăng Nhập</span></a></li>
+
+            </ul>
+
+        </nav>
+
+
+
+        </nav>
+
+
+
+        <!-- MAIN LAYOUT -->
+
+        <div class="main-content" id="dashboard-view">
+
+            <!-- LEFT COLUMN (Main News) -->
+
+            <div class="left-col">
+
+                <div class="section-box">
+
+                    <div class="box-header">
+
+                        <span class="box-title" data-i18n="box_news_featured">TIN TỨC - SỰ KIỆN NỔI BẬT</span>
+
+                        <a href="tin-tuc.html" style="font-size: 11px; color: #666; font-style: italic;"
+                            data-i18n="view_all">Xem tất cả >></a>
+
+                    </div>
+
+                    <div class="box-body" id="qt-homepage-news">
+
+                        <!-- Tin t?c sự được Javascript t?i vào dây -->
+
+                        <div style="font-style: italic; color: #666; padding: 10px;" data-i18n="loading_news">Đang k?t
+
+                            n?i dân h? thểng tin tức...</div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- RIGHT COLUMN (Sidebar) -->
+
+            <div class="right-col">
+
+                <!-- FUND WIDGET (ALL) -->
+
+                <div id="fund-widget-home"></div>
+
+                <script>
+
+                    window.addEventListener('load', function () {
+
+                        setTimeout(() => {
+
+                            if (typeof renderFundsWidget === 'function') {
+
+                                renderFundsWidget('fund-widget-home', 'ALL');
+
+                            }
+
+                        }, 1000);
+
+                    });
+
+                </script>
+
+
+
+                <!-- Administrative Links -->
+
+                <div class="section-box">
+
+                    <div class="box-header">
+
+                        <span class="box-title" data-i18n="box_management">ĐIỀU HÀNH TÁC NGHIỆP</span>
+
+                    </div>
+
+                    <div class="box-body" style="padding: 10px;">
+
+                        <a href="chi-bo.html" class="sidebar-link" data-i18n="group_chibo">Chi Bộ</a>
+
+                        <a href="mat-tran-to-quoc.html" class="sidebar-link" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
+
+                        <a href="hoi-phu-nu.html" class="sidebar-link" data-i18n="group_phunu">Hội Phụ Nữ</a>
+
+                        <a href="hoi-cuu-chien-binh.html" class="sidebar-link" data-i18n="group_ccb">Hội Cựu Chiến
+
+                            Binh</a>
+
+                        <a href="doan-thanh-nien.html" class="sidebar-link" data-i18n="group_thanhnien">Đoàn Thanh
+
+                            Niên</a>
+
+                        <a href="hoi-nguoi-cao-tuoi.html" class="sidebar-link" data-i18n="group_nct">Hội Người Cao
+
+                            Tu?i</a>
+
+
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Notifications -->
+
+                <div class="section-box">
+
+                    <div class="box-header">
+
+                        <span class="box-title" data-i18n="box_notifications">THÔNG BÁO MỚI</span>
+
+                    </div>
+
+                    <div class="box-body">
+
+                        <marquee direction="up" scrollamount="2" height="150" onmouseover="this.stop()"
+                            onmouseout="this.start()" id="qt-marquee">
+
+                            <div style="padding:10px;" data-i18n="loading_notify">Đang tải thông báo...</div>
+
+                        </marquee>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- Useful Links -->
+
+                <div class="section-box">
+
+                    <div class="box-header">
+
+                        <span class="box-title" data-i18n="box_links">LIÊN K?T WEBSITE</span>
+
+                    </div>
+
+                    <div class="box-body">
+
+                        <select style="width: 100%; padding: 5px;"
+                            onchange="if (this.value) window.location.href=this.value">
+
+                            <option value="" data-i18n="select_link">-- Chọn liên kết --</option>
+
+                            <option value="#" data-i18n="link_gov">Cổng TTĐT Chính Phủ</option>
+
+                            <option value="#" data-i18n="link_hanoi">UBND Thành Phố Hà Nội</option>
+
+                            <option value="#" data-i18n="link_badinh">UBND Quận Ba Đình</option>
+
+                            <option value="#" data-i18n="link_service">Dịch vụ công Quốc gia</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- FOOTER -->
+
+        <footer>
+
+            <div class="footer-content">
+
+                <div class="footer-info">
+
+                    <p style="font-size: 16px; margin-bottom: 15px;"><strong data-i18n="footer_title">BAN LÃNH ĐẠO Tổ
+
+                            DÂN PH? Số 21 - PHU?NG BA
+
+                            ĐÌNH</strong></p>
+
+                    <p data-i18n="footer_addr">Địa chỉ: Nhà Sinh Hoạt Cộng Đồng Số 21, Ngõ ..., Phường Ba Đình, TP Hà
+
+                        Nữi</p>
+
+                    <p data-i18n="footer_contact">Điện thoại: 024.3....... | Email: todanpho21@hanoi.gov.vn</p>
+
+                    <p style="margin-top: 15px; font-style: italic; opacity: 0.8;" data-i18n="footer_copyright">B?n
+
+                        quyền thuộc vị Tổ Dân Phố 21. Ghi
+
+                        rõ nguồn "Công TTĐT TPD21" khi phát hành lại thông tin từ website này.</p>
+
+                </div>
+
+            </div>
+
+        </footer>
+
+
+
+        <!-- BACK TO TOP BUTTON -->
+
+        <button id="btn-back-to-top" title="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+
+    </div>
+
+    <!-- Firebase SDKs -->
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+
+    <script src="db.js"></script>
+
+
+
+    <script src="cms.js?v=5"></script>
+
+    <script src="lang.js?v=2"></script>
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+            console.log("DOM Ready - App Starting...");
+
+            checkAndLoadContextArticle();
+
+            loadNews('TRANG_CHU', 'qt-homepage-news');
+
+            loadMarquee('qt-marquee');
+
+            loadDynamicMenu();
+
+            startClock();
+
+            fetchWeather();
+
+            initBackToTop();
+
+        });
+
+    </script>
+
+    <script src="fix_text.js"></script>
+
+</body>
+
+
+
+</html>

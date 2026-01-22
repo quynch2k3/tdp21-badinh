@@ -1,0 +1,530 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên Hệ - Tổ Dân Phố 21</title>
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V8">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .contact-info-row {
+            display: flex;
+            margin-bottom: 20px;
+            align-items: flex-start;
+        }
+
+        .contact-icon {
+            width: 40px;
+            height: 40px;
+            background: #eff6ff;
+            color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .contact-label {
+            font-weight: bold;
+            color: #374151;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        .contact-value {
+            color: #4b5563;
+        }
+
+        .contact-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-family: inherit;
+        }
+
+        .contact-form input:focus,
+        .contact-form textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 104, 255, 0.1);
+        }
+
+        .btn-submit {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: #1e40af;
+        }
+    </style>
+
+    <!-- FONT CHỮ MỚI: ROBOTO (Hỗ trợ Tiếng Việt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+
+</head>
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- UTILITY BAR (OFFICIAL FEEL) -->
+        <div class="utility-bar">
+            <div class="utility-left">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="current-date">Đang tải ngày...</span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-clock"></i>
+                <span id="current-time">--:--:--</span>
+            </div>
+            <div class="utility-center">
+                <span class="utility-text-scroll" data-i18n="welcome_msg">CHÀO MỪNG QUÝ KHÁCH ĐẾN VỚI CỔNG THÔNG TIN
+                    ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</span>
+            </div>
+
+            <div class="utility-right">
+                new google.translate.TranslateElement({
+                pageLanguage: 'vi',
+                includedLanguages: 'en,vi',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+                }, 'google_translate_element');
+                }
+                </script>
+                <script type="text/javascript"
+                    src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+                <!-- CUSTOM CONTROL SCRIPT -->
+                <script>
+                    function setLang(lang) {
+                        console.log("Setting language to:", lang);
+
+                        // 1. Notification
+                        if (window.showToast) {
+                            window.showToast(lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...');
+                        } else {
+                            let toast = document.createElement('div');
+                            toast.innerText = lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...';
+                            toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#2196F3; color:white; padding:10px 20px; border-radius:4px; z-index:99999;';
+                            document.body.appendChild(toast);
+                        }
+
+                        // 2. Cookie Logic (Aggressive)
+                        if (lang === 'vi') {
+                            // Clear cookies in every possible way
+                            let domains = [window.location.hostname, "." + window.location.hostname, ""];
+                            let paths = ["/", window.location.pathname];
+
+                            domains.forEach(d => {
+                                paths.forEach(p => {
+                                    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + p + (d ? "; domain=" + d : "");
+                                });
+                            });
+                        } else {
+                            // Set cookies in every possible way
+                            let val = "/vi/en";
+                            document.cookie = "googtrans=" + val + "; path=/";
+                            document.cookie = "googtrans=" + val + "; path=/; domain=" + window.location.hostname;
+                        }
+
+                        // 3. Reload to apply
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    }
+
+                    // ON LOAD: Check and set selector
+                    window.addEventListener('load', function () {
+                        var match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+                        var sel = document.getElementById('custom-lang-selector');
+
+                        // Console debugging
+                        console.log("Current Cookie:", document.cookie);
+
+                        if (match && match[2].includes('/en') && sel) {
+                            sel.value = 'en';
+                            // Show success toast
+                            let toast = document.createElement('div');
+                            toast.innerHTML = '<i class="fa-solid fa-check"></i> Translated to English';
+                            toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#4CAF50; color:white; padding:10px 20px; border-radius:4px; z-index:99999; animation: fadein 0.5s;';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 4000);
+                        }
+                    });
+                </script>
+
+
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <header class="top-banner">
+            <div class="banner-content">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Vietnam.svg/1200px-Emblem_of_Vietnam.svg.png"
+                    alt="Quốc Huy" class="logo-img">
+                <div class="banner-text">
+                    <div class="org-name-1" data-i18n="org_sub">Ủy Ban Nhân Dân Phường Ba Đình</div>
+                    <h1 class="org-name-2" data-i18n="page_header">CỔNG THÔNG TIN ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav class="main-nav">
+            <ul>
+                <li><a href="index.html" class="nav-item"><i class="fa-solid fa-home"></i> <span
+                            data-i18n="nav_home">Trang Chủ</span></a></li>
+                <li><a href="dong-gop.html" class="nav-item" style="background-color: var(--primary-red);"><i
+                            class="fa-solid fa-hand-holding-heart"></i> <span>ĐÓNG GÓP & VẬN ĐỘNG</span></a></li>
+                <li class="dropdown">
+                    <a href="cac-doan-the.html" class="nav-item"><i class="fa-solid fa-users"></i> <span
+                            data-i18n="nav_groups">CÁC ĐOÀN THỂ</span> <i class="fa-solid fa-caret-down"
+                            style="margin-left:5px;"></i></a>
+                    <div class="dropdown-content">
+                        <!-- CHI BỘ -->
+                        <div class="dropdown-sub">
+                            <a href="chi-bo.html?category=CB" data-i18n="group_chibo">Chi Bộ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="chi-bo.html?category=CB">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=CB">Tin Tức Chi Bộ</a>
+                                <a href="chi-bo.html?category=CB&section=notify">Văn Bản - Chỉ Đạo</a>
+                            </div>
+                        </div>
+
+                        <!-- MẶT TRẬN TỔ QUỐC -->
+                        <div class="dropdown-sub">
+                            <a href="mat-tran-to-quoc.html?category=MT" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
+                            <div class="dropdown-sub-content">
+                                <a href="mat-tran-to-quoc.html?category=MT">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=MT">Tin Tức - Sự Kiện</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI PHỤ NỮ -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="group_phunu">Hội Phụ Nữ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-phu-nu.html?category=PHU_NU">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=PHU_NU">Tin Tức Hội Phụ Nữ</a>
+                                <a href="hoi-phu-nu.html?category=PHU_NU&section=movements">Phong Trào Thi Đua</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI CỰU CHIẾN BINH -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="group_ccb">Hội Cựu Chiến Binh</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-cuu-chien-binh.html?category=CCB">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=CCB">Tin Tức CCB</a>
+                            </div>
+                        </div>
+
+                        <!-- ĐOÀN THANH NIÊN -->
+                        <div class="dropdown-sub">
+                            <a href="doan-thanh-nien.html?category=TN" data-i18n="group_thanhnien">Đoàn Thanh Niên</a>
+                            <div class="dropdown-sub-content">
+                                <a href="doan-thanh-nien.html?category=TN">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=TN">Tin Tức - Hoạt Động</a>
+                                <a href="doan-thanh-nien.html?category=TN&section=youth">Góc Thanh Niên</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI NGƯỜI CAO TUỔI -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="group_nct">Hội Người Cao Tuổi</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-nguoi-cao-tuoi.html?category=NCT">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=NCT">Tin Tức NCT</a>
+                            </div>
+                        </div>
+
+                        <!-- BAN KHUYẾN HỌC -->
+                        <div class="dropdown-sub">
+                            <a href="ban-khuyen-hoc.html?category=KH" data-i18n="group_khuyenhoc">Ban Khuyến Học</a>
+                            <div class="dropdown-sub-content">
+                                <a href="ban-khuyen-hoc.html?category=KH">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=KH">Tin Tức Khuyến Học</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </li>
+
+                <li><a href="lien-he.html" class="nav-item active"><i class="fa-solid fa-address-book"></i> <span
+                            data-i18n="nav_contact">Liên Hệ</span></a></li>
+                <li class="login-item" style="margin-left: auto;"><a href="admin.html"><i
+                            class="fa-solid fa-user-gear"></i> <span data-i18n="nav_login">Đăng Nhập</span></a></li>
+            </ul>
+        </nav>
+
+        </nav>
+
+        <!-- MAIN LAYOUT -->
+        <div class="main-content">
+            <!-- LEFT COLUMN (Content) -->
+            <div class="left-col">
+                <div class="section-box">
+                    <div class="box-header">
+                        <span class="box-title" data-i18n="nav_contact">THÔNG TIN LIÊN HỆ</span>
+                    </div>
+                    <div class="box-body" style="padding: 25px;">
+
+                        <!-- Info Grid -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+                            <!-- Column 1: Info -->
+                            <div>
+                                <h3 style="color: var(--primary-red); margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid #eee; padding-bottom: 10px;"
+                                    data-i18n="contact_header_leader">
+                                    Ban Lãnh Đạo Tổ Dân Phố</h3>
+
+                                <div class="contact-info-row">
+                                    <div class="contact-icon"><i class="fa-solid fa-location-dot"></i></div>
+                                    <div>
+                                        <span class="contact-label" data-i18n="contact_addr_office">Địa chỉ trụ
+                                            sở:</span>
+                                        <span class="contact-value" data-i18n="footer_addr">Nhà Sinh Hoạt Cộng Đồng Số
+                                            21, Phường Ba Đình, TP Hà
+                                            Nội</span>
+                                    </div>
+                                </div>
+
+                                <div class="contact-info-row">
+                                    <div class="contact-icon"><i class="fa-solid fa-phone"></i></div>
+                                    <div>
+                                        <span class="contact-label" data-i18n="contact_phone_label">Điện thoại liên
+                                            hệ:</span>
+                                        <span class="contact-value">024.3....... (Ông Nguyễn Văn A - Tổ Trưởng)</span>
+                                    </div>
+                                </div>
+
+                                <div class="contact-info-row">
+                                    <div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
+                                    <div>
+                                        <span class="contact-label" data-i18n="contact_email_label">Email công
+                                            vụ:</span>
+                                        <span class="contact-value">todanpho21@hanoi.gov.vn</span>
+                                    </div>
+                                </div>
+
+                                <div class="contact-info-row">
+                                    <div class="contact-icon"><i class="fa-solid fa-clock"></i></div>
+                                    <div>
+                                        <span class="contact-label" data-i18n="contact_work_hours">Giờ làm việc:</span>
+                                        <span class="contact-value" data-i18n="contact_work_time">Sáng: 8h00 - 11h30 |
+                                            Chiều: 14h00 - 17h00<br>(Từ Thứ
+                                            2 đến Thứ 6)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Column 2: Map -->
+                            <div>
+                                <h3 style="color: var(--primary-blue); margin-bottom: 20px; font-size: 18px; border-bottom: 2px solid #eee; padding-bottom: 10px;"
+                                    data-i18n="contact_map_header">
+                                    Bản Đồ Chỉ Dẫn</h3>
+                                <div style="border-radius: 8px; overflow: hidden; border: 1px solid #ddd;">
+                                    <iframe
+                                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3723.924278667683!2d105.8194541747693!3d21.03498848061325!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab0d127a01e7%3A0xab069cd4eaa76232!2zSW1wZXJpYSBHYXJkZW4sIDIwMyBOZ3V54buFbiBIdXkgVMaw4bufbmcsIFRoYW5oIFh1w6JuIFRydW5nLCBUaGFuaCBYdcOibiwgSMOgIE7hu5lpLCBWaWV0bmFt!5e0!3m2!1sen!2s!4v1709280000000!5m2!1sen!2s"
+                                        width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"
+                                        referrerpolicy="no-referrer-when-downgrade">
+                                    </iframe>
+                                    <!-- Note: Coordinates are placeholder for Hanoi -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Form -->
+                        <div
+                            style="margin-top: 40px; background: #f9fafb; padding: 25px; border-radius: 12px; border: 1px solid #eee;">
+                            <h3 style="text-align: center; color: #111827; margin-bottom: 25px; text-transform: uppercase;"
+                                data-i18n="contact_form_title">
+                                Gửi Ý Kiến Đóng Góp / Phản Ánh</h3>
+                            <form onsubmit="submitContact(event)" class="contact-form">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                    <div>
+                                        <label data-i18n="contact_name_label">Họ và tên của bạn:</label>
+                                        <input type="text" id="inp-name" placeholder="Nhập họ tên đầy đủ"
+                                            data-i18n="placeholder_name" required>
+                                    </div>
+                                    <div>
+                                        <label data-i18n="contact_info_label">Số điện thoại / Email:</label>
+                                        <input type="text" id="inp-contact" placeholder="Đề chúng tôi liên hệ lại"
+                                            data-i18n="placeholder_contact" required>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label data-i18n="contact_subject_label">Tiêu đề góp ý:</label>
+                                    <input type="text" id="inp-subject"
+                                        placeholder="Ví dụ: Phản ánh vị vệ sinh môi trường..."
+                                        data-i18n="placeholder_subject" required>
+                                </div>
+
+                                <div>
+                                    <label data-i18n="contact_message_label">Nội dung chi tiết:</label>
+                                    <textarea id="inp-message" rows="5" placeholder="Nội dung ý kiến của bạn..."
+                                        data-i18n="placeholder_message" required></textarea>
+                                </div>
+
+                                <div style="text-align: center;">
+                                    <button type="submit" class="btn-submit"><i class="fa-solid fa-paper-plane"
+                                            style="margin-right: 8px;"></i><span data-i18n="contact_submit_btn">Gửi Ý
+                                            kiến Về Tổ Dân Phố</span></button>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- NEWS SECTION -->
+                <div class="section-box" style="margin-top: 20px;">
+                    <div class="box-header">
+                        <span class="box-title" data-i18n="news_featured">TIN TỨC HOẠT ĐỘNG</span>
+                    </div>
+                    <div class="box-body" id="qt-page-news">
+                        <div style="padding:10px;">Đang tải tin tức...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN (Sidebar) -->
+            <div class="right-col">
+                <div class="section-box">
+                    <div class="box-header">
+                        <span class="box-title" data-i18n="box_management">ĐIỀU HÀNH TÁC NGHIỆP</span>
+                    </div>
+                    <div class="box-body" style="padding: 10px;">
+                        <a href="chi-bo.html" class="sidebar-link">Chi Bộ</a>
+                        <a href="mat-tran-to-quoc.html" class="sidebar-link">Mặt Trận Tổ Quốc</a>
+                        <a href="hoi-phu-nu.html" class="sidebar-link">Hội Phụ Nữ</a>
+                        <a href="hoi-cuu-chien-binh.html" class="sidebar-link">Hội Cựu Chiến Binh</a>
+                        <a href="doan-thanh-nien.html" class="sidebar-link">Đoàn Thanh Niên</a>
+                        <a href="hoi-nguoi-cao-tuoi.html" class="sidebar-link">Hội Người Cao Tuổi</a>
+
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="box-header">
+                        <span class="box-title" data-i18n="box_notifications">THÔNG BÁO MỚI</span>
+                    </div>
+                    <div class="box-body">
+                        <marquee direction="up" scrollamount="2" height="150" onmouseover="this.stop()"
+                            onmouseout="this.start()" id="qt-marquee">
+                            <div style="padding:10px;">Đang tải...</div>
+                        </marquee>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <footer>
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p style="font-size: 16px; margin-bottom: 15px;"><strong data-i18n="footer_title">BAN LÃNH ĐẠO TỔ
+                            DÂN PHỐ SỐ 21 - PHƯỜNG BA
+                            ĐÌNH</strong></p>
+                    <p data-i18n="footer_addr">Địa chỉ: Nhà Sinh Hoạt Cộng Đồng Số 21, Phường Ba Đình, TP Hà Nội</p>
+                    <p data-i18n="footer_contact">Điện thoại: 024.3....... | Email: todanpho21@hanoi.gov.vn</p>
+                    <p style="margin-top: 15px; font-style: italic; opacity: 0.8;" data-i18n="footer_copyright">Bản
+                        quyền thuộc vị Tổ Dân Phố 21. Ghi
+                        rõ nguồn "Cổng TTĐT TPD21" khi phát hành lại thông tin từ website này.</p>
+                </div>
+            </div>
+        </footer>
+
+        <!-- BACK TO TOP BUTTON -->
+        <button id="btn-back-to-top" title="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="db.js"></script>
+    <script src="cms.js?v=UI_UPGRADE_V5"></script>
+    <script src="lang.js?v=2"></script>
+    <script>
+        window.onload = function () {
+            // Load Common News
+            loadNews('ALL', 'qt-page-news');
+            loadMarquee('qt-marquee');
+            fetchWeather();
+            initBackToTop();
+        };
+
+        async function submitContact(e) {
+            e.preventDefault();
+
+            const btn = e.target.querySelector('.btn-submit');
+            const originalText = btn.innerHTML;
+
+            // Get values by ID (Stable)
+            const name = document.getElementById('inp-name').value;
+            const contact = document.getElementById('inp-contact').value;
+            const subject = document.getElementById('inp-subject').value;
+            const message = document.getElementById('inp-message').value;
+
+            // UI Loading
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang gửi...';
+            btn.disabled = true;
+
+            try {
+                // Save to Firestore
+                await db.collection('feedback').add({
+                    name: name,
+                    contact: contact,
+                    subject: subject,
+                    message: message,
+                    date: new Date().toISOString(),
+                    status: 'New' // New, Processed
+                });
+
+                const alertMsg = translations[currentLang]['contact_success_alert'] || "Đã gửi thành công!";
+                alert(alertMsg);
+                e.target.reset();
+
+            } catch (err) {
+                console.error(err);
+                const errorPrefix = translations[currentLang]['contact_error_alert'] || "Lỗi khi gửi: ";
+                alert(errorPrefix + err.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+    <script src="fix_text.js"></script>
+</body>
+
+</html>

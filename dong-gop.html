@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đóng Góp & Ủng Hộ - Tổ Dân Phố 21</title>
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V8">
+    <link rel="stylesheet" href="donation.css?v=MOBILE_FINAL_v2">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Crypto JS for MoMo Signature -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- UTILITY BAR -->
+        <div class="utility-bar">
+            <div class="utility-left">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="current-date">Đang tải ngày...</span>
+            </div>
+            <div class="utility-center">
+                <span class="utility-text-scroll" data-i18n="welcome_msg">CHÀO MỪNG QUÝ KHÁCH ĐẾN VỚI CỔNG THÔNG TIN
+                    ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</span>
+            </div>
+            <div class="utility-right">
+                <!-- Language Selector Removed -->
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <header class="top-banner">
+            <div class="banner-content">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Vietnam.svg/1200px-Emblem_of_Vietnam.svg.png"
+                    alt="Quốc Huy" class="logo-img" id="qt-page-logo">
+                <div class="banner-text">
+                    <div class="org-name-1" id="qt-org-sub">CỔNG THÔNG TIN ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</div>
+                    <h1 class="org-name-2" id="qt-page-header">ĐÓNG GÓP & ỦNG HỘ CỘNG ĐỒNG</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav class="main-nav" id="main-nav">
+            <ul>
+                <li><a href="index.html" class="nav-item"><i class="fa-solid fa-home"></i> <span
+                            data-i18n="nav_home">Trang Chủ</span></a></li>
+                <li><a href="dong-gop.html" class="nav-item active" style="background-color: var(--primary-red);"><i
+                            class="fa-solid fa-hand-holding-heart"></i> <span>ĐÓNG GÓP & VẬN ĐỘNG</span></a></li>
+                <li class="dropdown">
+                    <a href="cac-doan-the.html" class="nav-item"><i class="fa-solid fa-users"></i> <span
+                            data-i18n="nav_groups">CÁC ĐOÀN THỂ</span> <i class="fa-solid fa-caret-down"
+                            style="margin-left:5px;"></i></a>
+                    <div class="dropdown-content">
+                        <!-- CHI BỘ -->
+                        <div class="dropdown-sub">
+                            <a href="chi-bo.html?category=CB" data-i18n="group_chibo">Chi Bộ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="chi-bo.html?category=CB" data-i18n="intro_general">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=CB" data-i18n="news_chibo">Tin Tức Chi Bộ</a>
+                                <a href="chi-bo.html?category=CB&section=notify" data-i18n="doc_guidelines">Văn Bản -
+                                    Chỉ Đạo</a>
+                            </div>
+                        </div>
+
+                        <!-- MẶT TRẬN TỔ QUỐC -->
+                        <div class="dropdown-sub">
+                            <a href="mat-tran-to-quoc.html?category=MT" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
+                            <div class="dropdown-sub-content">
+                                <a href="mat-tran-to-quoc.html?category=MT" data-i18n="intro_general">Giới Thiệu
+                                    Chung</a>
+                                <a href="tin-tuc.html?category=MT" data-i18n="news_mttq">Tin Tức - Sự Kiện</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI PHỤ NỮ -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="group_phunu">Hội Phụ Nữ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="intro_general">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=PHU_NU" data-i18n="news_phunu">Tin Tức Hội Phụ Nữ</a>
+                                <a href="hoi-phu-nu.html?category=PHU_NU&section=movements"
+                                    data-i18n="movement_phong_trao">Phong Trào Thi Đua</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI CỰU CHIẾN BINH -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="group_ccb">Hội Cựu Chiến Binh</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="intro_general">Giới Thiệu
+                                    Chung</a>
+                                <a href="tin-tuc.html?category=CCB" data-i18n="news_ccb">Tin Tức CCB</a>
+                            </div>
+                        </div>
+
+                        <!-- ĐOÀN THANH NIÊN -->
+                        <div class="dropdown-sub">
+                            <a href="doan-thanh-nien.html?category=TN" data-i18n="group_thanhnien">Đoàn Thanh Niên</a>
+                            <div class="dropdown-sub-content">
+                                <a href="doan-thanh-nien.html?category=TN" data-i18n="intro_general">Giới Thiệu
+                                    Chung</a>
+                                <a href="tin-tuc.html?category=TN" data-i18n="news_thanhnien">Tin Tức - Hoạt Động</a>
+                                <a href="doan-thanh-nien.html?category=TN&section=youth" data-i18n="youth_corner">Góc
+                                    Thanh Niên</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI NGƯỜI CAO TUỔI -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="group_nct">Hội Người Cao Tuổi</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="intro_general">Giới Thiệu
+                                    Chung</a>
+                                <a href="tin-tuc.html?category=NCT" data-i18n="news_nct">Tin Tức NCT</a>
+                            </div>
+                        </div>
+
+                        <!-- BAN KHUYẾN HỌC -->
+                        <div class="dropdown-sub">
+                            <a href="ban-khuyen-hoc.html?category=KH" data-i18n="group_khuyenhoc">Ban Khuyến Học</a>
+                            <div class="dropdown-sub-content">
+                                <a href="ban-khuyen-hoc.html?category=KH" data-i18n="intro_general">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=KH" data-i18n="news_khuyenhoc">Tin Tức Khuyến Học</a>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li><a href="lien-he.html" class="nav-item"><i class="fa-solid fa-address-book"></i> <span
+                            data-i18n="nav_contact">Liên Hệ</span></a></li>
+                <li style="margin-left: auto;" class="login-item"><a href="admin.html"><i
+                            class="fa-solid fa-user-gear"></i>
+                        <span data-i18n="nav_login">Đăng Nhập</span></a></li>
+            </ul>
+        </nav>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content" style="max-width: 1200px; margin: 0 auto; display: block;">
+            <div class="section-box" style="width: 100%;">
+                <div class="box-header">
+                    <span class="box-title" style="letter-spacing: 1px;">CHƯƠNG TRÌNH VẬN ĐỘNG CỘNG ĐỒNG & TRI ÂN
+                        TẤM LÒNG VÀNG</span>
+                </div>
+                <div class="box-body"
+                    style="min-height: 400px; padding: 40px; background: rgba(255,255,255,0.5); backdrop-filter: blur(10px);">
+                    <!-- INTRO TEXT WRAPPER -->
+                    <div id="donation-intro-text">
+                        <div
+                            style="margin-bottom: 35px; background: #fffcfc; border-left: 4px solid var(--primary-red); padding: 25px; border-radius: 0 12px 12px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+                            <h2
+                                style="color: #be0000; font-size: 20px; font-weight: 800; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                <i class="fa-solid fa-quote-left" style="opacity: 0.3; margin-right: 10px;"></i>
+                                Kính thưa toàn thể Nhân dân Tổ dân phố số 21,
+                            </h2>
+                            <p
+                                style="line-height: 1.8; color: #333; font-size: 16px; text-align: justify; margin-bottom: 15px;">
+                                Phát huy truyền thống "Tương thân, tương ái" và tinh thần đoàn kết tốt đẹp của dân
+                                tộc, trong những năm qua, cộng đồng dân cư Tổ dân phố số 21 luôn nỗ lực xây dựng đời
+                                sống văn hóa, tinh thần phong phú và cảnh quan đô thị văn minh, hiện đại. Để hiện
+                                thực hóa những mục tiêu chung vì lợi ích của tập thể, Ban Lãnh đạo Tổ dân phố cùng
+                                các Đoàn thể chính trị - xã hội trân trọng kêu gọi sự chung tay, góp sức từ toàn thể
+                                nhân dân.
+                            </p>
+                            <p
+                                style="line-height: 1.8; color: #333; font-size: 16px; text-align: justify; margin-bottom: 15px;">
+                                Mỗi sự đóng góp của Quý vị, dù ít hay nhiều, đều là nguồn động viên to lớn và là
+                                những "viên gạch hồng" quý giá, góp phần kiến thiết các công trình phúc lợi chung,
+                                cũng như sẻ chia, hỗ trợ những hoàn cảnh khó khăn trong khu dân cư. Chúng tôi tin
+                                tưởng sâu sắc rằng, sức mạnh từ sự đồng lòng và tấm lòng hảo tâm của Quý vị chính là
+                                nền tảng vững chắc để Tổ dân phố số 21 ngày càng phát triển bền vững, nghĩa tình.
+                            </p>
+                            <p
+                                style="line-height: 1.8; color: #444; font-size: 15px; font-style: italic; background: #fef2f2; padding: 15px; border-radius: 8px;">
+                                <i class="fa-solid fa-shield-halved" style="color: #be0000; margin-right: 8px;"></i>
+                                <strong>Cam kết minh bạch:</strong> Với phương châm "Dân biết, dân bàn, dân làm, dân
+                                kiểm tra", và nhằm nâng cao hiệu quả quản lý, Tổ dân phố triển khai hệ thống tiếp
+                                nhận đóng góp trực tuyến thông qua hệ thống <strong>Cổng Thanh Toán Điện Tử
+                                    MOMO</strong>. Mọi thông tin ủng hộ
+                                sẽ được hệ thống ghi nhận chính xác, cập nhật liên tục theo thời gian thực và công
+                                khai minh bạch trên Cổng thông tin điện tử cũng như tại Bảng tin cộng đồng, đảm bảo
+                                sự rõ ràng và tin cậy tuyệt đối.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- MASTER FUND WIDGET (ALL) -->
+                    <div id="all-funds-container">
+                        <div style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin"></i> Đang
+                            tải danh sách quỹ...</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- FOOTER -->
+            <footer>
+                <div class="footer-content">
+                    <div class="footer-info">
+                        <p style="font-size: 16px; margin-bottom: 15px;"><strong>BAN LÃNH ĐẠO TỔ DÂN PHỐ SỐ 21</strong>
+                        </p>
+                        <p>Địa chỉ: Nhà Sinh Hoạt Cộng Đồng Số 21, Phường Ba Đình, TP Hà Nội</p>
+                        <p>Bản quyền thuộc vị Tổ Dân Phố 21.</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <!-- SCRIPTS -->
+        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+        <script src="firebase-config.js"></script>
+        <script src="db.js"></script>
+        <script src="cms.js?v=FIX_LOGIN_NAV_V1"></script>
+        <style>
+            /* PAGE SPECIFIC STYLES For Dong Gop */
+            #all-funds-container .fund-widget-title {
+                display: none;
+            }
+
+            /* URGENT MOBILE FIX - OVERRIDE INLINE STYLES */
+            @media (max-width: 768px) {
+                .box-body {
+                    padding: 10px !important;
+                    /* Override inline 40px */
+                }
+
+                .main-content {
+                    padding: 0 !important;
+                }
+
+                .section-box {
+                    margin-bottom: 10px !important;
+                    box-shadow: none !important;
+                    border: none !important;
+                    background: transparent !important;
+                }
+
+                #donation-intro-text>div {
+                    padding: 15px !important;
+                    margin-bottom: 20px !important;
+                }
+            }
+        </style>
+        <script>
+            window.onload = function () {
+                if (typeof loadMarquee === 'function') loadMarquee('sidebar-marquee');
+                startClock();
+                fetchWeather();
+
+                // INIT FUNDS PAGE (List or Detail)
+                initFundsPage('all-funds-container');
+            };
+        </script>
+</body>
+
+</html>

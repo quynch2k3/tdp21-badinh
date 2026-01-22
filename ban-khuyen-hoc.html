@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ban Khuyến Học - Tổ Dân Phố 21</title>
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V13">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- FONT CHỮ MỚI: ROBOTO (Hỗ trợ Tiếng Việt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- UTILITY BAR (OFFICIAL FEEL) -->
+        <div class="utility-bar">
+            <div class="utility-left">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="current-date">Đang tải ngày...</span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-clock"></i>
+                <span id="current-time">--:--:--</span>
+            </div>
+            <div class="utility-center">
+                <span class="utility-text-scroll" data-i18n="welcome_msg">CHÀO MỪNG QUÝ KHÁCH ĐẾN VỚI CỔNG THÔNG TIN
+                    ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</span>
+            </div>
+
+            <div class="utility-right">
+                <div id="google_translate_element" style="display:none"></div>
+                <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                        new google.translate.TranslateElement({
+                            pageLanguage: 'vi',
+                            includedLanguages: 'en,vi',
+                            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                            autoDisplay: false
+                        }, 'google_translate_element');
+                    }
+                </script>
+                <script type="text/javascript"
+                    src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+                <!-- CUSTOM CONTROL SCRIPT -->
+                <script>
+                    function setLang(lang) {
+                        console.log("Setting language to:", lang);
+
+                        // 1. Notification
+                        if (window.showToast) {
+                            window.showToast(lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...');
+                        } else {
+                            let toast = document.createElement('div');
+                            toast.innerText = lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...';
+                            toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#2196F3; color:white; padding:10px 20px; border-radius:4px; z-index:99999;';
+                            document.body.appendChild(toast);
+                        }
+
+                        // 2. Cookie Logic (Aggressive)
+                        if (lang === 'vi') {
+                            // Clear cookies in every possible way
+                            let domains = [window.location.hostname, "." + window.location.hostname, ""];
+                            let paths = ["/", window.location.pathname];
+
+                            domains.forEach(d => {
+                                paths.forEach(p => {
+                                    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + p + (d ? "; domain=" + d : "");
+                                });
+                            });
+                        } else {
+                            // Set cookies in every possible way
+                            let val = "/vi/en";
+                            document.cookie = "googtrans=" + val + "; path=/";
+                            document.cookie = "googtrans=" + val + "; path=/; domain=" + window.location.hostname;
+                        }
+
+                        // 3. Reload to apply
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    }
+
+                    // ON LOAD: Check and set selector
+                    window.addEventListener('load', function () {
+                        var match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+                        var sel = document.getElementById('custom-lang-selector');
+
+                        // Console debugging
+                        console.log("Current Cookie:", document.cookie);
+
+                        if (match && match[2].includes('/en') && sel) {
+                            sel.value = 'en';
+                            // Show success toast
+                            let toast = document.createElement('div');
+                            toast.innerHTML = '<i class="fa-solid fa-check"></i> Translated to English';
+                            toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#4CAF50; color:white; padding:10px 20px; border-radius:4px; z-index:99999; animation: fadein 0.5s;';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 4000);
+                        }
+                    });
+                </script>
+
+
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <header class="top-banner">
+            <div class="banner-content">
+                <!-- Logo t?m thểi t? nguá»“n phổ biến, người dÃ¹ng cÃ³ thể thay đội -->
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Vietnam.svg/1200px-Emblem_of_Vietnam.svg.png"
+                    alt="Ban Khuyến Học Logo" class="logo-img">
+                <div class="banner-text">
+                    <div class="org-name-1" data-i18n="org_sub_khuyenhoc">TỔ DÂN PHỐ SỐ 21</div>
+                    <h1 class="org-name-2" data-i18n="header_khuyenhoc">BAN KHUYẾN HỌC</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav class="main-nav">
+            <ul>
+                <!-- Menu sẽ được tải tự động từ cms.js -->
+            </ul>
+        </nav>
+
+        </nav>
+
+        <!-- MAIN CONTENT WRAPPER -->
+        <div class="main-content">
+
+            <!-- VIEW 1: DASHBOARD (Default) -->
+            <div id="dashboard-view" style="display: flex; width: 100%; gap: 20px;">
+                <!-- LEFT COLUMN (Main Content) -->
+                <div class="left-col">
+                    <!-- NEWS SECTION (Dynamic - Moved to Top) -->
+                    <div class="section-box" style="margin-top: 20px;">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="news_title_kh">TIN TỨC KHUYẾN HỌC</span>
+                            <a href="tin-tuc.html?category=KH"
+                                style="font-size: 11px; color: #666; font-style: italic; margin-left:10px;"
+                                data-i18n="view_all">Xem tất cả
+                                >></a>
+                        </div>
+                        <div class="box-body" id="qt-page-news">
+                            <div style="font-style: italic; color: #666; padding: 10px;" data-i18n="loading_news">Đang
+                                tải
+                                tin tức...</div>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="intro_general">GIỚI THIỆU CHUNG</span>
+                        </div>
+                        <div class="box-body" style="text-align: justify; line-height: 1.6;">
+                            <p style="margin-bottom: 15px;">
+                                <strong>Ban Khuyến học Tổ dân phố sự 21</strong> thắp sáng ngọn lửa hiếu học,
+                                khơi dậy truyền thống "Tôn sư trọng đạo" ngàn đời của dân tộc.
+                                Chúng tôi cam kết đồng hành cùng mỗi gia đình, dòng họ để xây dựng một xã hội học tập
+                                phát triển bền vững,
+                                nơi tri thức được tôn vinh và nhân tài được trọng dụng.
+                            </p>
+
+                            <p style="margin-bottom: 20px;">
+                                Với tâm niệm <em>"Hiền tài là nguyên khí quốc gia"</em>, Ban Khuyến học không ngừng nỗ
+                                lực ươm mầm những hạt giống trí tuệ,
+                                kịp thời động viên, khen thưởng những tấm gương vượt khó học giỏi,
+                                góp phần đào tạo nguồn nhân lực chất lượng cao cho công cuộc xây dựng và bảo vệ Tổ quốc.
+                            </p>
+
+                            <div style="border: 1px solid #2196F3; border-radius: 8px; overflow: hidden;">
+                                <div
+                                    style="background-color: #2196F3; color: white; padding: 10px; font-weight: bold; text-align: center;">
+                                    <i class="fa-solid fa-građưation-cap"></i> HOẠT ĐỘNG THƯỜNG NIÊN
+                                </div>
+                                <div style="padding: 15px; background-color: #e3f2fd;">
+                                    <ul style="list-style: none; padding: 0; margin: 0;">
+                                        <li style="margin-bottom: 10px; display: flex; align-items: start;">
+                                            <i class="fa-solid fa-star"
+                                                style="color: #ff9800; margin-top: 4px; margin-right: 10px; font-size: 12px;"></i>
+                                            <span>Tuyên dương, khen thưởng học sinh giỏi, học sinh đỗ đạt cao trong các
+                                                kỳ
+                                                thi quốc gia.</span>
+                                        </li>
+                                        <li style="margin-bottom: 10px; display: flex; align-items: start;">
+                                            <i class="fa-solid fa-hand-holding-heart"
+                                                style="color: #f44336; margin-top: 4px; margin-right: 10px; font-size: 12px;"></i>
+                                            <span>Trao học bổng "Tiếp sức đến trường" cho học sinh nghèo vượt khó,
+                                                khuyết
+                                                tật.</span>
+                                        </li>
+                                        <li style="display: flex; align-items: start;">
+                                            <i class="fa-solid fa-book-open"
+                                                style="color: #4caf50; margin-top: 4px; margin-right: 10px; font-size: 12px;"></i>
+                                            <span>Quản lý và phát triển "Tủ sách hiếu học" tại Nhà văn hóa Tổ dân
+                                                phố.</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div style="text-align: right; margin-top: 10px;">
+                                <a href="ban-khuyen-hoc.html?section=intro"
+                                    style="color: #2196F3; font-weight: bold; font-size: 14px;">Xem chi tiết >></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN (Sidebar) -->
+                <div class="right-col">
+                    <div id="fund-widget-kh"></div>
+                    <script>
+                        window.addEventListener('load', function () {
+                            // Wait for cms.js to be ready
+                            setTimeout(() => {
+                                if (typeof renderFundsWidget === 'function') {
+                                    renderFundsWidget('fund-widget-kh', 'KH');
+                                }
+                            }, 1000);
+                        });
+                    </script>
+
+                    <!-- Administrative Links -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="box_management">ĐIỀU HÀNH TÁC NGHIỆP</span>
+                        </div>
+                        <div class="box-body" style="padding: 10px;">
+                            <a href="mat-tran-to-quoc.html" class="sidebar-link">Mặt Trận Tổ Quốc</a>
+                            <a href="hoi-phu-nu.html" class="sidebar-link">Hội Phụ Nữ</a>
+                            <a href="hoi-cuu-chien-binh.html" class="sidebar-link">Hội Cựu Chiến Binh</a>
+                            <a href="doan-thanh-nien.html" class="sidebar-link">Đoàn Thanh Niên</a>
+                            <a href="hoi-nguoi-cao-tuoi.html" class="sidebar-link">Hội Người Cao Tuổi</a>
+                            <a href="ban-khuyen-hoc.html" class="sidebar-link"
+                                style="color: var(--primary-red); font-weight: bold;">Ban Khuyến Học</a>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="box_notifications">THÔNG BÁO MỚI</span>
+                        </div>
+                        <div class="box-body">
+                            <marquee direction="up" scrollamount="2" height="150" onmouseover="this.stop()"
+                                onmouseout="this.start()" id="qt-marquee">
+                                <div style="padding:10px;" data-i18n="loading_notify">Đang tải thông báo...</div>
+                            </marquee>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="box_contact_work">LIÊN HỆ CÔNG TÁC</span>
+                        </div>
+                        <div class="box-body">
+                            <p><strong>Trưởng Ban khuyến học:</strong> Bà Trần Thị E</p>
+                            <p>SĐT: 088.......</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: DETAIL CONTENT (Hidden by Default) -->
+            <div id="detail-view"
+                style="display: none; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 30px;">
+                <div id="detail-intro-kh" style="display: none;">
+                    <button onclick="window.location.href='ban-khuyen-hoc.html'"
+                        style="margin-bottom: 20px; padding: 8px 15px; border: 1px solid #ddd; background: #f5f5f5; cursor: pointer; border-radius: 4px;">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+                    </button>
+                    <h1
+                        style="color: #1976d2; text-align: center; text-transform: uppercase; margin-bottom: 20px; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+                        BAN KHUYẾN HỌC TỔ DÂN PHỐ SỐ 21
+                    </h1>
+
+                    <div style="font-size: 16px; line-height: 1.8; text-align: justify; color: #333;">
+                        <p style="margin-bottom: 20px;">
+                            <strong>Hội Khuyến học Việt Nam (HKHVN)</strong> - tổ chức của những tấm lòng tâm huyết với
+                            sự nghiệp "trồng người".
+                            Ban Khuyến học Tổ dân phố sự 21 không chỉ là cầu nối đưa tri thức đến với cộng đồng, mà còn
+                            là bệ phóng vững chắc cho những ước mơ bay cao, bay xa.
+                        </p>
+                        <p>Chúng tôi kiên trì mục tiêu: "Nhà nhà làm khuyến học, người người làm khuyến học", xây dựng
+                            Tổ dân phố trở thành một "Cộng đồng học tập" kiểu mẫu.</p>
+
+                        <h3
+                            style="color: #0288d1; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #0288d1; padding-left: 10px;">
+                            1. MÔ HÌNH HỌC TẬP
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                                <i class="fa-solid fa-house-chimney-user"
+                                    style="font-size: 30px; color: #1976d2; margin-bottom: 10px;"></i>
+                                <h4 style="color: #1565c0; font-size: 16px;">Gia đình học tập</h4>
+                                <p style="font-size: 13px;">Phấn đấu 95% gia đình đạt tiêu chí "Gia đình học tập".</p>
+                            </div>
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                                <i class="fa-solid fa-users"
+                                    style="font-size: 30px; color: #1976d2; margin-bottom: 10px;"></i>
+                                <h4 style="color: #1565c0; font-size: 16px;">Dòng họ học tập</h4>
+                                <p style="font-size: 13px;">Khuyến khích các dòng họ xây dựng quỹ khuyến học riêng.</p>
+                            </div>
+                            <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                                <i class="fa-solid fa-people-roof"
+                                    style="font-size: 30px; color: #1976d2; margin-bottom: 10px;"></i>
+                                <h4 style="color: #1565c0; font-size: 16px;">Cộng đồng học tập</h4>
+                                <p style="font-size: 13px;">Xây dựng TDP thành "Cộng đồng học tập" tiêu biểu.</p>
+                            </div>
+                        </div>
+
+                        <h3
+                            style="color: #0288d1; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #0288d1; padding-left: 10px;">
+                            2. TỔ CHỨC BAN KHUYẾN HỌC
+                        </h3>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff;">
+                            <thead>
+                                <tr style="background: #e1f5fe; color: #333;">
+                                    <th style="border: 1px solid #b3e5fc; padding: 10px;">STT</th>
+                                    <th style="border: 1px solid #b3e5fc; padding: 10px;">Họ tên</th>
+                                    <th style="border: 1px solid #b3e5fc; padding: 10px;">Chức vụ</th>
+                                    <th style="border: 1px solid #b3e5fc; padding: 10px;">Liên hệ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">1</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Bà <strong>Trần Thị E</strong>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Trưởng ban</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">088.......</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">2</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Ông <strong>Phạm Văn F</strong>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Phó ban</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">091.......</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3
+                            style="color: #0288d1; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #0288d1; padding-left: 10px;">
+                            3. QUỸ KHUYẾN HỌC
+                        </h3>
+                        <p>Quỹ khuyến học của Tổ dân phố được xây dựng từ sự đóng góp tự nguyện của nhân dân và các nhà
+                            hảo tâm.</p>
+                        <div
+                            style="background: #f1f8e9; padding: 15px; border-radius: 8px; border: 1px solid #c5e1a5; margin-top: 10px;">
+                            <p style="margin-bottom: 10px;"><strong><i class="fa-solid fa-piggy-bank"></i> Mức khen
+                                    thưởng hàng năm (dự kiến):</strong></p>
+                            <ul style="list-style: circle; padding-left: 20px;">
+                                <li>Học sinh Giỏi cấp 1, 2, 3: 100.000đ - 200.000đ</li>
+                                <li>Đỗ Đại học công lập: 300.000đ</li>
+                                <li>Giải Quốc gia, Quốc tế: 500.000đ - 1.000.000đ</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-info">
+                <p style="font-size: 16px; margin-bottom: 15px;"><strong data-i18n="footer_title">BAN LÃNH ĐẠO TỔ DÂN
+                        PHỐ SỐ 21 - PHƯỜNG BA
+                        ĐÌNH</strong></p>
+                <p data-i18n="footer_addr">Địa chỉ: Nhà Sinh Hoạt Cộng Đồng Số 21, Phường Ba Đình, TP Hà Nội</p>
+                <p data-i18n="footer_contact">Điện thoại: 024.3....... | Email: todanpho21@hanoi.gov.vn</p>
+                <p style="margin-top: 15px; font-style: italic; opacity: 0.8;" data-i18n="footer_copyright">Bản quyền
+                    thuộc vị Tổ Dân Phố 21. Ghi
+                    rõ nguồn "Cổng TTĐT TPD21" khi phát hành lại thông tin từ website này.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BACK TO TOP BUTTON -->
+    <button id="btn-back-to-top" title="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="db.js"></script>
+    <script src="cms.js?v=UI_UPGRADE_V5"></script>
+    <script src="lang.js?v=2"></script>
+    <script>
+        window.onload = function () {
+            renderGlobalMenu(); // Tải menu tự động
+            checkAndLoadContextArticle();
+            loadMarquee('qt-marquee');
+            loadNews('KH', 'qt-page-news');
+            loadDynamicMenu();
+            startClock();
+            fetchWeather();
+            initBackToTop();
+
+            // 2. Handle View Switching Logic based on URL Params
+            const urlParams = new URLSearchParams(window.location.search);
+            const section = urlParams.get('section');
+
+            const dashboardView = document.getElementById('dashboard-view');
+            const detailView = document.getElementById('detail-view');
+            const detailIntro = document.getElementById('detail-intro-kh');
+
+            if (section === 'intro') {
+                if (dashboardView) dashboardView.style.display = 'none';
+                if (detailView) detailView.style.display = 'block';
+                if (detailIntro) detailIntro.style.display = 'block';
+
+                // Scroll to top
+                window.scrollTo(0, 0);
+            } else {
+                if (dashboardView) dashboardView.style.display = 'flex';
+                if (detailView) detailView.style.display = 'none';
+            }
+        };
+    </script>
+    <script src="fix_text.js"></script>
+</body>
+
+</html>

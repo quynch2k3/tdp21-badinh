@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hội Phụ Nữ - Tổ Dân Phố 21</title>
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V13">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- FONT CHỮ MỚI: ROBOTO (Hỗ trợ Tiếng Việt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- UTILITY BAR (OFFICIAL FEEL) -->
+        <div class="utility-bar">
+            <div class="utility-left">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="current-date">Đang tải ngày...</span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-clock"></i>
+                <span id="current-time">--:--:--</span>
+            </div>
+            <div class="utility-center">
+                <span class="utility-text-scroll" data-i18n="welcome_msg">CHÀO MỪNG QUÝ KHÁCH ĐẾN VỚI CỔNG THÔNG TIN
+                    ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</span>
+            </div>
+
+            <div class="utility-right">
+                <div id="google_translate_element" style="display:none"></div>
+                <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                        new google.translate.TranslateElement({
+                            pageLanguage: 'vi',
+                            includedLanguages: 'en,vi',
+                            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                            autoDisplay: false
+                        }, 'google_translate_element');
+                    }
+                </script>
+                <script type="text/javascript"
+                    src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+                <!-- CUSTOM CONTROL SCRIPT -->
+                <script>
+                    function setLang(lang) {
+                        console.log("Setting language to:", lang);
+
+                        // 1. Notification
+                        if (window.showToast) {
+                            window.showToast(lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...');
+                        } else {
+                            let toast = document.createElement('div');
+                            toast.innerText = lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...';
+                            toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#2196F3; color:white; padding:10px 20px; border-radius:4px; z-index:99999;';
+                            document.body.appendChild(toast);
+                        }
+
+                        // 2. Cookie Logic (Aggressive)
+                        if (lang === 'vi') {
+                            // Clear cookies in every possible way
+                            let domains = [window.location.hostname, "." + window.location.hostname, ""];
+                            let paths = ["/", window.location.pathname];
+
+                            domains.forEach(d => {
+                                paths.forEach(p => {
+                                    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + p + (d ? "; domain=" + d : "");
+                                });
+                            });
+                        } else {
+                            // Set cookies in every possible way
+                            let val = "/vi/en";
+                            document.cookie = "googtrans=" + val + "; path=/";
+                            document.cookie = "googtrans=" + val + "; path=/; domain=" + window.location.hostname;
+                        }
+
+                        // 3. Reload to apply
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    }
+
+                    // ON LOAD: Check and set selector
+                    window.addEventListener('load', function () {
+                        var match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+                        var sel = document.getElementById('custom-lang-selector');
+
+                        // Console debugging
+                        console.log("Current Cookie:", document.cookie);
+
+                        if (match && match[2].includes('/en') && sel) {
+                            sel.value = 'en';
+                            // Show success toast
+                            let toast = document.createElement('div');
+                            toast.innerHTML = '<i class="fa-solid fa-check"></i> Translated to English';
+                            toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#4CAF50; color:white; padding:10px 20px; border-radius:4px; z-index:99999; animation: fadein 0.5s;';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 4000);
+                        }
+                    });
+                </script>
+
+
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <header class="top-banner">
+            <div class="banner-content">
+                <img src="https://cdn.haitrieu.com/wp-content/uploads/2022/06/Logo-Hoi-Lien-Hiep-Phu-Nu-Viet-Nam.png"
+                    alt="Logo Hội Phụ Nữ" class="logo-img">
+                <div class="banner-text">
+                    <div class="org-name-1" data-i18n="org_sub_phunu">TỔ DÂN PHỐ SỐ 21</div>
+                    <h1 class="org-name-2" data-i18n="header_phunu">CHI HỘI PHỤ NỮ SỐ 21</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav class="main-nav">
+            <ul>
+                <li><a href="index.html" class="nav-item"><i class="fa-solid fa-home"></i> <span
+                            data-i18n="nav_home">Trang Chủ</span></a></li>
+                <li><a href="dong-gop.html" class="nav-item" style="background-color: var(--primary-red);"><i
+                            class="fa-solid fa-hand-holding-heart"></i> <span>ĐÓNG GÓP & VẬN ĐỘNG</span></a></li>
+                <li class="dropdown">
+                    <a href="cac-doan-the.html" class="nav-item"><i class="fa-solid fa-users"></i> <span
+                            data-i18n="nav_groups">CÁC ĐOÀN THỂ</span> <i class="fa-solid fa-caret-down"
+                            style="margin-left:5px;"></i></a>
+                    <div class="dropdown-content">
+                        <!-- CHI BỘ -->
+                        <div class="dropdown-sub">
+                            <a href="chi-bo.html?category=CB" data-i18n="group_chibo">Chi Bộ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="chi-bo.html?category=CB">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=CB">Tin Tức Chi Bộ</a>
+                                <a href="chi-bo.html?category=CB&section=notify">Văn Bản - Chỉ Đạo</a>
+                            </div>
+                        </div>
+
+                        <!-- Mặt Trận Tổ Quốc -->
+                        <div class="dropdown-sub">
+                            <a href="mat-tran-to-quoc.html?category=MT" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
+                            <div class="dropdown-sub-content">
+                                <a href="mat-tran-to-quoc.html?category=MT">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=MT">Tin Tức - Sự Kiện</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI Phụ Nữ -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="group_phunu">Hội Phụ Nữ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-phu-nu.html?section=intro">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=PHU_NU">Tin Tức Hội Phụ Nữ</a>
+                                <a href="hoi-phu-nu.html?category=PHU_NU&section=movements">Phong Trào Thi Đua</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI Cựu Chiến Binh -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="group_ccb">Hội Cựu Chiến Binh</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-cuu-chien-binh.html?category=CCB">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=CCB">Tin Tức CCB</a>
+                            </div>
+                        </div>
+
+                        <!-- ĐOÀN THANH NIÊN -->
+                        <div class="dropdown-sub">
+                            <a href="doan-thanh-nien.html?category=TN" data-i18n="group_thanhnien">Đoàn Thanh Niên</a>
+                            <div class="dropdown-sub-content">
+                                <a href="doan-thanh-nien.html?category=TN">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=TN">Tin Tức - Hoạt Động</a>
+                                <a href="doan-thanh-nien.html?category=TN&section=youth">Góc Thanh Niên</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI NGƯỜI CAO TUỔI -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="group_nct">Hội Người Cao Tuổi</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-nguoi-cao-tuoi.html?category=NCT">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=NCT">Tin Tức NCT</a>
+                            </div>
+                        </div>
+
+                        <!-- BAN Khuyến Học -->
+                        <div class="dropdown-sub">
+                            <a href="ban-khuyen-hoc.html?category=KH" data-i18n="group_khuyenhoc">Ban Khuyến Học</a>
+                            <div class="dropdown-sub-content">
+                                <a href="ban-khuyen-hoc.html?category=KH">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=KH">Tin Tức Khuyến Học</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </li>
+
+                <li><a href="lien-he.html" class="nav-item"><i class="fa-solid fa-address-book"></i> <span
+                            data-i18n="nav_contact">Liên Hệ</span></a></li>
+                <li class="login-item" style="margin-left: auto;"><a href="admin.html"><i
+                            class="fa-solid fa-user-gear"></i> <span data-i18n="nav_login">Đăng Nhập</span></a></li>
+            </ul>
+        </nav>
+
+        </nav>
+
+        <!-- MAIN CONTENT WRAPPER -->
+        <div class="main-content">
+
+            <!-- VIEW 1: DASHBOARD (Default) -->
+            <div id="dashboard-view" style="display: flex; width: 100%; gap: 20px;">
+                <div class="left-col">
+                    <!-- NEWS SECTION (Dynamic) -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="news_title_phu_nu">TIN TỨC HỘI PHỤ NỮ</span>
+                            <a href="tin-tuc.html?category=PHU_NU"
+                                style="font-size: 11px; color: #666; font-style: italic; margin-left:10px;"
+                                data-i18n="view_all">Xem tất cả
+                                >></a>
+                        </div>
+                        <div class="box-body" id="qt-page-news">
+                            <!-- Content loaded by cms.js -->
+                            <div style="font-style: italic; color: #666; padding: 10px;" data-i18n="loading_news">Đang
+                                tải
+                                tin tức...</div>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="intro_phunu">GIỚI THIỆU CHI HỘI</span>
+                        </div>
+                        <div class="box-body" style="text-align: justify; line-height: 1.6;">
+                            <p style="margin-bottom: 15px;">
+                                <strong>Chi hội Phụ nữ Tổ dân phố sự 21</strong> tự hào là nơi kết nối những trái tim
+                                nhân hậu,
+                                những bàn tay khéo léo và trí tuệ mẫn tiệp của phụ nữ trong thời đại mới.
+                                Kế thừa truyền thống <em>"Anh hùng - Bất khuất - Trung hậu - Đảm đang"</em>,
+                                chị em phụ nữ Tổ 21 luôn nỗ lực vươn lên, khẳng định vị thế trong gia đình và xã hội,
+                                đóng góp quan trọng vào công cuộc xây dựng đô thị văn minh, hiện đại.
+                            </p>
+
+                            <p style="margin-bottom: 15px;">
+                                Chi hội không chỉ là điểm tựa tinh thần ấm áp mà còn là "bà đỡ" mát tay cho những ý
+                                tưởng khởi nghiệp sáng tạo.
+                                Chúng tôi cùng nhau xây dựng "tổ ấm" hạnh phúc, nuôi dạy con ngoan trò giỏi,
+                                và lan tỏa yêu thương qua những hoạt động thiện nguyện giàu tính nhân văn.
+                            </p>
+
+                            <div
+                                style="background: linear-gradient(to right, #fff0f5, #fff); padding: 15px; border-left: 4px solid #d63384; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                                <h4
+                                    style="color: #d63384; margin: 0 0 8px 0; text-transform: uppercase; font-size: 14px;">
+                                    <i class="fa-solid fa-star"></i> KHẨU HIỆU HÀNH ĐỘNG
+                                </h4>
+                                <p
+                                    style="font-weight: bold; color: #333; font-size: 15px; text-align: center; margin: 0;">
+                                    "Phụ nữ Tổ 21: Tự tin - Tự trọng - Trung hậu - Đảm đang"
+                                </p>
+                            </div>
+
+                            <div style="margin-top: 20px;">
+                                <h4
+                                    style="font-size: 14px; font-weight: bold; color: #333; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+                                    CÁC NHIỆM VỤ TRỌNG TÂM:</h4>
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="margin-bottom: 8px; position: relative; padding-left: 20px;">
+                                        <i class="fa-solid fa-heart"
+                                            style="position: absolute; left: 0; top: 4px; color: #d63384; font-size: 11px;"></i>
+                                        Triển khai hiệu quả cuộc vận động <strong>"Xây dựng gia đình 5 không, 3
+                                            sạch"</strong> gắn với xây dựng đô thị văn minh.
+                                    </li>
+                                    <li style="margin-bottom: 8px; position: relative; padding-left: 20px;">
+                                        <i class="fa-solid fa-heart"
+                                            style="position: absolute; left: 0; top: 4px; color: #d63384; font-size: 11px;"></i>
+                                        Hỗ trợ phụ nữ khởi nghiệp, phát triển kinh tế, giảm nghèo bền vững và bảo vệ môi
+                                        trường.
+                                    </li>
+                                    <li style="position: relative; padding-left: 20px;">
+                                        <i class="fa-solid fa-heart"
+                                            style="position: absolute; left: 0; top: 4px; color: #d63384; font-size: 11px;"></i>
+                                        Xây dựng tổ chức Hội vững mạnh, tham gia xây dựng Đảng, xây dựng chính quyền và
+                                        giám
+                                        sát xã hội.
+                                    </li>
+                                </ul>
+                            </div>
+                            <div style="text-align: right; margin-top: 10px;">
+                                <a href="hoi-phu-nu.html?section=intro"
+                                    style="color: #d63384; font-weight: bold; font-size: 14px;">Xem chi tiết >></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="nav_groups">CÁC PHONG TRÀO THI ĐUA</span>
+                        </div>
+                        <div class="box-body">
+                            <div class="news-list-item">
+                                <div class="news-info">
+                                    <h3><a href="#">Phong trào "Xây dựng gia đình 5 không, 3 sạch"</a></h3>
+                                    <p style="margin-top: 5px; color: #555;">Tuyên truyền, vận động hội viên giữ gìn vệ
+                                        sinh
+                                        môi trường, đổ rác đúng giờ, xây dựng tuyến phố văn minh đô thị.</p>
+                                </div>
+                            </div>
+                            <div class="news-list-item">
+                                <div class="news-info">
+                                    <h3><a href="#">Mô hình "Nuôi heo đất tiết kiệm"</a></h3>
+                                    <p style="margin-top: 5px; color: #555;">Gây quỹ hỗ trợ phụ nữ, trẻ em có hoàn cảnh
+                                        khó
+                                        khăn trên địa bàn.</p>
+                                </div>
+                            </div>
+                            <div class="news-list-item">
+                                <div class="news-info">
+                                    <h3><a href="#">CLB "Dân vũ thể thao"</a></h3>
+                                    <p style="margin-top: 5px; color: #555;">Tổ chức sinh hoạt văn hóa, văn nghệ, nâng
+                                        cao
+                                        sức khỏe tinh thần cho hội viên.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SIDEBAR -->
+                <div class="right-col">
+                    <div id="fund-widget-phunu"></div>
+                    <script>
+                        window.addEventListener('load', function () {
+                            // Wait for cms.js to be ready
+                            setTimeout(() => {
+                                if (typeof renderFundsWidget === 'function') {
+                                    renderFundsWidget('fund-widget-phunu', 'PHU_NU');
+                                }
+                            }, 1000);
+                        });
+                    </script>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title">CƠ CẤU TỔ CHỨC</span>
+                        </div>
+                        <div class="box-body">
+                            <p><strong>Chi hội trưởng:</strong> Bà Nguyễn Thị Lan</p>
+                            <p style="border-bottom: 1px dashed #eee; padding-bottom: 5px; margin-bottom: 5px;">ĐT:
+                                0987.xxx.xxx</p>
+                            <p><strong>Chi hội phó:</strong> Bà Trần Thị Hoa</p>
+                            <p style="border-bottom: 1px dashed #eee; padding-bottom: 5px; margin-bottom: 5px;">ĐT:
+                                0912.xxx.xxx</p>
+                            <p><strong>Số tổ phụ nữ:</strong> 12 tổ</p>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title">VĂN BẢN HƯỚNG DẪN</span>
+                        </div>
+                        <div class="box-body">
+                            <a href="#" class="sidebar-link">Điều lệ Hội LHPN Việt Nam</a>
+                            <a href="#" class="sidebar-link">Kế hoạch công tác Hội năm 2026</a>
+                            <a href="#" class="sidebar-link">Hướng dẫn vay vốn NHCSXH</a>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title">LIÊN HỆ CÔNG TÁC</span>
+                        </div>
+                        <div class="box-body">
+                            <p><strong>Chi hội trưởng:</strong> Bà Nguyễn Thị B</p>
+                            <p>SĐT: 091.......</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: DETAIL CONTENT (Hidden by Default) -->
+            <div id="detail-view"
+                style="display: none; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 30px;">
+                <div id="detail-intro-phunu" style="display: none;">
+                    <h1
+                        style="color: #d63384; text-align: center; text-transform: uppercase; margin-bottom: 20px; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+                        CHI HỘI PHỤ NỮ TỔ DÂN PHỐ SỐ 21
+                    </h1>
+
+                    <div style="font-size: 16px; line-height: 1.8; text-align: justify; color: #333;">
+                        <p style="margin-bottom: 20px;">
+                            <strong>Hội Liên hiệp Phụ nữ Việt Nam</strong> - tổ chức đại diện cho quyền bình đẳng, dân
+                            chủ và lợi ích hợp pháp của mọi tầng lớp phụ nữ.
+                            Tại Tổ dân phố sự 21, <strong>Chi hội Phụ nữ</strong> là ngôi nhà chung ấm áp, nơi quy tụ
+                            sức mạnh đoàn kết, trí tuệ và lòng nhân ái của chị em.
+                        </p>
+                        <p>
+                            Chúng tôi hoạt động với tôn chỉ: Nâng cao vị thế người phụ nữ, xây dựng người phụ nữ Việt
+                            Nam thời đại mới
+                            có tri thức, có đạo đức, có sức khỏe, có trách nhiệm với bản thân, gia đình, xã hội và đất
+                            nước.
+                        </p>
+
+                        <h3
+                            style="color: #d63384; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #d63384; padding-left: 10px;">
+                            1. SỨ MỆNH & TRÁCH NHIỆM
+                        </h3>
+                        <ul style="list-style: none; padding-left: 0;">
+                            <li style="margin-bottom: 15px; display: flex; align-items: start;">
+                                <i class="fa-solid fa-heart"
+                                    style="color: #d63384; margin-right: 10px; margin-top: 6px;"></i>
+                                <span><strong>Vun đắp giá trị gia đình:</strong> Hỗ trợ phụ nữ xây dựng gia đình no ấm,
+                                    tiến bộ, hạnh phúc, văn minh; chăm sóc sức khỏe sinh sản, nuôi dạy con tốt.</span>
+                            </li>
+                            <li style="margin-bottom: 15px; display: flex; align-items: start;">
+                                <i class="fa-solid fa-lightbulb"
+                                    style="color: #d63384; margin-right: 10px; margin-top: 6px;"></i>
+                                <span><strong>Hỗ trợ phát triển kinh tế:</strong> Tạo điều kiện cho phụ nữ tiếp cận vốn
+                                    vay, kiến thức, kỹ năng để khởi nghiệp, giảm nghèo, làm giàu chính đáng.</span>
+                            </li>
+                            <li style="margin-bottom: 15px; display: flex; align-items: start;">
+                                <i class="fa-solid fa-scale-balanced"
+                                    style="color: #d63384; margin-right: 10px; margin-top: 6px;"></i>
+                                <span><strong>Bảo vệ quyền lợi:</strong> Lên tiếng bảo vệ phụ nữ và trẻ em gái trước bạo
+                                    lực gia đình, phân biệt đối xử; giám sát việc thực hiện luật pháp vị bình đẳng
+                                    giới.</span>
+                            </li>
+                        </ul>
+
+                        <h3
+                            style="color: #d63384; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #d63384; padding-left: 10px;">
+                            2. TỔ CHỨC BỘ MÁY
+                        </h3>
+                        <p>Chi hội hiện có <strong>450 hội viên</strong> sinh hoạt tại <strong>12 tổ phụ nữ</strong>.
+                        </p>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff;">
+                            <thead>
+                                <tr style="background: #fce4ec;">
+                                    <th style="border: 1px solid #f8bbd0; padding: 10px;">STT</th>
+                                    <th style="border: 1px solid #f8bbd0; padding: 10px;">Họ tên</th>
+                                    <th style="border: 1px solid #f8bbd0; padding: 10px;">Chức vụ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">1</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Bà <strong>Nguyễn Thị
+                                            Lan</strong></td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">Chi hội
+                                        trưởng</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">2</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Bà <strong>Trần Thị Hoa</strong>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">Chi hội phó
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">3</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Bà <strong>Lê Thị Mận</strong>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">Chi hội phó
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3
+                            style="color: #d63384; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #d63384; padding-left: 10px;">
+                            3. PHONG TRÀO NỔI BẬT
+                        </h3>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                            <div
+                                style="background: #fff0f5; padding: 15px; border-radius: 8px; border: 1px solid #f8bbd0;">
+                                <h4 style="color: #d81b60;">Gia đình 5 Không, 3 Sạch</h4>
+                                <ul style="font-size: 14px; margin-top: 10px; padding-left: 20px;">
+                                    <li><strong>5 Không:</strong> Không đói nghèo, Không vi phạm pháp luật và TNXH,
+                                        Không có bạo lực gia đình, Không sinh con thứ 3 trở lên, Không có trẻ suy dinh
+                                        dưỡng & bỏ học.</li>
+                                    <li><strong>3 Sạch:</strong> Sạch nhà, Sạch bếp, Sạch ngõ.</li>
+                                </ul>
+                            </div>
+                            <div
+                                style="background: #e1f5fe; padding: 15px; border-radius: 8px; border: 1px solid #b3e5fc;">
+                                <h4 style="color: #0277bd;">Văn hóa - Văn nghệ - Thể thao</h4>
+                                <p style="font-size: 14px; margin-top: 5px;">Duy trì đều đặn 02 CLB Dân vũ và 01 CLB
+                                    Yoga, thu hút hơn 100 hội viên tham gia tập luyện hàng ngày, nâng cao sức khỏe và
+                                    đời sựng tinh thần.</p>
+                            </div>
+                            <div
+                                style="background: #fffde7; padding: 15px; border-radius: 8px; border: 1px solid #fff9c4;">
+                                <h4 style="color: #fbc02d;">Tương thân tương ái</h4>
+                                <p style="font-size: 14px; margin-top: 5px;">Mô hình "Thu gom phế liệu gây quỹ từ thiện"
+                                    đã giúp đỡ được 15 hoàn cảnh khó khăn và tặng quà cho học sinh nghèo vượt khó trong
+                                    năm qua.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 40px; text-align: center;">
+                        <a href="hoi-phu-nu.html"
+                            style="display: inline-block; padding: 10px 20px; background: #666; color: #fff; text-decoration: none; border-radius: 4px;">
+                            <i class="fa-solid fa-arrow-left"></i> Quay lại Trang Chính
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-info">
+                <p style="font-size: 16px; margin-bottom: 15px;"><strong data-i18n="footer_title">BAN LÃNH ĐẠO TỔ DÂN
+                        PHỐ SỐ 21 - PHƯỜNG BA
+                        ĐÌNH</strong></p>
+                <p data-i18n="footer_addr">Địa chỉ: Nhà Sinh Hoạt Cộng Đồng Số 21, Phường Ba Đình, TP Hà Nội</p>
+                <p data-i18n="footer_contact">Điện thoại: 024.3....... | Email: todanpho21@hanoi.gov.vn</p>
+                <p style="margin-top: 15px; font-style: italic; opacity: 0.8;" data-i18n="footer_copyright">Bản quyền
+                    thuộc vị Tổ Dân Phố 21. Ghi
+                    rõ nguồn "Cổng TTĐT TPD21" khi phát hành lại thông tin từ website này.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BACK TO TOP BUTTON -->
+    <button id="btn-back-to-top" title="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="db.js"></script>
+    <script src="cms.js?v=UI_UPGRADE_V5"></script>
+    <script src="lang.js?v=2"></script>
+    <script>
+        window.onload = function () {
+            checkAndLoadContextArticle();
+            loadDynamicMenu();
+            loadNews('PHU_NU', 'qt-page-news');
+            startClock();
+            fetchWeather();
+            initBackToTop();
+
+            // 2. Handle View Switching Logic based on URL Params
+            const urlParams = new URLSearchParams(window.location.search);
+            const section = urlParams.get('section');
+
+            const dashboardView = document.getElementById('dashboard-view');
+            const detailView = document.getElementById('detail-view');
+            const detailIntro = document.getElementById('detail-intro-phunu');
+
+            if (section === 'intro') {
+                if (dashboardView) dashboardView.style.display = 'none';
+                if (detailView) detailView.style.display = 'block';
+                if (detailIntro) detailIntro.style.display = 'block';
+
+                // Scroll to top
+                window.scrollTo(0, 0);
+            } else {
+                if (dashboardView) dashboardView.style.display = 'flex';
+                if (detailView) detailView.style.display = 'none';
+            }
+        };
+    </script>
+    <script src="fix_text.js"></script>
+</body>
+
+</html>

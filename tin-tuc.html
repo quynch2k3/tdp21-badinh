@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tin Tức Chung - Tổ Dân Phố 21</title>
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V8">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Fonts Optimized -->
+    <style>
+        body {
+            font-family: Tahoma, Arial, sans-serif !important;
+        }
+    </style>
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+    <style>
+        /* Áp dụng font Roboto cho toàn bộ các thẻ trên trang web */
+        /* Áp dụng font Arial cho toàn bộ các thẻ trên trang web */
+        body,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        span,
+        div,
+        a,
+        li,
+        ul,
+        ol,
+        td,
+        th,
+        input,
+        button,
+        select,
+        textarea,
+        b,
+        strong,
+        em {
+            font-family: 'Roboto', sans-serif !important;
+            font-family: Arial, Helvetica, sans-serif !important;
+            line-height: 1.5;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- UTILITY BAR (OFFICIAL FEEL) -->
+        <div class="utility-bar">
+            <div class="utility-left">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="current-date">Đang tải ngày...</span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-clock"></i>
+                <span id="current-time">--:--:--</span>
+            </div>
+            <div class="utility-center">
+                <span class="utility-text-scroll" data-i18n="welcome_msg">CHÀO MỪNG QUÝ KHÁCH ĐẾN VỚI CỔNG THÔNG TIN
+                    ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</span>
+            </div>
+
+            <div class="utility-right">
+                <!-- Language Selector Removed -->
+            </div>
+            <!-- GOOGLE TRANSLATE WIDGET (HIDDEN BUT ACTIVE) -->
+            <div id="google_translate_element"
+                style="visibility:hidden; width:1px; height:1px; overflow:hidden; position:absolute; top:0; left:0; z-index:-1;">
+            </div>
+            <script type="text/javascript">
+                function googleTranslateElementInit() {
+                    new google.translate.TranslateElement({
+                        pageLanguage: 'vi',
+                        includedLanguages: 'en,vi',
+                        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                        autoDisplay: false
+                    }, 'google_translate_element');
+                }
+            </script>
+            <script type="text/javascript" async
+                src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+            <!-- CUSTOM CONTROL SCRIPT -->
+            <script>
+                function setLang(lang) {
+                    console.log("Setting language to:", lang);
+
+                    // 1. Notification
+                    if (window.showToast) {
+                        window.showToast(lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...');
+                    } else {
+                        let toast = document.createElement('div');
+                        toast.innerText = lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...';
+                        toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#2196F3; color:white; padding:10px 20px; border-radius:4px; z-index:99999;';
+                        document.body.appendChild(toast);
+                    }
+
+                    // 2. Cookie Logic (Aggressive)
+                    if (lang === 'vi') {
+                        // Clear cookies in every possible way
+                        let domains = [window.location.hostname, "." + window.location.hostname, ""];
+                        let paths = ["/", window.location.pathname];
+
+                        domains.forEach(d => {
+                            paths.forEach(p => {
+                                document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + p + (d ? "; domain=" + d : "");
+                            });
+                        });
+                    } else {
+                        // Set cookies in every possible way
+                        let val = "/vi/en";
+                        document.cookie = "googtrans=" + val + "; path=/";
+                        document.cookie = "googtrans=" + val + "; path=/; domain=" + window.location.hostname;
+                    }
+
+                    // 3. Reload to apply
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                }
+
+                // ON LOAD: Check and set selector
+                window.addEventListener('load', function () {
+                    var match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+                    var sel = document.getElementById('custom-lang-selector');
+
+                    // Console debugging
+                    console.log("Current Cookie:", document.cookie);
+
+                    if (match && match[2].includes('/en') && sel) {
+                        sel.value = 'en';
+                        // Show success toast
+                        let toast = document.createElement('div');
+                        toast.innerHTML = '<i class="fa-solid fa-check"></i> Translated to English';
+                        toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#4CAF50; color:white; padding:10px 20px; border-radius:4px; z-index:99999; animation: fadein 0.5s;';
+                        document.body.appendChild(toast);
+                        setTimeout(() => toast.remove(), 4000);
+                    }
+                });
+            </script>
+
+
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="top-banner">
+        <div class="banner-content">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Vietnam.svg/1200px-Emblem_of_Vietnam.svg.png"
+                alt="Quốc Huy" class="logo-img">
+            <div class="banner-text">
+                <div class="org-name-1" data-i18n="org_sub">Ủy Ban Nhân Dân Phường Ba Đình</div>
+                <h1 class="org-name-2" data-i18n="page_header">CỔNG THÔNG TIN ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav class="main-nav">
+        <ul>
+            <!-- Menu sẽ được tải tự động từ cms.js -->
+        </ul>
+    </nav>
+
+    </nav>
+
+    <!-- MAIN LAYOUT -->
+    <div class="main-content">
+        <!-- LEFT COLUMN (Main Content) -->
+        <div class="left-col">
+            <!-- NEWS SECTION -->
+            <div class="section-box" style="margin-top: 20px;">
+                <div class="box-header">
+                    <span class="box-title" data-i18n="news_title_all">TIN TỨC - SỰ KIỆN</span>
+                </div>
+                <div class="box-body" id="qt-page-news">
+                    <!-- Content loaded by cms.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN (Sidebar) -->
+        <div class="right-col">
+            <!-- Administrative Links -->
+            <div class="section-box">
+                <div class="box-header">
+                    <span class="box-title" data-i18n="box_management">ĐIỀU HÀNH TÁC NGHIỆP</span>
+                </div>
+                <div class="box-body" style="padding: 10px;">
+                    <a href="chi-bo.html" class="sidebar-link" data-i18n="group_chibo">Chi Bộ</a>
+                    <a href="mat-tran-to-quoc.html" class="sidebar-link" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
+                    <a href="hoi-phu-nu.html" class="sidebar-link" data-i18n="group_phunu">Hội Phụ Nữ</a>
+                    <a href="hoi-cuu-chien-binh.html" class="sidebar-link" data-i18n="group_ccb">Hội Cựu Chiến
+                        Binh</a>
+                    <a href="doan-thanh-nien.html" class="sidebar-link" data-i18n="group_thanhnien">Đoàn Thanh
+                        Niên</a>
+                    <a href="hoi-nguoi-cao-tuoi.html" class="sidebar-link" data-i18n="group_nct">Hội Người Cao
+                        Tuổi</a>
+
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="section-box">
+                <div class="box-header">
+                    <span class="box-title" data-i18n="box_notifications">THÔNG BÁO MỚI</span>
+                </div>
+                <div class="box-body">
+                    <marquee direction="up" scrollamount="2" height="150" onmouseover="this.stop()"
+                        onmouseout="this.start()" id="qt-marquee">
+                        <div style="padding:10px;" data-i18n="loading_notify">Đang tải thông báo...</div>
+                    </marquee>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-info">
+                <p style="font-size: 16px; margin-bottom: 15px;"><strong data-i18n="footer_title">BAN LÃNH ĐẠO TỔ DÂN
+                        PHỐ SỐ 21 - PHƯỜNG BA
+                        ĐÌNH</strong></p>
+                <p data-i18n="footer_addr">Địa chỉ: Nhà Sinh Hoạt Cộng Đồng Số 21, Phường Ba Đình, TP Hà Nội</p>
+                <p data-i18n="footer_contact">Điện thoại: 024.3....... | Email: todanpho21@hanoi.gov.vn</p>
+                <p style="margin-top: 15px; font-style: italic; opacity: 0.8;" data-i18n="footer_copyright">Bản quyền
+                    thuộc vị Tổ Dân Phố 21. Ghi
+                    rõ nguồn "Cổng TTĐT TPD21" khi phát hành lại thông tin từ website này.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BACK TO TOP BUTTON -->
+    <button id="btn-back-to-top" title="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+    <!-- FIREBASE SDK (Compat) -->
+
+
+
+
+    <!-- POCKETBASE SDK -->
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="db.js"></script>
+    <script src="cms.js?v=UI_UPGRADE_V5"></script>
+    <script src="lang.js?v=2"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            renderGlobalMenu(); // Tải menu tự động
+            loadMarquee('qt-marquee');
+
+            // 1. Parse URL params
+            const params = new URLSearchParams(window.location.search);
+            const category = params.get('category') || 'ALL';
+
+            // 2. Dynamic Header Title
+            const titleMap = {
+                'ALL': 'news_title_all',
+                'NCT': 'news_title_nct',
+                'PHU_NU': 'news_title_phu_nu',
+                'CCB': 'news_title_ccb',
+                'TN': 'news_title_tn',
+                'CB': 'news_title_cb',
+                'MT': 'news_title_mt',
+                'KH': 'news_title_kh'
+            };
+
+            const headerTitle = document.querySelector('.box-title');
+            if (headerTitle) {
+                const i18nKey = titleMap[category] || 'news_title_all';
+                headerTitle.setAttribute('data-i18n', i18nKey);
+            }
+
+            // 3. Load news code
+            loadNews(category, 'qt-page-news');
+
+            startClock();
+            fetchWeather();
+            initBackToTop();
+        });
+    </script>
+    <script src="fix_text.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Bộ - Tổ Dân Phố 21</title>
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V13">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- FONT CHỮ MỚI: ROBOTO (Hỗ trợ Tiếng Việt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+
+</head>
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- UTILITY BAR (OFFICIAL FEEL) -->
+        <div class="utility-bar">
+            <div class="utility-left">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="current-date">Đang tải ngày...</span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-clock"></i>
+                <span id="current-time">--:--:--</span>
+            </div>
+            <div class="utility-center">
+                <span class="utility-text-scroll" data-i18n="welcome_msg">CHÀO MỪNG QUÝ KHÁCH ĐẾN VỚI CỔNG THÔNG TIN
+                    ĐIỆN TỬ TỔTổ Dân PhốỐ SỐ 21</span>
+            </div>
+
+            <div class="utility-right">
+                <div id="google_translate_element" style="display:none"></div>
+                <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                        new google.translate.TranslateElement({
+                            pageLanguage: 'vi',
+                            includedLanguages: 'en,vi',
+                            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                            autoDisplay: false
+                        }, 'google_translate_element');
+                    }
+                </script>
+                <script type="text/javascript"
+                    src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+                <!-- CUSTOM CONTROL SCRIPT -->
+                <script>
+                    function setLang(lang) {
+                        console.log("Setting language to:", lang);
+
+                        // 1. Notification
+                        if (window.showToast) {
+                            window.showToast(lang === 'vi' ? 'Đang chuyển về Tiếng Việt...' : 'Translating to English...');
+                        } else {
+                            let toast = document.createElement('div');
+                            toast.innerText = lang === 'vi' ? 'Đang chuyển về Tiếng Việt...' : 'Translating to English...';
+                            toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#2196F3; color:white; padding:10px 20px; border-radius:4px; z-index:99999;';
+                            document.body.appendChild(toast);
+                        }
+
+                        // 2. Cookie Logic (Aggressive)
+                        if (lang === 'vi') {
+                            // Clear cookies in every possible way
+                            let domains = [window.location.hostname, "." + window.location.hostname, ""];
+                            let paths = ["/", window.location.pathname];
+
+                            domains.forEach(d => {
+                                paths.forEach(p => {
+                                    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + p + (d ? "; domain=" + d : "");
+                                });
+                            });
+                        } else {
+                            // Set cookies in every possible way
+                            let val = "/vi/en";
+                            document.cookie = "googtrans=" + val + "; path=/";
+                            document.cookie = "googtrans=" + val + "; path=/; domain=" + window.location.hostname;
+                        }
+
+                        // 3. Reload to apply
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    }
+
+                    // ON LOAD: Check and set selector
+                    window.addEventListener('load', function () {
+                        var match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+                        var sel = document.getElementById('custom-lang-selector');
+
+                        // Console debugging
+                        console.log("Current Cookie:", document.cookie);
+
+                        if (match && match[2].includes('/en') && sel) {
+                            sel.value = 'en';
+                            // Show success toast
+                            let toast = document.createElement('div');
+                            toast.innerHTML = '<i class="fa-solid fa-check"></i> Translated to English';
+                            toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#4CAF50; color:white; padding:10px 20px; border-radius:4px; z-index:99999; animation: fadein 0.5s;';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 4000);
+                        }
+                    });
+                </script>
+
+
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <header class="top-banner">
+            <div class="banner-content">
+                <img src="logo-chibo.svg" alt="Logo Chi Bộ" class="logo-img">
+                <div class="banner-text">
+                    <div class="org-name-1" data-i18n="org_so_1">ĐẢNG BỘ PHƯỜNG BA ĐÌNH</div>
+                    <h1 class="org-name-2" data-i18n="org_so_2">Chi Bộ TỔ DÂN PHỐ SỐ 21</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav class="main-nav">
+            <ul>
+                <!-- Menu sẽ được tải tự động từ cms.js -->
+            </ul>
+        </nav>
+
+        <!-- BANNER CHÀO MỪNG ĐẠI HỘI ĐẢNG XIV -->
+        <div style="margin-bottom: 20px; margin-top: 15px; text-align: center;">
+            <a href="https://dangcongsan.vn/huong-toi-dai-hoi-dai-bieu-toan-quoc-lan-thu-xiv-cua-dang" target="_blank"
+                title="Chào mừng Đại hội đại biểu toàn quốc lần thứ XIV của Đảng">
+                <img src="https://dangcongsan.vn/upload/2006988/20260116/image_2026-01-16_13-54-37_a7e72.png"
+                    alt="Chào mừng Đại hội XIV"
+                    style="width: 100%; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: block;">
+            </a>
+        </div>
+
+        <!-- MAIN LAYOUT WRAPPER (To toggle Views) -->
+        <div class="main-content">
+
+            <!-- VIEW 1: DASHBOARD (Default / Left+Right Cols) -->
+            <div id="dashboard-view" style="display: flex; width: 100%; gap: 20px;">
+                <!-- LEFT COLUMN (Main Content) -->
+                <div class="left-col">
+                    <!-- NEWS SECTION -->
+                    <div class="section-box" style="margin-top: 20px;">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="news_title_cb">TIN TỨC CẤP ỦY - Chi Bộ</span>
+                            <a href="tin-tuc.html?category=CB"
+                                style="font-size: 11px; color: #666; font-style: italic; margin-left:10px;"
+                                data-i18n="view_all">Xem tất cả >></a>
+                        </div>
+                        <div class="box-body" id="qt-page-news">
+                            <div style="font-style: italic; color: #666; padding: 10px;" data-i18n="loading_news">
+                                Đang
+                                tại
+                                tin tức...</div>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="intro_general">GIỚI THIỆU CHUNG</span>
+                        </div>
+                        <div class="box-body" style="text-align: justify; line-height: 1.6;">
+                            <p style="margin-bottom: 15px;">
+                                <strong>Chi Bộ Tổ Dân Phố số 21</strong> giữ vai trò là hạt nhân chính trị, là "bộ
+                                não"
+                                chỉ đạo toàn diện mọi Hoạt động tại khu dân cư.
+                                Dưới sự lãnh đạo trực tiếp của Đảng ủy Phường Ba Đình, Chi Bộ không ngừng nâng cao
+                                năng
+                                lực lãnh đạo và sức chiến đấu,
+                                xứng đáng là đội tiên phong gương mẫu, là cầu nối mật thiết, gắn bó máu thịt giữa
+                                Đảng
+                                với Nhân dân.
+                                Mọi chủ trương của Đảng, chính sách pháp luật của Nhà nước đều được Chi Bộ Quán
+                                Triệt
+                                sâu sắc và vận dụng sáng tạo vào thực tiễn địa phương.
+                            </p>
+
+                            <p style="margin-bottom: 15px;">
+                                Thấm nhuần tư tưởng <em>"Lấy dân làm gốc"</em>, Chi Bộ luôn kiên định mục tiêu:
+                                <strong>"Đoàn kết - Dân chủ - Kỷ cương - Trách nhiệm"</strong>.
+                                Mỗi đảng viên trong Chi Bộ là một tấm gương sáng vị đạo đức cách mạng, lối sựng giản
+                                dị
+                                và tinh thần cống hiến,
+                                luôn đi đầu trong các phong trào thi đưa yêu nước, xây dựng Tổ Dân Phố ngày càng văn
+                                minh, giàu đẹp.
+                            </p>
+
+                            <div
+                                style="background-color: #f8f9fa; border-left: 4px solid var(--primary-red); padding: 15px; margin: 15px 0;">
+                                <h3
+                                    style="color: var(--primary-red); font-size: 15px; margin: 0 0 10px 0; text-transform: uppercase;">
+                                    NHIỆM VỤ TRỌNG TÂM NHIỆM KỲ 2025-2027</h3>
+                                <ul style="list-style-type: none; padding: 0;">
+                                    <li style="margin-bottom: 8px; position: relative; padding-left: 20px;">
+                                        <i class="fa-solid fa-check"
+                                            style="position: absolute; left: 0; top: 4px; color: var(--primary-red); font-size: 11px;"></i>
+                                        Lãnh đạo xây dựng Tổ Dân Phố đạt danh hiệu <strong>"Tổ Dân Phố Văn hóa
+                                            Kiểu
+                                            mẫu"</strong>, đảm bảo an ninh trật tự, văn minh đô thị.
+                                    </li>
+                                    <li style="margin-bottom: 8px; position: relative; padding-left: 20px;">
+                                        <i class="fa-solid fa-check"
+                                            style="position: absolute; left: 0; top: 4px; color: var(--primary-red); font-size: 11px;"></i>
+                                        Thực hiện tốt công tác an sinh xã hội, đền ơn đáp nghĩa, chăm lo đời sựng
+                                        vật
+                                        chất và tinh thần cho Nhân dân.
+                                    </li>
+                                    <li style="margin-bottom: 8px; position: relative; padding-left: 20px;">
+                                        <i class="fa-solid fa-check"
+                                            style="position: absolute; left: 0; top: 4px; color: var(--primary-red); font-size: 11px;"></i>
+                                        Đổi mới, nâng cao chất lượng sinh hoạt Chi Bộ; chú trọng công tác phát triển
+                                        đảng viên trẻ, có trình độ và nhiệt huyết.
+                                    </li>
+                                    <li style="position: relative; padding-left: 20px;">
+                                        <i class="fa-solid fa-check"
+                                            style="position: absolute; left: 0; top: 4px; color: var(--primary-red); font-size: 11px;"></i>
+                                        Lãnh đạo, chỉ đạo các Tổ chức đoàn thể (Mặt Trận, Phụ Nữ, Cựu Chiến Binh,
+                                        Đoàn
+                                        Thanh Niên, Người cao tuổi...) Hoạt động đồng bộ, hiệu quả.
+                                    </li>
+                                    <li style="position: relative; padding-left: 20px;">
+                                        <i class="fa-solid fa-check"
+                                            style="position: absolute; left: 0; top: 4px; color: var(--primary-red); font-size: 11px;"></i>
+                                        Tăng cường công tác kiểm tra, giám sát, giữ nghiêm kỷ luật Đảng; kiên quyết
+                                        đấu
+                                        tranh phòng, chống tham nhũng, lãng phí, tiêu cực.
+                                    </li>
+                                </ul>
+                            </div>
+                            <div style="text-align: right;">
+                                <a href="chi-bo.html?section=intro"
+                                    style="color: var(--primary-red); font-weight: bold; font-size: 14px;">Xem chi
+                                    tiết
+                                    >></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN (Sidebar) -->
+                <div class="right-col">
+                    <!-- FUND WIDGET HERE -->
+                    <div id="fund-widget-chibo"></div>
+                    <script>
+                        window.addEventListener('load', function () {
+                            // Wait for cms.js to be ready
+                            setTimeout(() => {
+                                if (typeof renderFundsWidget === 'function') {
+                                    renderFundsWidget('fund-widget-chibo', 'CB');
+                                }
+                            }, 1000);
+                        });
+                    </script>
+
+                    <!-- Administrative Links -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="box_management">ĐIỀU HÀNH TÁC NGHIỆP</span>
+                        </div>
+                        <div class="box-body" style="padding: 10px;">
+                            <a href="chi-bo.html" class="sidebar-link"
+                                style="color: var(--primary-red); font-weight: bold;" data-i18n="group_chibo">Chi
+                                Bộ</a>
+                            <a href="mat-tran-to-quoc.html" class="sidebar-link" data-i18n="group_mttq">Mặt Trận Tổ
+                                Quốc</a>
+                            <a href="hoi-phu-nu.html" class="sidebar-link" data-i18n="group_phunu">Hội Phụ Nữ</a>
+                            <a href="hoi-cuu-chien-binh.html" class="sidebar-link" data-i18n="group_ccb">Hội Cựu
+                                Chiến
+                                Binh</a>
+                            <a href="doan-thanh-nien.html" class="sidebar-link" data-i18n="group_thanhnien">Đoàn
+                                Thanh
+                                Niên</a>
+                            <a href="hoi-nguoi-cao-tuoi.html" class="sidebar-link" data-i18n="group_nct">Hội Người
+                                Cao
+                                Tuổi</a>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title">VĂN BẢN CHỈ ĐẠO</span>
+                        </div>
+                        <div class="box-body">
+                            <marquee direction="up" scrollamount="2" height="150" onmouseover="this.stop()"
+                                onmouseout="this.start()" id="qt-marquee">
+                                <div style="padding:10px;">Đang tải văn bản...</div>
+                            </marquee>
+                        </div>
+                    </div>
+
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title">CẤP ỦY CHI BỘ</span>
+                        </div>
+                        <div class="box-body">
+                            <p><strong>Bí thư Chi Bộ:</strong> Ông Nguyễn Văn A</p>
+                            <p>SĐT: 091.......</p>
+                            <p><strong>Phó Bí thư:</strong> Bà Nguyễn Thị B</p>
+                            <p><strong>Chi ủy viên:</strong> Ông Trần Văn C</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: DETAIL CONTENT (Hidden by Default) -->
+            <div id="detail-view"
+                style="display: none; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 30px;">
+                <!-- Content will be injected or hardcoded here -->
+                <div id="detail-intro" style="display: none;">
+                    <h1
+                        style="color: var(--primary-red); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+                        GIỚI THIỆU CHUNG Về Chi Bộ TỔ DÂN PHỐ SỐ 21
+                    </h1>
+
+                    <div style="font-size: 16px; line-height: 1.8; text-align: justify; color: #333;">
+                        <p style="margin-bottom: 20px;">
+                            <strong>Đảng Cộng sản Việt Nam</strong> - đội tiên phong của giai cấp công nhân, đồng
+                            thời
+                            là đội tiên phong của nhân dân lao động và của dân tộc Việt Nam.
+                            Kế thừa sự mạnh lịch sử đó, <strong>Chi Bộ Tổ Dân Phố số 21</strong> vinh dự là "tế bào"
+                            co
+                            sự của Đảng, nơi trực tiếp đưa đường lối, nghị quyết của Đảng vào cuộc sựng.
+                            Chúng tôi chịu trách nhiệm trước Đảng ủy cấp trên và Nhân dân vị mọi mật đội sựng chính
+                            trị,
+                            kinh tế, văn hóa, xã hội tại Tổ Dân Phố.
+                        </p>
+
+                        <h3
+                            style="color: var(--primary-blue); margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid var(--primary-red); padding-left: 10px;">
+                            1. CHỨC NĂNG & NHIỆM VỤề CHIẾN LƯỢC
+                        </h3>
+                        <div style="padding: 15px; background: #fff5f5; border-radius: 8px;">
+                            <p style="margin-bottom: 15px;">
+                                <strong style="color: #d32f2f;">? LÃNH ĐềO CHÍNH TRỊ & TƯ TƯỞNG:</strong><br>
+                                Giáo dục, rèn luyện đảng viên giữ vọng lập trường giai cấp, bản lĩnh chính trị;
+                                tuyên
+                                truy?n, vịn đếng quần chúng nhân dân tin tưởng tuyệt đối vào sự lãnh đạo của Đảng,
+                                tạo sự đồng thuận cao trong xã hội.
+                            </p>
+                            <p style="margin-bottom: 15px;">
+                                <strong style="color: #d32f2f;">? LÃNH ĐềO PHÁT TRIỂN TOÀN DIỆN:</strong><br>
+                                Đề ra các Nghị quyết sát, đúng, trúng với tình hình thực tế để phát triển kinh tế,
+                                nâng
+                                cao đội sựng nhân dân,
+                                xây dựng n?p sựng văn hóa, đảm bảo an ninh trật tự, an toàn xã hội trên địa bàn.
+                            </p>
+                            <p style="margin-bottom: 0;">
+                                <strong style="color: #d32f2f;">? XÂY D?NG Hệ Thống CHÍNH TRỊ VỮNG
+                                    MẠNH:</strong><br>
+                                Lãnh đạo, chỉ đạo Ban Công tác Mặt Trận và các Tổ chức đoàn thể (Phụ Nữ, Cựu Chiến
+                                Binh,
+                                Người cao tuổi...) Hoạt động đúng tôn chủ, mục đích,
+                                phát huy sực mạnh tỦNG HỘp của kh?i đội đoàn kết toàn dân.
+                            </p>
+                        </div>
+
+                        <h3
+                            style="color: var(--primary-blue); margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid var(--primary-red); padding-left: 10px;">
+                            2. CƠ CẤU TỔ CHỨC
+                        </h3>
+                        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
+                            <p style="margin-bottom: 10px;">Hiện nay, Chi Bộ có TỔNG SỐ <strong>45 đảng
+                                    viên</strong>,
+                                trong đó có 40 đảng viên chính thức và 05 đảng viên dự bị. Cấp ủy Chi Bộ nhiệm kỳ
+                                2025-2027 gồm 03 đồng chí:</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff;">
+                                <thead>
+                                    <tr style="background: #eee;">
+                                        <th style="border: 1px solid #ddd; padding: 10px; text-align: center;">STT
+                                        </th>
+                                        <th style="border: 1px solid #ddd; padding: 10px;">Họ và tên</th>
+                                        <th style="border: 1px solid #ddd; padding: 10px;">Chức vụ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">1
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 10px;">Đ/c <strong>Luu Duy
+                                                Đềc</strong></td>
+                                        <td style="border: 1px solid #ddd; padding: 10px;">Bí thư
+                                            Chi Bộ, Trưởng ban công tác các Mặt Trận
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">2
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 10px;">Đ/c <strong>Nguyễn Duy
+                                                Ngọc</strong></td>
+                                        <td style="border: 1px solid #ddd; padding: 10px;">Phó Bí
+                                            thu Chi Bộ</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3
+                            style="color: var(--primary-blue); margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid var(--primary-red); padding-left: 10px;">
+                            3. THÀNH TÍCH NỔI BẬT
+                        </h3>
+                        <p>
+                            Nhiều năm liền, Chi Bộ được Đảng ủy cấp trên công nhận là <strong>"Chi Bộ Hoàn thành
+                                xu?t
+                                sực nhiệm vụ"</strong>.
+                            Chi Bộ dã lãnh đạo Tổ Dân Phố đạt danh hiệu Khu dân cư văn hóa cấp Quận 5 năm liền; công
+                            tác
+                            an ninh trật tự luôn được đảm bảo, không có tệ nạn xã hội nghiêm trọng.
+                        </p>
+
+                    </div>
+
+                    <div style="margin-top: 40px; text-align: center;">
+                        <a href="chi-bo.html"
+                            style="display: inline-block; padding: 10px 20px; background: #666; color: #fff; text-decoration: none; border-radius: 4px;">
+                            <i class="fa-solid fa-arrow-left"></i> Quay lại trang tin tức
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-info">
+                <p style="font-size: 16px; margin-bottom: 15px;"><strong data-i18n="footer_title">BAN LÃNH ĐẠO TỔ
+                        DÂN
+                        PHỐ SỐ 21 - PHƯỜNG BA
+                        ĐÌNH</strong></p>
+                <p data-i18n="footer_addr">Địa chỉ: Nhà Sinh Hoạt Cộng Đảng Số 21, Phường Ba Đình, TP Hà Nội</p>
+                <p data-i18n="footer_contact">Điện thoại: 024.3....... | Email: todanpho21@hanoi.gov.vn</p>
+                <p style="margin-top: 15px; font-style: italic; opacity: 0.8;" data-i18n="footer_copyright">Bản
+                    quyền
+                    thuộc về Tổ Dân Phố 21. Ghi
+                    rõ nguồn "Công TTĐT TPD21" khi phát hành lại thông tin từ website này.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BACK TO TOP BUTTON -->
+    <button id="btn-back-to-top" title="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="db.js"></script>
+    <script src="cms.js?v=UI_UPGRADE_V5"></script>
+    <script src="lang.js?v=2"></script>
+    <script>
+        window.onload = function () {
+            // 1. Initial Load of Standard Components
+            renderGlobalMenu(); // Tải menu tự động
+            checkAndLoadContextArticle();
+            loadDynamicMenu();
+            loadMarquee('qt-marquee');
+            loadNews('CB', 'qt-page-news');
+            startClock();
+            fetchWeather();
+            initBackToTop();
+
+            // 2. Handle View Switching Logic based on URL Params
+            const urlParams = new URLSearchParams(window.location.search);
+            const section = urlParams.get('section');
+
+            const dashboardView = document.getElementById('dashboard-view');
+            const detailView = document.getElementById('detail-view');
+            const detailIntro = document.getElementById('detail-intro');
+
+            if (section === 'intro') {
+                if (dashboardView) dashboardView.style.display = 'none';
+                if (detailView) detailView.style.display = 'block';
+                if (detailIntro) detailIntro.style.display = 'block';
+
+                // Scroll to top
+                window.scrollTo(0, 0);
+            } else if (section === 'notify') {
+                // If we had a specific notify section view, we'd toggle it here
+                // For now, maybe just scroll to notification box or show a different detail
+                // Implement specific logic if needed, or default to dashboard
+            } else {
+                // Default: Show Dashboard
+                if (dashboardView) dashboardView.style.display = 'flex';
+                if (detailView) detailView.style.display = 'none';
+            }
+        };
+    </script>
+    <script src="fix_text.js"></script>
+</body>
+
+</html>

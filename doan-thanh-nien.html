@@ -1,0 +1,566 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đoàn Thanh Niên - Tổ Dân Phố 21</title>
+    <!-- CACHE BUSTING -->
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V13">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- FONT CHỮ MỚI: ROBOTO (Hỗ trợ Tiếng Việt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+
+</head>
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- UTILITY BAR -->
+        <div class="utility-bar">
+            <div class="utility-left">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="current-date">Đang tải ngày...</span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-clock"></i>
+                <span id="current-time">--:--:--</span>
+            </div>
+
+            <div class="utility-center">
+                <span class="utility-text-scroll" data-i18n="header_thanhnien">CHI ĐOÀN THANH NIÊN CỘNG SẢN HỒ CHÍ
+                    MINH</span>
+            </div>
+
+            <div class="utility-right">
+                <!-- Language Selector Removed -->
+            </div>
+            <!-- GOOGLE TRANSLATE WIDGET (HIDDEN BUT ACTIVE) -->
+            <div id="google_translate_element"
+                style="visibility:hidden; width:1px; height:1px; overflow:hidden; position:absolute; top:0; left:0; z-index:-1;">
+            </div>
+            <script type="text/javascript">
+                function googleTranslateElementInit() {
+                    new google.translate.TranslateElement({
+                        pageLanguage: 'vi',
+                        includedLanguages: 'en,vi',
+                        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                        autoDisplay: false
+                    }, 'google_translate_element');
+                }
+            </script>
+            <script type="text/javascript"
+                src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+            <!-- CUSTOM CONTROL SCRIPT -->
+            <script>
+                function setLang(lang) {
+                    console.log("Setting language to:", lang);
+
+                    // 1. Notification
+                    if (window.showToast) {
+                        window.showToast(lang === 'vi' ? 'Đang chuy?n vị Tiếng Việt...' : 'Translating to English...');
+                    } else {
+                        let toast = document.createElement('div');
+                        toast.innerText = lang === 'vi' ? 'Đang chuy?n vị Tiếng Việt...' : 'Translating to English...';
+                        toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#2196F3; color:white; padding:10px 20px; border-radius:4px; z-index:99999;';
+                        document.body.appendChild(toast);
+                    }
+
+                    // 2. Cookie Logic (Aggressive)
+                    if (lang === 'vi') {
+                        // Clear cookies in every possible way
+                        let domains = [window.location.hostname, "." + window.location.hostname, ""];
+                        let paths = ["/", window.location.pathname];
+
+                        domains.forEach(d => {
+                            paths.forEach(p => {
+                                document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + p + (d ? "; domain=" + d : "");
+                            });
+                        });
+                    } else {
+                        // Set cookies in every possible way
+                        let val = "/vi/en";
+                        document.cookie = "googtrans=" + val + "; path=/";
+                        document.cookie = "googtrans=" + val + "; path=/; domain=" + window.location.hostname;
+                    }
+
+                    // 3. Reload to apply
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
+                }
+
+                // ON LOAD: Check and set selector
+                window.addEventListener('load', function () {
+                    var match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+                    var sel = document.getElementById('custom-lang-selector');
+
+                    // Console debugging
+                    console.log("Current Cookie:", document.cookie);
+
+                    if (match && match[2].includes('/en') && sel) {
+                        sel.value = 'en';
+                        // Show success toast
+                        let toast = document.createElement('div');
+                        toast.innerHTML = '<i class="fa-solid fa-check"></i> Translated to English';
+                        toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#4CAF50; color:white; padding:10px 20px; border-radius:4px; z-index:99999; animation: fadein 0.5s;';
+                        document.body.appendChild(toast);
+                        setTimeout(() => toast.remove(), 4000);
+                    }
+                });
+            </script>
+
+
+        </div>
+
+        <!-- HEADER -->
+        <header class="top-banner">
+            <div class="banner-content">
+                <img src="https://cdn.haitrieu.com/wp-content/uploads/2021/11/Logo-Doan-Thanh-NIen-Cong-San-Ho-Chi-Minh-1.png"
+                    alt="Logo Đoàn" class="logo-img">
+                <div class="banner-text">
+                    <div class="org-name-1" data-i18n="org_sub_thanhnien">Đoàn Phường Ba Đình</div>
+                    <h1 class="org-name-2" data-i18n="header_thanhnien">CHI Đoàn Thanh Niên CỘNG SẢN HỒ CHÍ MINH Số 21
+                    </h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav class="main-nav" id="main-nav">
+            <ul>
+                <li><a href="index.html" class="nav-item"><i class="fa-solid fa-home"></i> <span
+                            data-i18n="nav_home">Trang
+                            Chủ</span></a></li>
+                <li><a href="dong-gop.html" class="nav-item" style="background-color: var(--primary-red);"><i
+                            class="fa-solid fa-hand-holding-heart"></i> <span>ĐÓNG GÓP & VẬN ĐỘNG</span></a></li>
+                <li class="dropdown">
+                    <a href="cac-doan-the.html" class="nav-item"><i class="fa-solid fa-users"></i> <span
+                            data-i18n="nav_groups">CÁC ĐOÀN THỂ</span> <i class="fa-solid fa-caret-down"
+                            style="margin-left:5px;"></i></a>
+                    <div class="dropdown-content">
+                        <!-- Chi Bộ -->
+                        <div class="dropdown-sub">
+                            <a href="chi-bo.html?category=CB" data-i18n="group_chibo">Chi Bộ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="chi-bo.html?category=CB" data-i18n="intro_general">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=CB" data-i18n="news_chibo">Tin Tức Chi Bộ</a>
+                                <a href="chi-bo.html?category=CB&section=notify" data-i18n="doc_guidelines">Văn Bản -
+                                    Chỉ Đạo</a>
+                            </div>
+                        </div>
+
+                        <!-- Mặt Trận Tổ Quốc -->
+                        <div class="dropdown-sub">
+                            <a href="mat-tran-to-quoc.html?category=MT" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
+                            <div class="dropdown-sub-content">
+                                <a href="mat-tran-to-quoc.html?category=MT" data-i18n="intro_general">Giới Thiệu
+                                    Chung</a>
+                                <a href="tin-tuc.html?category=MT" data-i18n="news_mttq">Tin Tức - Sự Kiện</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI Phụ Nữ -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="group_phunu">Hội Phụ Nữ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="intro_general">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=PHU_NU" data-i18n="news_phunu">Tin Tức Hội Phụ Nữ</a>
+                                <a href="hoi-phu-nu.html?category=PHU_NU&section=movements"
+                                    data-i18n="movement_phong_trao">Phong Trào Thi Đua</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI Cựu Chiến Binh -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="group_ccb">Hội Cựu Chiến Binh</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="intro_general">Giới Thiệu
+                                    Chung</a>
+                                <a href="tin-tuc.html?category=CCB" data-i18n="news_ccb">Tin Tức CCB</a>
+                            </div>
+                        </div>
+
+                        <!-- Đoàn Thanh Niên -->
+                        <div class="dropdown-sub">
+                            <a href="doan-thanh-nien.html?category=TN" data-i18n="group_thanhnien">Đoàn Thanh Niên</a>
+                            <div class="dropdown-sub-content">
+                                <a href="doan-thanh-nien.html?section=intro" data-i18n="intro_general">Giới Thiệu
+                                    Chung</a>
+                                <a href="tin-tuc.html?category=TN" data-i18n="news_thanhnien">Tin Tức - Hoạt Động</a>
+                                <a href="doan-thanh-nien.html?category=TN&section=youth" data-i18n="youth_corner">Góc
+                                    Thanh Niên</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI NGƯỜI CAO TUỔI -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="group_nct">Hội Người Cao Tuổi</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="intro_general">Giới Thiệu
+                                    Chung</a>
+                                <a href="tin-tuc.html?category=NCT" data-i18n="news_nct">Tin Tức NCT</a>
+                            </div>
+                        </div>
+
+                        <!-- BAN Khuyến Học -->
+                        <div class="dropdown-sub">
+                            <a href="ban-khuyen-hoc.html?category=KH" data-i18n="group_khuyenhoc">Ban Khuyến Học</a>
+                            <div class="dropdown-sub-content">
+                                <a href="ban-khuyen-hoc.html?category=KH" data-i18n="intro_general">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=KH" data-i18n="news_khuyenhoc">Tin Tức Khuyến Học</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </li>
+
+                <li><a href="lien-he.html" class="nav-item"><i class="fa-solid fa-address-book"></i> <span
+                            data-i18n="nav_contact">Liên Hệ</span></a></li>
+                <li class="login-item" style="margin-left: auto;"><a href="admin.html"><i
+                            class="fa-solid fa-user-gear"></i>
+                        <span data-i18n="nav_login">Đăng Nhập</span></a></li>
+            </ul>
+        </nav>
+
+        <!-- MAIN CONTENT WRAPPER -->
+        <div class="main-content">
+
+            <!-- VIEW 1: DASHBOARD (Default) -->
+            <div id="dashboard-view" style="display: flex; width: 100%; gap: 20px;">
+                <!-- LEFT COLUMN (Main News) -->
+                <div class="left-col">
+                    <!-- NEWS BOX -->
+                    <div class="section-box" style="border-top: 3px solid var(--primary-blue);">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="news_title_thanhnien">TIN TỨC THANH NIÊN</span>
+                        </div>
+                        <div class="box-body" id="qt-homepage-news">
+                            <!-- News Loaded by JS -->
+                            <div style="font-style: italic; color: #666; padding: 10px;" data-i18n="loading_news">Đang
+                                kết
+                                nối đến Hệ Thống tin tức...</div>
+                        </div>
+                    </div>
+
+                    <!-- INTRO BOX -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="intro_thanhnien">CÔNG TÁC ĐOÀN VÀ PHONG TRÀO THANH
+                                NIÊN</span>
+                        </div>
+                        <div class="box-body"
+                            style="padding: 15px; font-size: 15px; line-height: 1.6; text-align: justify; overflow: hidden;">
+
+                            <div style="float: left; width: 110px; margin-right: 15px; text-align: center;">
+                                <img src="https://upload.wikimedia.org/wikipedia/vi/0/09/Huy_Hi%E1%BB%87u_%C4%90o%C3%A0n.png"
+                                    style="width: 100px; margin-bottom: 5px;" alt="Logo Đoàn">
+                                <p style="font-size: 11px; font-weight: bold; color: #0066cc; margin: 0;">Tiên phong -
+                                    Sáng
+                                    tạo</p>
+                            </div>
+
+                            <p style="margin-bottom: 10px;">
+                                <strong>Chi đoàn Thanh Niên Cộng sản Hồ Chí Minh Tổ Dân Phố Số 21</strong> tự hào khẳng
+                                định vị thế là "cánh tay phải" độc lập, là đội dự bị tin cậy tuyệt đối của Đảng. Chúng
+                                tôi là nơi quy tụ những trái tim tuổi trẻ sục sôi nhiệt huyết, luôn mang trong mình khát
+                                vọng cống hiến cháy bỏng, sẵn sàng dấn thân đi đầu trong mọi gian khổ. Là lực lượng tiên
+                                phong, xung kích trên mọi Mặt Trận, Chi đoàn luôn kiên định mục tiêu chăm lo, bảo vệ
+                                quyền và lợi ích chính đáng, hợp pháp của thanh thiếu nhi, đồng thời là ngọn cờ đầu
+                                trong việc lan tỏa những giá trị nhân văn tốt đẹp đến toàn thể nhân dân trên địa bàn.
+                            </p>
+
+                            <p style="margin-bottom: 15px;">
+                                Thấm nhuần lời dạy vàng ngọc của Bác: <em>"Đâu cần Thanh Niên có, việc gì khó có thanh
+                                    niên"</em>, mọi đoàn viên đều ý thức sâu sắc trách nhiệm của mình trước thời đại.
+                                Chi đoàn không ngừng đổi mới sáng tạo, tiên phong lĩnh ấn trọng trách trong công cuộc
+                                <strong>Chuyển đổi số quốc gia</strong>, đưa công nghệ đến TỪNG ngõ ngách cuộc sống. Bên
+                                cạnh đó, sắc áo xanh tình nguyện luôn in đậm dấu ấn trong các Hoạt động an sinh xã hội
+                                Quan Trọng như: phong trào hiến máu nhân đạo "Giọt hồng nghĩa tình", các chiến dịch ra
+                                quân vệ sinh bảo vệ môi trường, tiếp sức mùa thi và đặc biệt là chiến dịch hỗ trợ người
+                                dân tiếp cận các tiện ích số hiện đại (VNeID, Dịch vụ công).
+                            </p>
+
+                            <div style="clear: both; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #eee;">
+                                <p
+                                    style="font-weight: bold; color: #0066cc; margin-bottom: 10px; text-transform: uppercase;">
+                                    <i class="fa-solid fa-star"></i> Sứ mệnh & Tầm nhìn:
+                                </p>
+                                <div
+                                    style="font-style: italic; color: #555; padding-left: 10px; border-left: 3px solid #0066cc;">
+                                    "Xây dựng lớp Thanh Niên thời kỳ đổi mới có tâm trong, trí sáng, hoài bão lớn; giàu
+                                    lòng yêu nước, đoàn kết, sáng tạo, sẵn sàng cống hiến vì sự nghiệp xây dựng và bảo
+                                    vệ Tổ Quốc."
+                                </div>
+                            </div>
+                            <div style="text-align: right; margin-top: 10px;">
+                                <a href="doan-thanh-nien.html?section=intro"
+                                    style="color: #0066cc; font-weight: bold; font-size: 14px;">Xem chi tiết >></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN (Sidebar) -->
+                <div class="right-col">
+                    <div id="fund-widget-tn"></div>
+                    <script>
+                        window.addEventListener('load', function () {
+                            // Wait for cms.js to be ready
+                            setTimeout(() => {
+                                if (typeof renderFundsWidget === 'function') {
+                                    renderFundsWidget('fund-widget-tn', 'TN');
+                                }
+                            }, 1000);
+                        });
+                    </script>
+
+
+                    <!-- Administrative Links -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="box_management">ĐIỀU HÀNH TÁC NGHIỆP</span>
+                        </div>
+                        <div class="box-body" style="padding: 10px;">
+                            <a href="chi-bo.html" class="sidebar-link" data-i18n="group_chibo">Chi Bộ</a>
+                            <a href="mat-tran-to-quoc.html" class="sidebar-link" data-i18n="group_mttq">Mặt Trận Tổ
+                                Quốc</a>
+                            <a href="hoi-phu-nu.html" class="sidebar-link" data-i18n="group_phunu">Hội Phụ Nữ</a>
+                            <a href="hoi-cuu-chien-binh.html" class="sidebar-link" data-i18n="group_ccb">Hội Cựu
+                                Chiến
+                                Binh</a>
+                            <a href="doan-thanh-nien.html" class="sidebar-link"
+                                style="color: var(--primary-blue); font-weight: bold;" data-i18n="group_thanhnien">Đoàn
+                                Thanh
+                                Niên</a>
+                            <a href="hoi-nguoi-cao-tuoi.html" class="sidebar-link" data-i18n="group_nct">Hội Người
+                                Cao
+                                Tuổi</a>
+                        </div>
+                    </div>
+
+                    <!-- NOTIFICATIONS -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="box_notifications">THÔNG BÁO MỚI</span>
+                        </div>
+                        <div class="box-body">
+                            <marquee direction="up" scrollamount="2" height="150" onmouseover="this.stop()"
+                                onmouseout="this.start()" id="qt-marquee">
+                                <div style="padding:10px;" data-i18n="loading_notify">Đang tải thông báo...</div>
+                            </marquee>
+                        </div>
+                    </div>
+
+                    <!-- SIDEBAR: WORK CONTACT -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="box_contact_work">LIÊN HỆ CÔNG TÁC</span>
+                        </div>
+                        <div class="box-body" style="padding: 15px; line-height: 1.8;">
+                            <strong>Bí thư chi đoàn:</strong> Đ/c Lê Văn Mạnh<br>
+                            <strong>SĐT/Zalo:</strong> 0988.xxx.xxx<br>
+                            <strong>Email:</strong> doanthanhnientdp21@gmail.com<br>
+                            <strong>Fanpage:</strong> <a href="#" style="color: blue;">Đoàn Thanh Niên TDP 21</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: DETAIL CONTENT (Hidden by Default) -->
+            <div id="detail-view"
+                style="display: none; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 30px;">
+                <div id="detail-intro-tn" style="display: none;">
+                    <button onclick="window.location.href='doan-thanh-nien.html'"
+                        style="margin-bottom: 20px; padding: 8px 15px; border: 1px solid #ddd; background: #f5f5f5; cursor: pointer; border-radius: 4px;">
+                        <i class="fa-solid fa-arrow-left"></i> Quay lại Dashboard
+                    </button>
+                    <h1
+                        style="color: #0066cc; text-align: center; text-transform: uppercase; margin-bottom: 20px; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+                        CHI Đoàn Thanh Niên CỘNG SẢN HỒ CHÍ MINH - TỔ DÂN PHỐ SỐ 21
+                    </h1>
+
+                    <div style="font-size: 16px; line-height: 1.8; text-align: justify; color: #333;">
+                        <p style="margin-bottom: 20px;">
+                            <strong>Đoàn Thanh Niên Cộng sản Hồ Chí Minh</strong> là Tổ chức chính trị - xã hội của
+                            Thanh Niên Việt Nam do Đảng Cộng sản Việt Nam và Chủ tịch Hồ Chí Minh sáng lập, lãnh đạo và
+                            rèn luyện. Trải qua chặng đường lịch sử vẻ vang, Đoàn đã không ngừng lớn mạnh, xứng đáng là
+                            đội dự bị tin cậy của Đảng, là trường học xã hội chủ nghĩa của Thanh Niên.
+                        </p>
+                        <p>
+                            Kế thừa và phát huy truyền thống đó, <strong>Chi đoàn Thanh Niên Tổ Dân Phố Số 21</strong>
+                            là một tập thể đoàn kết, vững mạnh, nơi quy tụ những gương mặt trẻ ưu tú, giàu tri thức và
+                            nhiệt huyết. Chúng tôi không chỉ là lực lượng xung kích trong các phong trào văn hóa, thể
+                            thao, an sinh xã hội tại địa phương mà còn là những người tiên phong trong công cuộc đổi mới
+                            sáng tạo và chuyển đổi số.
+                        </p>
+
+                        <h3
+                            style="color: #0066cc; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #0066cc; padding-left: 10px;">
+                            1. VAI TRÒ & SỨ MỆNH LỊCH SỬ
+                        </h3>
+                        <div style="padding: 15px; background: #f8fbff; border-radius: 8px;">
+                            <p style="margin-bottom: 15px;">
+                                <strong style="color: #d32f2f;">🔥 ĐỘI DỰ BỊ TIN CẬY CỦA ĐẢNG:</strong><br>
+                                Là "cánh tay phải" của Đảng, Chi đoàn thường xuyên giác ngộ lý tưởng cách mạng, bồi
+                                dưỡng, rèn luyện những đoàn viên ưu tú để giới thiệu cho Đảng, tạo nguồn cán bộ kế cận
+                                vừa "hồng" vừa "chuyên", phục vụ độc lập cho sự nghiệp công nghiệp hóa, hiện đại hóa đất
+                                nước.
+                            </p>
+                            <p style="margin-bottom: 15px;">
+                                <strong style="color: #d32f2f;">🏫 TRƯỜNG HỌC XÃ HỘI CHỦ NGHĨA:</strong><br>
+                                Là môi trường rèn luyện thực tiễn sinh động, giúp Thanh Niên tu dưỡng đạo đức, trau dồi
+                                tri thức, kỹ năng xã hội, hình thành nhân cách và lối sống văn minh, tích cực.
+                            </p>
+                            <p style="margin-bottom: 0;">
+                                <strong style="color: #d32f2f;">🤝 NGƯỜI BẠN ĐỒNG HÀNH CỦA THANH NIÊN:</strong><br>
+                                Đại diện, chăm lo và bảo vệ quyền lợi hợp pháp, chính đáng của thanh thiếu nhi; đồng
+                                hành, hỗ trợ Thanh Niên trong lập thân, lập nghiệp, học tập và vui chơi giải trí lành
+                                mạnh.
+                            </p>
+                        </div>
+
+                        <h3
+                            style="color: #0066cc; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #0066cc; padding-left: 10px;">
+                            2. CƠ CẤU TỔ CHỨC
+                        </h3>
+                        <p>Chi đoàn hiện có <strong>08 đoàn viên</strong> đang sinh hoạt thường xuyên và hơn 50 thanh
+                            niên cư trú trên địa bàn.</p>
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff;">
+                            <thead>
+                                <tr style="background: #e3f2fd; color: #333;">
+                                    <th style="border: 1px solid #90caf9; padding: 10px;">STT</th>
+                                    <th style="border: 1px solid #90caf9; padding: 10px;">Họ tên</th>
+                                    <th style="border: 1px solid #90caf9; padding: 10px;">Chức vụ</th>
+                                    <th style="border: 1px solid #90caf9; padding: 10px;">Liên Hệ</th>
+                                    <th style="border: 1px solid #90caf9; padding: 10px;">Email</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">1</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Đ/c <strong>Nguyễn Cao Hoàng
+                                            Quý</strong>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Bí thư Chi đoàn</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">0837.290.703</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">hoangquy.ctxh@gmail.com</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">2</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Đ/c <strong>Bùi Đức Anh</strong>
+                                    </td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">Phó Bí thư</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">CXĐ</td>
+                                    <td style="border: 1px solid #ddd; padding: 10px;">CXĐ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <h3
+                            style="color: #0066cc; margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid #0066cc; padding-left: 10px;">
+                            3. HOẠT ĐỘNG TIÊU BIỂU
+                        </h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div
+                                style="background: #f3f9ff; padding: 15px; border-radius: 8px; border: 1px solid #bfdbfe; text-align: center;">
+                                <i class="fa-solid fa-laptop-code"
+                                    style="font-size: 30px; color: #0066cc; margin-bottom: 10px;"></i>
+                                <h4 style="color: #0066cc; margin-bottom: 5px;">Chuyển đổi số</h4>
+                                <p style="font-size: 13px;">Hỗ trợ cài đặt VNeID, dịch vụ công trực tuyến cho người dân.
+                                </p>
+                            </div>
+                            <div
+                                style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; text-align: center;">
+                                <i class="fa-solid fa-droplet"
+                                    style="font-size: 30px; color: #ef4444; margin-bottom: 10px;"></i>
+                                <h4 style="color: #16a34a; margin-bottom: 5px;">Hiến máu nhân đạo</h4>
+                                <p style="font-size: 13px;">Đạt chỉ tiêu hiến máu được giao năm 2025.</p>
+                            </div>
+                            <div
+                                style="background: #fff7ed; padding: 15px; border-radius: 8px; border: 1px solid #fed7aa; text-align: center;">
+                                <i class="fa-solid fa-broom"
+                                    style="font-size: 30px; color: #f97316; margin-bottom: 10px;"></i>
+                                <h4 style="color: #ea580c; margin-bottom: 5px;">Ngày Chủ Nhật Xanh</h4>
+                                <p style="font-size: 13px;">Ra quân vệ sinh môi trường, bóc xóa quảng cáo rao vặt vào
+                                    sáng Chủ nhật hàng tuần.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <footer>
+            <div class="footer-content">
+                <div class="footer-info">
+                    <p style="font-size: 16px; margin-bottom: 15px;"><strong data-i18n="footer_title">BAN LÃNH ĐẠO TỔ
+                            DÂN PHỐ SỐ 21 - PHƯỜNG BA ĐÌNH</strong></p>
+                    <p data-i18n="footer_addr">Địa chỉ: Nhà Sinh Hoạt Cộng Đồng Số 21, Phường Ba Đình, TP Hà
+                        Nội</p>
+                    <p data-i18n="footer_contact">Điện thoại: 024.3....... | Email: todanpho21@hanoi.gov.vn</p>
+                    <p style="margin-top: 15px; font-style: italic; opacity: 0.8;" data-i18n="footer_copyright">Bản
+                        quyền thuộc về Tổ Dân Phố 21.</p>
+                </div>
+            </div>
+        </footer>
+
+        <button id="btn-back-to-top" title="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="db.js"></script>
+
+    <script src="cms.js?v=UI_UPGRADE_V5"></script>
+    <script src="lang.js?v=2"></script>
+    <script>
+        window.onload = function () {
+            checkAndLoadContextArticle();
+            loadNews('TN', 'qt-homepage-news');
+            loadDynamicMenu();
+            startClock();
+            fetchWeather();
+            initBackToTop();
+
+            // 2. Handle View Switching Logic based on URL Params
+            const urlParams = new URLSearchParams(window.location.search);
+            const section = urlParams.get('section');
+
+            const dashboardView = document.getElementById('dashboard-view');
+            const detailView = document.getElementById('detail-view');
+            const detailIntro = document.getElementById('detail-intro-tn');
+
+            if (section === 'intro') {
+                if (dashboardView) dashboardView.style.display = 'none';
+                if (detailView) detailView.style.display = 'block';
+                if (detailIntro) detailIntro.style.display = 'block';
+
+                // Scroll to top
+                window.scrollTo(0, 0);
+            } else {
+                if (dashboardView) dashboardView.style.display = 'flex';
+                if (detailView) detailView.style.display = 'none';
+            }
+        };
+    </script>
+    <script src="fix_text.js"></script>
+</body>
+
+</html>

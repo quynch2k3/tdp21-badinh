@@ -1,0 +1,402 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mặt Trận Tổ Quốc - Tổ Dân Phố 21</title>
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V13">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- FONT CHỮ MỚI: ROBOTO (Hỗ trợ Tiếng Việt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
+
+</head>
+
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- UTILITY BAR (OFFICIAL FEEL) -->
+        <div class="utility-bar">
+            <div class="utility-left">
+                <i class="fa-solid fa-cloud-sun"></i>
+                <span id="current-weather"><span data-i18n="weather_prefix">Hà Nội:</span> <span
+                        id="weather-temp">--°C</span></span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-calendar-check"></i>
+                <span id="current-date">Đang tải ngày...</span>
+                <span class="utility-divider">|</span>
+                <i class="fa-regular fa-clock"></i>
+                <span id="current-time">--:--:--</span>
+            </div>
+            <div class="utility-center">
+                <span class="utility-text-scroll" data-i18n="welcome_msg">CHÀO MỪNG QUÝ KHÁCH ĐẾN VỚI CỔNG THÔNG TIN
+                    ĐIỆN TỬ TỔ DÂN PHỐ SỐ 21</span>
+            </div>
+
+            <div class="utility-right">
+                <div id="google_translate_element" style="display:none"></div>
+                <script type="text/javascript">
+                    function googleTranslateElementInit() {
+                        new google.translate.TranslateElement({
+                            pageLanguage: 'vi',
+                            includedLanguages: 'en,vi',
+                            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                            autoDisplay: false
+                        }, 'google_translate_element');
+                    }
+                </script>
+                <script type="text/javascript"
+                    src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+                <!-- CUSTOM CONTROL SCRIPT -->
+                <script>
+                    function setLang(lang) {
+                        console.log("Setting language to:", lang);
+
+                        // 1. Notification
+                        if (window.showToast) {
+                            window.showToast(lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...');
+                        } else {
+                            let toast = document.createElement('div');
+                            toast.innerText = lang === 'vi' ? 'Đang chuyển vị Tiếng Việt...' : 'Translating to English...';
+                            toast.style.cssText = 'position:fixed; top:20px; right:20px; background:#2196F3; color:white; padding:10px 20px; border-radius:4px; z-index:99999;';
+                            document.body.appendChild(toast);
+                        }
+
+                        // 2. Cookie Logic (Aggressive)
+                        if (lang === 'vi') {
+                            // Clear cookies in every possible way
+                            let domains = [window.location.hostname, "." + window.location.hostname, ""];
+                            let paths = ["/", window.location.pathname];
+
+                            domains.forEach(d => {
+                                paths.forEach(p => {
+                                    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=" + p + (d ? "; domain=" + d : "");
+                                });
+                            });
+                        } else {
+                            // Set cookies in every possible way
+                            let val = "/vi/en";
+                            document.cookie = "googtrans=" + val + "; path=/";
+                            document.cookie = "googtrans=" + val + "; path=/; domain=" + window.location.hostname;
+                        }
+
+                        // 3. Reload to apply
+                        setTimeout(() => {
+                            location.reload();
+                        }, 500);
+                    }
+
+                    // ON LOAD: Check and set selector
+                    window.addEventListener('load', function () {
+                        var match = document.cookie.match(new RegExp('(^| )googtrans=([^;]+)'));
+                        var sel = document.getElementById('custom-lang-selector');
+
+                        // Console debugging
+                        console.log("Current Cookie:", document.cookie);
+
+                        if (match && match[2].includes('/en') && sel) {
+                            sel.value = 'en';
+                            // Show success toast
+                            let toast = document.createElement('div');
+                            toast.innerHTML = '<i class="fa-solid fa-check"></i> Translated to English';
+                            toast.style.cssText = 'position:fixed; top:80px; right:20px; background:#4CAF50; color:white; padding:10px 20px; border-radius:4px; z-index:99999; animation: fadein 0.5s;';
+                            document.body.appendChild(toast);
+                            setTimeout(() => toast.remove(), 4000);
+                        }
+                    });
+                </script>
+
+
+            </div>
+        </div>
+
+        <!-- HEADER -->
+        <header class="top-banner">
+            <div class="banner-content">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Bi%E1%BB%83u_tr%C6%B0ng_M%E1%BA%B7t_tr%E1%BA%ADn_T%E1%BB%95_qu%E1%BB%91c_Vi%E1%BB%87t_Nam.svg"
+                    alt="Logo MTTQ" class="logo-img">
+                <div class="banner-text">
+                    <div class="org-name-1" data-i18n="org_sub_mttq">UBMTTQ VIỆT NAM PHƯỜNG BA ĐÌNH</div>
+                    <h1 class="org-name-2" data-i18n="header_mttq">BAN CÔNG TÁC MẶT TRẬN TỔ DÂN PHỐ SỐ 21</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION -->
+        <nav class="main-nav">
+            <!-- Updated Nav Menu Link for MTTQ -->
+            <ul>
+                <li><a href="index.html" class="nav-item"><i class="fa-solid fa-home"></i> <span
+                            data-i18n="nav_home">Trang Chủ</span></a></li>
+                <li><a href="dong-gop.html" class="nav-item" style="background-color: var(--primary-red);"><i
+                            class="fa-solid fa-hand-holding-heart"></i> <span>ĐÓNG GÓP & VẬN ĐỘNG</span></a></li>
+                <li class="dropdown">
+                    <a href="cac-doan-the.html" class="nav-item"><i class="fa-solid fa-users"></i> <span
+                            data-i18n="nav_groups">CÁC ĐOÀN THỂ</span> <i class="fa-solid fa-caret-down"
+                            style="margin-left:5px;"></i></a>
+                    <div class="dropdown-content">
+                        <!-- CHI BỘ -->
+                        <div class="dropdown-sub">
+                            <a href="chi-bo.html?category=CB" data-i18n="group_chibo">Chi Bộ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="chi-bo.html?section=intro">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=CB">Tin Tức Chi Bộ</a>
+                                <a href="chi-bo.html?section=notify">Văn Bản - Chỉ Đạo</a>
+                            </div>
+                        </div>
+
+                        <!-- Mặt Trận Tổ Quốc -->
+                        <div class="dropdown-sub">
+                            <a href="mat-tran-to-quoc.html?category=MT" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
+                            <div class="dropdown-sub-content">
+                                <a href="mat-tran-to-quoc.html?section=intro">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=MT">Tin Tức - Sự Kiện</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI Phụ Nữ -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="group_phunu">Hội Phụ Nữ</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-phu-nu.html?category=PHU_NU">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=PHU_NU">Tin Tức Hội Phụ Nữ</a>
+                                <a href="hoi-phu-nu.html?category=PHU_NU&section=movements">Phong Trào Thi Đua</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI Cựu Chiến Binh -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="group_ccb">Hội Cựu Chiến Binh</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-cuu-chien-binh.html?category=CCB">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=CCB">Tin Tức CCB</a>
+                            </div>
+                        </div>
+
+                        <!-- ĐOÀN THANH NIÊN -->
+                        <div class="dropdown-sub">
+                            <a href="doan-thanh-nien.html?category=TN" data-i18n="group_thanhnien">Đoàn Thanh Niên</a>
+                            <div class="dropdown-sub-content">
+                                <a href="doan-thanh-nien.html?category=TN">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=TN">Tin Tức - Hoạt Động</a>
+                                <a href="doan-thanh-nien.html?category=TN&section=youth">Góc Thanh Niên</a>
+                            </div>
+                        </div>
+
+                        <!-- HỘI NGƯỜI CAO TUỔI -->
+                        <div class="dropdown-sub">
+                            <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="group_nct">Hội Người Cao Tuổi</a>
+                            <div class="dropdown-sub-content">
+                                <a href="hoi-nguoi-cao-tuoi.html?category=NCT">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=NCT">Tin Tức NCT</a>
+                            </div>
+                        </div>
+
+                        <!-- BAN Khuyến Học -->
+                        <div class="dropdown-sub">
+                            <a href="ban-khuyen-hoc.html?category=KH" data-i18n="group_khuyenhoc">Ban Khuyến Học</a>
+                            <div class="dropdown-sub-content">
+                                <a href="ban-khuyen-hoc.html?category=KH">Giới Thiệu Chung</a>
+                                <a href="tin-tuc.html?category=KH">Tin Tức Khuyến Học</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </li>
+
+                <li><a href="lien-he.html" class="nav-item"><i class="fa-solid fa-address-book"></i> <span
+                            data-i18n="nav_contact">Liên Hệ</span></a></li>
+                <li class="login-item" style="margin-left: auto;"><a href="admin.html"><i
+                            class="fa-solid fa-user-gear"></i> <span data-i18n="nav_login">Đăng Nhập</span></a></li>
+            </ul>
+        </nav>
+
+
+
+        <!-- MAIN LAYOUT WRAPPER -->
+        <div class="main-content">
+
+
+
+
+            <div id="detail-view"
+                style="display: block; background: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 30px; width: 100%; box-sizing: border-box;">
+                <div id="detail-intro-mttq" style="display: block;">
+                    <h1
+                        style="color: var(--primary-blue); text-align: center; text-transform: uppercase; margin-bottom: 20px; font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 15px;">
+                        BAN CÔNG TÁC MẶT TRẬN TỔ QUỐC VIỆT NAM - TỔ DÂN PHỐ SỐ 21
+                    </h1>
+
+                    <div style="font-size: 16px; line-height: 1.8; text-align: justify; color: #333;">
+                        <p style="margin-bottom: 20px;">
+                            <strong>Mặt trận Tổ quốc Việt Nam</strong> là bộ phận cấu thành đặc biệt Quan Trọng của hệ
+                            thống chính trị nước Cộng hòa xã hội chủ nghĩa Việt Nam.
+                            Tại Tổ dân phố Số 21, <strong>Ban Công tác Mặt trận</strong> đóng vai trò trung tâm trong
+                            việc tập hợp, vận động và đoàn kết rộng rãi các tầng lớp nhân dân,
+                            tạo nên sức mạnh tổng hợp to lớn để thực hiện thắng lợi các nhiệm vụ chính trị của địa
+                            phương.
+                        </p>
+                        <p>
+                            Chúng tôi là cầu nối vững chắc giữa à Đảng và Lòng Dân, là nơi thể hiện ý chí và nguyện vọng
+                            của cộng đồng dân cư,
+                            góp phần xây dựng một xã hội "Dân giàu, nước mạnh, dân chủ, công bằng, văn minh".
+                        </p>
+
+                        <h3
+                            style="color: var(--primary-red); margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid var(--primary-blue); padding-left: 10px;">
+                            1. VỊ TRÍ & VAI TRÒ CHIẾN LƯỢC
+                        </h3>
+                        <p>Ban Công tác Mặt trận không chỉ là tổ chức liên minh chính trị mà còn là diễn đàn dân chủ của
+                            Nhân dân. Vai trò chiến lược bao gồm:</p>
+                        <ul style="list-style: none; padding-left: 0; margin-bottom: 20px;">
+                            <li style="margin-bottom: 10px; padding-left: 20px; position: relative;">
+                                <i class="fa-solid fa-star"
+                                    style="position: absolute; left: 0; top: 5px; color: #fbc02d; font-size: 10px;"></i>
+                                <strong>Tập hợp và Đoàn kết:</strong> Quy tụ mọi lực lượng, cá nhân tiêu biểu, người uy
+                                tín trong cộng đồng để củng cố vững chắc khối đại đoàn kết toàn dân.
+                            </li>
+                            <li style="margin-bottom: 10px; padding-left: 20px; position: relative;">
+                                <i class="fa-solid fa-star"
+                                    style="position: absolute; left: 0; top: 5px; color: #fbc02d; font-size: 10px;"></i>
+                                <strong>Tuyên truyền và Vận động:</strong> Biến chủ trương, chính sách thành hành động
+                                cách mạng cụ thể của quần chúng; triển khai sâu rộng các cuộc vận động, phong trào thi
+                                đua.
+                            </li>
+                            <li style="margin-bottom: 10px; padding-left: 20px; position: relative;">
+                                <i class="fa-solid fa-star"
+                                    style="position: absolute; left: 0; top: 5px; color: #fbc02d; font-size: 10px;"></i>
+                                <strong>Giám sát và Phản biện:</strong> Là "tai mắt" của Nhân dân, giám sát hoạt động
+                                của cơ quan công quyền, đảm bảo quyền làm chủ thực sự của Nhân dân được tôn trọng và
+                                thực thi.
+                            </li>
+                        </ul>
+
+                        <h3
+                            style="color: var(--primary-red); margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid var(--primary-blue); padding-left: 10px;">
+                            2. CƠ CẤU TỔ CHỨC
+                        </h3>
+                        <div style="background: #f9f9f9; padding: 20px; border-radius: 8px;">
+                            <p>Ban Công tác Mặt trận Tổ 21 gồm <strong>Trưởng ban</strong>, <strong>Phó ban</strong> và
+                                các Ủy viên đại diện cho các Chi hội đoàn thể, và các cá nhân tiêu biểu trong tổ dân
+                                phố.</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; background: #fff;">
+                                <thead>
+                                    <tr style="background: #e3f2fd;">
+                                        <th style="border: 1px solid #90caf9; padding: 10px;">STT</th>
+                                        <th style="border: 1px solid #90caf9; padding: 10px;">Họ tên</th>
+                                        <th style="border: 1px solid #90caf9; padding: 10px;">Chức vụ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">1</td>
+                                        <td style="border: 1px solid #ddd; padding: 10px;">Tiến sĩ <strong>Nguyễn Văn
+                                                A</strong></td>
+                                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">Trưởng
+                                            ban</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">2</td>
+                                        <td style="border: 1px solid #ddd; padding: 10px;">Bà <strong>Phạm Thị
+                                                H</strong></td>
+                                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">Phó ban
+                                            (Chi hội trưởng Phụ nữ)</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">3</td>
+                                        <td style="border: 1px solid #ddd; padding: 10px;">Ông <strong>Lê Văn K</strong>
+                                        </td>
+                                        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">Ủy viên
+                                            (Chi hội trưởng CCB)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h3
+                            style="color: var(--primary-red); margin-top: 30px; margin-bottom: 15px; font-size: 20px; border-left: 5px solid var(--primary-blue); padding-left: 10px;">
+                            3. CÁC CUỘC VẬN ĐỘNG TRỌNG TÂM
+                        </h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
+                                <h4 style="color: #ef6c00;"><i class="fa-solid fa-users-rays"></i> Cuộc vận động "Toàn
+                                    dân đoàn kết xây dựng nông thôn mới, đô thị văn minh"</h4>
+                                <p style="font-size: 14px; margin-top: 5px;">Tập trung vào 5 nội dung: Đoàn kết phát
+                                    triển kinh tế; Đoàn kết xây dựng đời sựng văn hóa; Đoàn kết bảo vệ môi trường; Đoàn
+                                    kết chấp hành pháp luật; Đoàn kết phát huy dân chủ.</p>
+                            </div>
+                            <div style="background: #e8f5e9; padding: 15px; border-radius: 8px;">
+                                <h4 style="color: #2e7d32;"><i class="fa-solid fa-cart-shopping"></i> Cuộc vận động
+                                    "Người Việt Nam ưu tiên dùng hàng Việt Nam"</h4>
+                                <p style="font-size: 14px; margin-top: 5px;">Vận động người dân trong tổ tin dùng và sử
+                                    dụng các sản phẩm hàng hóa do doanh nghiệp Việt Nam sản xuất, góp phần thúc đẩy kinh
+                                    tế đất nước.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 40px; text-align: center;">
+                        <a href="mat-tran-to-quoc.html"
+                            style="display: inline-block; padding: 10px 20px; background: #666; color: #fff; text-decoration: none; border-radius: 4px;">
+                            <i class="fa-solid fa-arrow-left"></i> Quay lại Trang Chính
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-info">
+                <p style="font-size: 16px; margin-bottom: 15px;"><strong data-i18n="footer_title">BAN LÃNH ĐẠO TỔ DÂN
+                        PHỐ SỐ 21 - PHƯỜNG BA
+                        ĐÌNH</strong></p>
+                <p data-i18n="footer_addr">Địa chỉ: Nhà Sinh Hoạt Cộng Đồng Số 21, Phường Ba Đình, TP Hà Nội</p>
+                <p data-i18n="footer_contact">Điện thoại: 024.3....... | Email: todanpho21@hanoi.gov.vn</p>
+                <p style="margin-top: 15px; font-style: italic; opacity: 0.8;" data-i18n="footer_copyright">Bản quyền
+                    thuộc về Tổ Dân Phố 21. Ghi
+                    rõ nguồn "Cổng TTĐT TPD21" khi phát hành lại thông tin từ website này.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- BACK TO TOP BUTTON -->
+    <button id="btn-back-to-top" title="Lên đầu trang"><i class="fa-solid fa-arrow-up"></i></button>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="db.js"></script>
+    <script src="cms.js?v=UI_UPGRADE_V5"></script>
+    <script src="lang.js?v=2"></script>
+    <script>
+        window.onload = function () {
+            // 1. Initial Load of Standard Components
+            checkAndLoadContextArticle();
+            loadDynamicMenu();
+            loadMarquee('qt-marquee');
+            loadNews('MT', 'qt-page-news');
+            startClock();
+            fetchWeather();
+            initBackToTop();
+
+
+        };
+    </script>
+    <script src="fix_text.js"></script>
+</body>
+
+</html>

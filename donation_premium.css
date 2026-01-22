@@ -1,0 +1,137 @@
+/* --- PREMIUM DONATION WIDGET --- */
+.premium-widget-card {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    /* Softer shadow */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    /* For header radius */
+}
+
+.premium-widget-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    /* Blue Gradient */
+    padding: 20px;
+    text-align: center;
+    color: white;
+}
+
+.premium-input-group {
+    position: relative;
+    margin-bottom: 25px;
+    /* More spacing */
+}
+
+.premium-input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.premium-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+    color: #334155;
+    outline: none;
+}
+
+.premium-input:focus {
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.premium-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    background: #f1f5f9;
+    padding: 10px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    user-select: none;
+    margin-bottom: 25px;
+}
+
+.premium-checkbox-wrapper:hover {
+    background: #e2e8f0;
+}
+
+.premium-checkbox {
+    width: 20px;
+    height: 20px;
+    accent-color: #3b82f6;
+    margin-right: 12px;
+    cursor: pointer;
+}
+
+.premium-amount-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.premium-chip {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.premium-chip:hover {
+    border-color: #3b82f6;
+    color: #3b82f6;
+    background: #eff6ff;
+}
+
+.premium-submit-btn {
+    width: 100%;
+    background: linear-gradient(to right, #dc2626, #991b1b);
+    /* Red Gradient */
+    color: white;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    border: none;
+    border-radius: 50px;
+    /* Pill shape */
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.premium-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 25px rgba(220, 38, 38, 0.4);
+    background: linear-gradient(to right, #ef4444, #b91c1c);
+}
+
+.premium-submit-btn:disabled {
+    background: #cbd5e1;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* Animations included in original CSS */
