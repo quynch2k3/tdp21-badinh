@@ -778,8 +778,8 @@ async function renderFundDetail_OLD(container, fundId) {
                                 <button onclick="setAmountPage(500000)" class="btn-amount-chip">500k</button>
                             </div>
 
-                            <button onclick="registerAndGenQR()" id="btn-gen-qr-page" class="btn-p-submit pulse-red" disabled>
-                                TẠO MÃ QR & GHI DANH <i class="fa-solid fa-qrcode"></i>
+                            <button onclick="registerAndGenNganLuong()" id="btn-gen-qr-page" class="btn-p-submit pulse-red" disabled>
+                                THANH TOÁN NGÂN LƯỢNG <i class="fa-solid fa-credit-card"></i>
                             </button>
                             
                             <p style="font-size:11px; color:#666; margin-top:15px; text-align:center; line-height:1.4;">
@@ -868,21 +868,17 @@ async function renderFundDetail_OLD(container, fundId) {
 }
 
 // 4. ACTION: REGISTER & GEN QR
-// --- MOMO CONFIG ---
-// CAUTION: EXPOSING SECRET KEY ON CLIENT SIDE IS RISKY. USE SERVER-SIDE FOR PRODUCTION.
-const MOMO_CONFIG = {
-    partnerCode: "MOMOP1YJ20240215",
-    accessKey: "4JFCRonN39LLBhgm",
-    secretKey: "3cg9f9GQOZGBbAnXL1fQi5G6BlzqsCy4",
-    // DIRECT API (Blocked by CORS)
-    // apiEndpoint: "https://payment.momo.vn/v2/gateway/api/create"
+// --- NGAN LUONG CONFIG ---
+// NOTE: SECURITY UPDATE
+// Secret keys are NO LONGER stored here. They are in 'Code.gs' (Google Apps Script).
+// This client just calls the script to get the secure URL.
 
-    // LOCAL PROXY (Works reliably on Localhost with 'node proxy.js')
-    apiEndpoint: "http://localhost:3000"
-};
+// IMPORTANT: Replace this with your deployed Web App URL from Google Apps Script
+// Publish -> Deploy as Web App -> Execute as Me -> Access: Anyone
+const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz1JvDQmhW753skzNnCIk4xt_uvu2gaWFSVEmL_Ej3pp0x82yC3kBMa5j0dFh6nD-Ebzw/exec";
 
-// 4. ACTION: REGISTER & PAY WITH MOMO
-async function registerAndGenQR() {
+// 4. ACTION: REGISTER & PAY WITH NGAN LUONG
+async function registerAndGenNganLuong() {
     if (!window.currentFundData) return;
     const fund = window.currentFundData;
     let name = document.getElementById('d-name-page').value.trim();
@@ -898,11 +894,7 @@ async function registerAndGenQR() {
     if (isAnonymous) name = "Mạnh thường quân (Ẩn danh)";
 
     const amount = parseInt(amountStr);
-    const orderId = MOMO_CONFIG.partnerCode + new Date().getTime();
-    const requestId = orderId;
-
-    // Generate Unique Transaction Code
-    const transactionCode = generateTransactionCode();
+    const orderId = "TDP21_" + new Date().getTime(); // Unique ID
 
     // 1. DEFER SAVE (Store payload)
     window.pendingDonationPayload = {
@@ -911,108 +903,40 @@ async function registerAndGenQR() {
         amount: amount,
         timestamp: new Date().toISOString(),
         verified: false, // Pending Admin Approval
-        method: 'MoMo',
+        method: 'NganLuong',
         isAnonymous: isAnonymous,
-        code: transactionCode
+        code: orderId
     };
 
     // SAVE SESSION (Critical for Redirect Recovery)
-    localStorage.setItem('pending_momo_donation', JSON.stringify({
+    localStorage.setItem('pending_nganluong_donation', JSON.stringify({
         payload: window.pendingDonationPayload,
         timestamp: Date.now()
     }));
 
-    // Match VietQR format: UNG HO [CODE] [NAME]
-
-    // HELPER: Remove Accents for Banking Compatibility
-    function removeAccents(str) {
-        if (!str) return "";
-        return str.normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/đ/g, "d").replace(/Đ/g, "D")
-            .replace(/[^a-zA-Z0-9 ]/g, "") // Remove special chars
-            .toUpperCase();
-    }
-
-    const cleanName = removeAccents(name);
-    const cleanFund = removeAccents(fund.title || "");
-
-    // SMART TRUNCATE (Max 50 chars for safe banking copatibility)
-    // Priority: Prefix + Code + Name + Fund
-    const prefix = `UNG HO ${transactionCode}`;
-    let orderInfo = `${prefix} ${cleanName} ${cleanFund}`;
-
-    // If too long, trim Fund first
-    if (orderInfo.length > 50) {
-        orderInfo = `${prefix} ${cleanName}`; // Drop fund
-
-        // If still too long, trim Name
-        if (orderInfo.length > 50) {
-            const allowedNameLen = 50 - prefix.length - 1;
-            orderInfo = `${prefix} ${cleanName.substring(0, allowedNameLen)}`;
-        }
-    }
-
-    const redirectUrl = window.location.href; // Return here
-    const ipnUrl = window.location.href; // Webhook (Not usable on static site)
-    const requestType = "captureWallet";
-    const extraData = ""; // Pass email/hidden data if needed
-
-    // rawSignature = accessKey=$accessKey&amount=$amount&extraData=$extraData&ipnUrl=$ipnUrl&orderId=$orderId&orderInfo=$orderInfo&partnerCode=$partnerCode&redirectUrl=$redirectUrl&requestId=$requestId&requestType=$requestType
-    const rawSignature = `accessKey=${MOMO_CONFIG.accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${MOMO_CONFIG.partnerCode}&redirectUrl=${redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
-
-    // Generate Signature
-    let signature = "";
-    try {
-        // CryptoJS must be loaded
-        signature = CryptoJS.HmacSHA256(rawSignature, MOMO_CONFIG.secretKey).toString(CryptoJS.enc.Hex);
-    } catch (e) {
-        alert("Lỗi thư viện mã hóa: " + e.message);
-        return;
-    }
-
-    // Prepare Payload
-    const requestBody = {
-        partnerCode: MOMO_CONFIG.partnerCode,
-        accessKey: MOMO_CONFIG.accessKey,
-        requestId: requestId,
-        amount: amount,
-        orderId: orderId,
-        orderInfo: orderInfo,
-        redirectUrl: redirectUrl,
-        ipnUrl: ipnUrl,
-        extraData: extraData,
-        requestType: requestType,
-        signature: signature,
-        lang: "vi"
-    };
-
-    // SAVE REQUEST BODY FOR STEP 2
-    window.pendingMoMoReqBody = requestBody;
-
-    // UI Feedback: CONFIRMATION STEP (New Requirement)
+    // UI Feedback: CONFIRMATION STEP
     const container = document.getElementById('donation-form-container');
     container.innerHTML = `<div style="text-align:center; padding:30px 20px;">
         <div style="margin-bottom:20px;">
-            <i class="fa-solid fa-file-invoice-dollar" style="font-size:50px; color:#db2777; animation: bounceIn 0.5s;"></i>
+            <i class="fa-solid fa-wallet" style="font-size:50px; color:#f59e0b; animation: bounceIn 0.5s;"></i>
         </div>
         
-        <h3 style="color:#9d174d; font-weight:900; margin-bottom:10px;">XÁC NHẬN THÔNG TIN</h3>
+        <h3 style="color:#b45309; font-weight:900; margin-bottom:10px;">XÁC NHẬN THANH TOÁN</h3>
         <p style="font-size:13px; color:#555; margin-bottom:20px; line-height:1.5;">
-            quý khách vui lòng <b>GHI NHỚ</b> hoặc <b>CHỤP MÀN HÌNH</b> mã ghi nhận bên dưới để tra cứu khi cần thiết.
+            Hệ thống sẽ chuyển bạn đến cổng thanh toán Ngân Lượng để hoàn tất.
         </p>
 
-        <div style="background:#fdf2f8; padding:20px; border-radius:4px; border:2px dashed #db2777; margin-bottom:25px;">
-            <div style="font-size:12px; color:#be185d; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">MÃ GHI NHẬN ỦNG HỘ</div>
-            <div style="font-size:28px; font-weight:900; color:#831843; letter-spacing:1px;">${transactionCode}</div>
+        <div style="background:#fffbeb; padding:20px; border-radius:4px; border:2px dashed #f59e0b; margin-bottom:25px;">
+            <div style="font-size:12px; color:#b45309; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">MÃ GIAO DỊCH</div>
+            <div style="font-size:24px; font-weight:900; color:#92400e; letter-spacing:1px;">${orderId}</div>
             <div style="margin-top:10px; font-size:16px; font-weight:600; color:#333;">
                 Số tiền: <span style="color:#dc2626;">${amount.toLocaleString('vi-VN')} đ</span>
             </div>
         </div>
 
         <div style="display:grid; gap:10px;">
-            <button onclick="executeMoMoPayment()" class="premium-submit-btn" style="background:#be185d; box-shadow:0 4px 15px rgba(190, 24, 93, 0.4); border-radius: 4px; width: 100%;">
-                <i class="fa-solid fa-check-circle"></i> TÔI ĐÃ LƯU MÃ <br>TIẾP TỤC</br>
+            <button onclick="executeNganLuongPayment()" class="premium-submit-btn" style="background:#f59e0b; box-shadow:0 4px 15px rgba(245, 158, 11, 0.4); border-radius: 4px; width: 100%;">
+                <i class="fa-solid fa-credit-card"></i> THANH TOÁN QUA NGÂN LƯỢNG
             </button>
             <button onclick="resetDonationForm()" class="premium-chip" style="width:100%; color:#555; border-radius: 4px;">
                 Quay lại / Hủy
@@ -1022,65 +946,83 @@ async function registerAndGenQR() {
     <style>@keyframes bounceIn {0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(0.9)}100%{transform:scale(1)}}</style>`;
 }
 
-// 4b. ACTION: EXECUTE MOMO (Called after user confirms)
-// 4b. ACTION: EXECUTE MOMO (Now: SCAN QR)
-// 4b. ACTION: EXECUTE MOMO (Called after user confirms)
-async function executeMoMoPayment() {
-    if (!window.pendingDonationPayload || !window.pendingMoMoReqBody) {
+// 4b. ACTION: CALL GOOGLE SCRIPT TO GET URL
+async function executeNganLuongPayment() {
+    if (!window.pendingDonationPayload) {
         alert("Lỗi dữ liệu phiên. Vui lòng tải lại trang.");
         return;
     }
 
     const payload = window.pendingDonationPayload;
+    const btn = document.querySelector('.premium-submit-btn');
 
-    // SAVE SESSION (Critical for Redirect Recovery)
-    localStorage.setItem('pending_momo_donation', JSON.stringify({
-        payload: payload,
-        timestamp: Date.now()
-    }));
+    // CHECK IF GAS URL IS CONFIGURED
+    // Allow simulation if not configured
+    if (typeof GAS_API_URL === 'undefined' || GAS_API_URL.includes("YOUR_ID_HERE")) {
+        console.warn("GAS_API_URL not configured. Switching to Simulation Mode.");
+        if (confirm("API chưa cấu hình. Bạn có muốn GIẢ LẬP thanh toán thành công để test giao diện không?")) {
+            simulateMoMoSuccess();
+            return;
+        }
+        alert("CHƯA CẤU HÌNH API!\nVui lòng cập nhật biến GAS_API_URL trong cms.js với Link Web App từ Google Apps Script.");
+        return;
+    }
 
     // SHOW LOADING
-    const btn = document.querySelector('.premium-submit-btn');
     if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG KẾT NỐI MOMO...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG TẠO LIÊN KẾT...';
         btn.disabled = true;
     }
 
     try {
-        // CALL PROXY (Localhost:3000)
-        // Ensure proxy.js is running!
-        console.log("Sending to Proxy...", window.pendingMoMoReqBody);
-
-        const response = await fetch('http://localhost:3000', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(window.pendingMoMoReqBody)
+        // PREPARE PARAMS
+        // We map our donation data to NganLuong params
+        const params = new URLSearchParams({
+            action: 'create_nganluong_url',
+            order_code: payload.code,
+            total_amount: payload.amount.toString(),
+            buyer_fullname: removeAccentsSimple(payload.name),
+            buyer_email: "hotro@todanpho21.com", // Dummy or ask user
+            buyer_mobile: "0900000000",          // Dummy or ask user
+            return_url: window.location.href,    // Back to this page
+            cancel_url: window.location.href
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status}`);
+        // CALL GOOGLE SCRIPT (CORS might benefit from no-cors but we need response. 
+        // GAS Web App usually supports CORS if deployed as 'User accessing' or 'Anyone')
+
+        // CALL GOOGLE SCRIPT VIA REDIRECT (NO CORS)
+        // We navigate directly to the script, which then redirects to NganLuong.
+        // This bypasses all CORS issues because it is a standard navigation.
+
+        params.set('action', 'redirect_payment'); // Use the new HTML redirect handler
+
+        // Show loading state before redirect happens
+        if (btn) {
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG CHUYỂN HƯỚNG...';
         }
 
-        const data = await response.json();
-        console.log("MoMo Response:", data);
+        console.log("Redirecting to GAS Backend:", GAS_API_URL + "?" + params.toString());
+        window.location.href = GAS_API_URL + "?" + params.toString();
 
-        if (data.payUrl) {
-            // REDIRECT TO MOMO
-            window.location.href = data.payUrl;
+        // No code after this is executed because page unloads
+        return;
+
+        /* 
+        // OLD FETCH CODE (Disabled due to persistent CORS issues)
+        const response = await fetch(...) 
+        */
+
+        if (data.status === "success" && data.paymentUrl) {
+            console.log("Redirecting to:", data.paymentUrl);
+            window.location.href = data.paymentUrl;
         } else {
-            // Handle MoMo API Error
-            alert("Lỗi từ MoMo: " + (data.message || JSON.stringify(data)));
-            if (btn) {
-                btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> THỬ LẠI';
-                btn.disabled = false;
-            }
+            throw new Error(data.message || "Lỗi tạo link thanh toán");
         }
 
     } catch (e) {
         console.error("Payment Error:", e);
-        alert("Không thể kết nối đến cổng thanh toán. \nVui lòng đảm bảo bạn đang chạy 'node proxy.js'. \nLỗi: " + e.message);
+        alert("Lỗi kết nối Server: " + e.message);
 
         if (btn) {
             btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> THỬ LẠI';
@@ -1090,39 +1032,37 @@ async function executeMoMoPayment() {
 }
 
 // 5. ACTION: CHECK PAYMENT RETURN (Handle Redirect from MoMo)
-// 5. ACTION: CHECK PAYMENT RETURN (Handle Redirect from MoMo)
+// 5. ACTION: CHECK PAYMENT RETURN (Handle Redirect from NganLuong)
 function checkPaymentReturn() {
     const urlParams = new URLSearchParams(window.location.search);
-    const resultCode = urlParams.get('resultCode');
-    const message = urlParams.get('message');
+    const errorCode = urlParams.get('error_code');
+    // const token = urlParams.get('token'); // NganLuong often sends token
 
-    // Only process if we have a MoMo result
-    if (resultCode !== null) {
+    // Only process if we have NganLuong result
+    if (errorCode !== null) {
         // Clear params to clean URL but PRESERVE id
         const newUrl = new URL(window.location.href);
-        const paramsToRemove = ['resultCode', 'message', 'transId', 'orderId', 'requestId', 'signature', 'extraData', 'payType', 'responseTime', 'amount', 'partnerCode', 'orderInfo'];
+        const paramsToRemove = ['error_code', 'token', 'order_code', 'payment_id', 'payment_type', 'discount_amount', 'fee_shipping', 'integration_version', 'created_time', 'buyer_email', 'buyer_fullname', 'buyer_mobile'];
         paramsToRemove.forEach(k => newUrl.searchParams.delete(k));
         window.history.replaceState({}, document.title, newUrl.toString());
 
-        if (resultCode === '0') {
+        if (errorCode === '00') {
             // SUCCESS
-            const stored = localStorage.getItem('pending_momo_donation');
+            const stored = localStorage.getItem('pending_nganluong_donation');
             if (stored) {
                 try {
                     const data = JSON.parse(stored);
                     const payload = data.payload;
 
                     // Recover payload and finalize
-                    payload.verified = true; // Auto-verify (or keep false for admin check)
-                    payload.momoTransId = urlParams.get('transId');
-                    payload.momoOrderId = urlParams.get('orderId');
+                    payload.verified = true; // Auto-verify (Simple check)
+                    // payload.nlToken = token;
 
                     // Save to Firebase
                     db.collection('donations').add(payload)
                         .then(() => {
-                            // RENDER FULL PAGE SUCCESS (Since widget might not exist yet)
                             renderFullPageSuccess(payload);
-                            localStorage.removeItem('pending_momo_donation');
+                            localStorage.removeItem('pending_nganluong_donation');
                         })
                         .catch(e => {
                             alert("Thanh toán thành công nhưng lỗi lưu dữ liệu: " + e.message);
@@ -1130,14 +1070,16 @@ function checkPaymentReturn() {
 
                 } catch (e) { console.error("Parse stored data error", e); }
             } else {
-                // No stored payload?
-                alert("Thanh toán thành công qua MoMo! (Không tìm thấy dữ liệu phiên - vui lòng liên hệ Admin nếu cần hỗ trợ)");
+                alert("Thanh toán thành công! (Không tìm thấy dữ liệu phiên - vui lòng liên hệ Admin)");
             }
-            return true; // STOP LOADING (Show Success Screen)
+            return true; // STOP LOADING
         } else {
             // FAILED or CANCELLED
-            // Alert user but ALLOW PAGE TO LOAD so they can try again
-            alert("Giao dịch MoMo thất bại hoặc bị hủy: " + (message || resultCode));
+            if (errorCode === 'CANCEL') {
+                alert("Bạn đã hủy giao dịch.");
+            } else {
+                alert("Giao dịch thất bại. Mã lỗi: " + errorCode);
+            }
             return false; // CONTINUE LOADING FUND PAGE
         }
     }
@@ -1586,8 +1528,8 @@ function renderStaticLayout(container, fund) {
                         </div>
 
                         <!-- BUTTON -->
-                        <button onclick="registerAndGenQR()" id="btn-gen-qr-page" class="premium-submit-btn" disabled>
-                            <span>TẠO MÃ QR & GHI DANH</span> <i class="fa-solid fa-qrcode"></i>
+                        <button onclick="registerAndGenNganLuong()" id="btn-gen-qr-page" class="premium-submit-btn" disabled>
+                            <span>THANH TOÁN NGÂN LƯỢNG</span> <i class="fa-solid fa-credit-card"></i>
                         </button>
                         
                         <p style="font-size:12px; color:#94a3b8; margin-top:20px; text-align:center; font-style:italic;">
@@ -1749,7 +1691,7 @@ function renderDonationStats(donations, fund) {
         }
 
         // Restore focus if searching
-        if (searchTerm) {
+        if (window.currentSearchTerm) {
             const searchInput = document.getElementById('donation-search-input');
             if (searchInput) {
                 searchInput.value = window.currentSearchTerm;
@@ -1842,3 +1784,20 @@ function filterDonationList(searchTerm) {
         });
     }, 500);
 })();
+
+// ----- CLOCK FUNCTION -----
+function startClock() {
+    function update() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('vi-VN');
+        const dateString = now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        const timeEl = document.getElementById('current-time');
+        const dateEl = document.getElementById('current-date');
+
+        if (timeEl) timeEl.innerText = timeString;
+        if (dateEl) dateEl.innerText = dateString;
+    }
+    setInterval(update, 1000);
+    update();
+}

@@ -3,6 +3,18 @@
  * Hỗ trợ: Bài viết (HTML/Doc), Trang tĩnh, Cấu hình hệ thống
  */
 
+// ====================================================
+// CẤU HÌNH NGÂN LƯỢNG (DÀNH CHO THANH TOÁN THỰC)
+// ====================================================
+// Bạn hãy thay đổi các giá trị dưới đây bằng thông tin thật của bạn
+// lấy từ trang quản trị NganLuong.vn
+
+var NL_MERCHANT_ID = "69460";      // Mã kết nối (Merchant ID)
+var NL_MERCHANT_PASS = "65f2077b091d243a3779e8a5c2dcb533"; // Mật khẩu kết nối (Merchant Password)
+var NL_RECEIVER_EMAIL = "hoangquy@imail.edu.vn"; // Email nhận tiền
+
+// ====================================================
+
 function setup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   
@@ -63,6 +75,10 @@ function doGet(e) {
   
   if (action == "get_articles") {
     return getList("Articles");
+  } else if (action == "create_nganluong_url") {
+    // JSON API (Old way)
+    var result = buildNganLuongData(e.parameter);
+    return response(result);
   } else if (action == "get_article_detail") {
     return getArticleDetail(e.parameter.id);
   } else if (action == "get_pages") {
@@ -73,6 +89,16 @@ function doGet(e) {
     return getDocContent(e.parameter.url);
   } else if (action == "get_menu") {
     return getMenu(); // Implement if needed or use get_pages
+  }
+  
+  else if (action == "redirect_payment") {
+    // NEW: Return HTML that auto-redirects (Bypasses CORS completely)
+    var result = buildNganLuongData(e.parameter);
+    if (result.status == "success") {
+       return HtmlService.createHtmlOutput("<script>window.location.href='" + result.paymentUrl + "';</script>");
+    } else {
+       return ContentService.createTextOutput("Error: " + result.message);
+    }
   }
   
   return ContentService.createTextOutput(JSON.stringify({status: "running"}));
@@ -331,3 +357,103 @@ function processTextAndImages(element) {
 function response(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }
+
+// --- NGAN LUONG PAYMENT INTEGRATION ---
+// Documentation: https://www.nganluong.vn/vn/integrate/standard.html
+
+// Refactored helper to return DATA object
+function buildNganLuongData(params) {
+  try {
+    // 1. CONFIGURATION
+    var MERCHANT_ID = NL_MERCHANT_ID;
+    var MERCHANT_PASS = NL_MERCHANT_PASS;
+    var RECEIVER_EMAIL = NL_RECEIVER_EMAIL;
+
+    // 2. GET ORDER DATA
+    var order_code = params.order_code || ("ORD_" + new Date().getTime());
+    var total_amount = params.total_amount || "10000";
+    var buyer_fullname = params.buyer_fullname || "Khach vang lai";
+    var buyer_email = params.buyer_email || "no-email@domain.com";
+    var buyer_mobile = params.buyer_mobile || "0900000000";
+    var bank_code = params.bank_code || ""; // Optional
+    
+    // Redirect URL (Where NganLuong sends user back after payment)
+    var return_url = params.return_url || "https://google.com";
+    var cancel_url = params.cancel_url || "https://google.com";
+
+    // 3. BUILD CHECKOUT URL
+    var nluong_url = "https://www.nganluong.vn/checkout.php";
+    
+    var data = {
+      "merchant_site_code": MERCHANT_ID,
+      "return_url": return_url,
+      "receiver": RECEIVER_EMAIL,
+      "transaction_info": "Ung ho quy " + order_code,
+      "order_code": order_code,
+      "price": total_amount,
+      "currency": "vnd",
+      "quantity": 1,
+      "tax": 0,
+      "discount": 0,
+      "fee_cal": 0,
+      "fee_shipping": 0,
+      "order_description": "Ung ho quy TDP21",
+      "buyer_info": buyer_fullname + "*|*" + buyer_email + "*|*" + buyer_mobile,
+      "affiliate_code": ""
+    };
+    
+    // 4. GENERATE CHECKSUM (MD5)
+    var secure_string = data.merchant_site_code + " " + 
+                        data.return_url + " " + 
+                        data.receiver + " " + 
+                        data.transaction_info + " " + 
+                        data.order_code + " " + 
+                        data.price + " " + 
+                        data.currency + " " + 
+                        data.quantity + " " + 
+                        data.tax + " " + 
+                        data.discount + " " + 
+                        data.fee_cal + " " + 
+                        data.fee_shipping + " " + 
+                        data.order_description + " " + 
+                        data.buyer_info + " " + 
+                        data.affiliate_code + " " + 
+                        MERCHANT_PASS;
+                        
+    var checksum = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, secure_string, Utilities.Charset.UTF_8);
+    var checksum_hex = bytesToHex(checksum); 
+    
+    // Append checksum
+    data["checksum"] = checksum_hex;
+    
+    // 5. CONSTRUCT FINAL URL
+    var qParams = [];
+    for (var key in data) {
+      qParams.push(key + "=" + encodeURIComponent(data[key]));
+    }
+    
+    var finalUrl = nluong_url + "?" + qParams.join("&");
+    
+    return { status: "success", paymentUrl: finalUrl };
+    
+  } catch (ex) {
+    return { status: "error", message: ex.toString() };
+  }
+}
+
+function bytesToHex(bytes) {
+  var hex = [];
+  for (var i = 0; i < bytes.length; i++) {
+    var b = parseInt(bytes[i]);
+    if (b < 0) {
+      b += 256;
+    }
+    var s = b.toString(16);
+    if (s.length == 1) {
+      s = "0" + s;
+    }
+    hex.push(s);
+  }
+  return hex.join("");
+}
+
