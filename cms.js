@@ -868,14 +868,22 @@ async function renderFundDetail_OLD(container, fundId) {
 }
 
 // 4. ACTION: REGISTER & GEN QR
-// --- NGAN LUONG CONFIG ---
-// NOTE: SECURITY UPDATE
-// Secret keys are NO LONGER stored here. They are in 'Code.gs' (Google Apps Script).
-// This client just calls the script to get the secure URL.
+// --- NGAN LUONG CONFIG (CLIENT-SIDE) ---
+// WARNING: MERCHANT PASSWORD IS EXPOSED IN CLIENT SIDE CODE
+// This is required for "No-Backend" integration as requested.
+const NL_CONFIG = {
+    MERCHANT_ID: "69462",
+    MERCHANT_PASS: "6260dda75f44acb15fc064d7be4697bb", // Mat khau ket noi
+    RECEIVER_EMAIL: "hoangquy@imail.edu.vn",
+    URL_PAYMENT: "https://www.nganluong.vn/checkout.php"
+};
 
-// IMPORTANT: Replace this with your deployed Web App URL from Google Apps Script
-// Publish -> Deploy as Web App -> Execute as Me -> Access: Anyone
-const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz1JvDQmhW753skzNnCIk4xt_uvu2gaWFSVEmL_Ej3pp0x82yC3kBMa5j0dFh6nD-Ebzw/exec";
+// Removed GAS_API_URL as requested
+// const GAS_API_URL = "...";
+
+// --- MD5 HELPER (Compact) ---
+var MD5 = function (d) { var r = M(V(Y(X(d), 8 * d.length))); return r.toLowerCase() }; function M(d) { for (var _, m = "0123456789ABCDEF", f = "", r = 0; r < d.length; r++)_ = d[r], f += m.charAt(_ >>> 4 & 15) + m.charAt(15 & _); return f } function X(d) { for (var _ = Array(d.length >> 2), m = 0; m < _.length; m++)_[m] = 0; for (m = 0; m < 8 * d.length; m += 8)_[m >> 5] |= (255 & d.charCodeAt(m / 8)) << m % 32; return _ } function V(d) { for (var _ = "", m = 0; m < 32 * d.length; m += 8)_ += String.fromCharCode(d[m >> 5] >>> m % 32 & 255); return _ } function Y(d, _) { d[_.constructor == String ? "push" : "length"] = _; for (var m = 8 * d.length, f = 1732584193, r = -271733879, t = -1732584194, h = 271733878, n = 0; n < d.length; n += 16) { var a = f, e = r, g = t, C = h; f = md5_ii(f = md5_ii(f = md5_ii(f = md5_ii(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_ff(f = md5_ff(f = md5_ff(f = md5_ff(f, r, t, h, d[n + 0], 7, -680876936), r, t, h, d[n + 1], 12, -389564586), r, t, h, d[n + 2], 17, 606105819), r, t, h, d[n + 3], 22, -1044525330), r, t, h, d[n + 4], 7, -176418897), r, t, h, d[n + 5], 12, 1200080426), r, t, h, d[n + 6], 17, -1473231341), r, t, h, d[n + 7], 22, -45705983), r, t, h, d[n + 8], 7, 1770035416), r, t, h, d[n + 9], 12, -1958414417), r, t, h, d[n + 10], 17, -42063), r, t, h, d[n + 11], 22, -1990404162), r, t, h, d[n + 12], 7, 1804112514), r, t, h, d[n + 13], 12, -40341101), r, t, h, d[n + 14], 17, -1502002290), r, t, h, d[n + 15], 22, 1236535329), f = md5_hh(f, r = md5_hh(r, t = md5_hh(t, h = md5_hh(h, f, r, t, d[n + 1], 5, -165796510), f, r, t, d[n + 6], 9, -1069501632), h, f, r, d[n + 11], 14, 643717713), t, h, f, d[n + 0], 20, -373897302), r = md5_ii(r, t = md5_ii(t, h = md5_ii(h, f = md5_ii(f, r, t, h, d[n + 5], 4, -701558691), r, t, h, d[n + 10], 11, 38016083), f, r, t, d[n + 15], 16, -660478335), h, f, r, d[n + 4], 23, -405537848), f = md5_gg(f, r = md5_gg(r, t = md5_gg(t, h = md5_gg(h, f, r, t, d[n + 9], 21, 2127289290 ? 2127289290 : -2167180006), f, r, t, d[n + 14], 6, -1542279162), h, f, r, d[n + 3], 11, -1061905477 ? -1061905477 : -2147483648), t, h, f, d[n + 8], 16, 814660356); f = safe_add(f, a), r = safe_add(r, e), t = safe_add(t, g), h = safe_add(h, C) } return f } function md5_cmn(d, _, m, f, r, t) { return safe_add(bit_rol(safe_add(safe_add(_, d), safe_add(f, t)), r), m) } function md5_ff(d, _, m, f, r, t, h) { return md5_cmn(_ & m | ~_ & f, d, _, r, t, h) } function md5_gg(d, _, m, f, r, t, h) { return md5_cmn(_ & f | m & ~f, d, _, r, t, h) } function md5_hh(d, _, m, f, r, t, h) { return md5_cmn(_ ^ m ^ f, d, _, r, t, h) } function md5_ii(d, _, m, f, r, t, h) { return md5_cmn(m ^ (_ | ~f), d, _, r, t, h) } function safe_add(d, _) { var m = (65535 & d) + (65535 & _); return (d >> 16) + (_ >> 16) + (m >> 16) << 16 | 65535 & m } function bit_rol(d, _) { return d << _ | d >>> 32 - _ }
+
 
 // 4. ACTION: REGISTER & PAY WITH NGAN LUONG
 async function registerAndGenNganLuong() {
@@ -946,7 +954,7 @@ async function registerAndGenNganLuong() {
     <style>@keyframes bounceIn {0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(0.9)}100%{transform:scale(1)}}</style>`;
 }
 
-// 4b. ACTION: CALL GOOGLE SCRIPT TO GET URL
+// 4b. ACTION: DIRECT NGAN LUONG REDIRECT (Client-Side)
 async function executeNganLuongPayment() {
     if (!window.pendingDonationPayload) {
         alert("Lỗi dữ liệu phiên. Vui lòng tải lại trang.");
@@ -956,73 +964,98 @@ async function executeNganLuongPayment() {
     const payload = window.pendingDonationPayload;
     const btn = document.querySelector('.premium-submit-btn');
 
-    // CHECK IF GAS URL IS CONFIGURED
-    // Allow simulation if not configured
-    if (typeof GAS_API_URL === 'undefined' || GAS_API_URL.includes("YOUR_ID_HERE")) {
-        console.warn("GAS_API_URL not configured. Switching to Simulation Mode.");
-        if (confirm("API chưa cấu hình. Bạn có muốn GIẢ LẬP thanh toán thành công để test giao diện không?")) {
-            simulateMoMoSuccess();
-            return;
-        }
-        alert("CHƯA CẤU HÌNH API!\nVui lòng cập nhật biến GAS_API_URL trong cms.js với Link Web App từ Google Apps Script.");
-        return;
-    }
-
     // SHOW LOADING
     if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG TẠO LIÊN KẾT...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG CHUYỂN HƯỚNG...';
         btn.disabled = true;
     }
 
     try {
-        // PREPARE PARAMS
-        // We map our donation data to NganLuong params
-        const params = new URLSearchParams({
-            action: 'create_nganluong_url',
-            order_code: payload.code,
-            total_amount: payload.amount.toString(),
-            buyer_fullname: removeAccentsSimple(payload.name),
-            buyer_email: "hotro@todanpho21.com", // Dummy or ask user
-            buyer_mobile: "0900000000",          // Dummy or ask user
-            return_url: window.location.href,    // Back to this page
-            cancel_url: window.location.href
-        });
+        console.log("Preparing NganLuong Redirect:", payload);
 
-        // CALL GOOGLE SCRIPT (CORS might benefit from no-cors but we need response. 
-        // GAS Web App usually supports CORS if deployed as 'User accessing' or 'Anyone')
+        // --- 1. PREPARE DATA ---
+        var merchant_site_code = NL_CONFIG.MERCHANT_ID;
+        var return_url = window.location.href;
+        var receiver = NL_CONFIG.RECEIVER_EMAIL;
+        var transaction_info = "Ung ho quy TDP21";
+        var order_code = payload.code;
+        var price = payload.amount.toString();
+        var currency = "vnd";
+        var quantity = "1";
+        var tax = "0";
+        var discount = "0";
+        var fee_cal = "0";
+        var fee_shipping = "0";
+        var order_description = "Ung ho quy TDP21: " + removeAccentsSimple(payload.name);
+        var cleanName = removeAccentsSimple(payload.name);
+        var buyer_info = cleanName + "*|*hotro@todanpho21.com*|*0900000000*|*HN";
+        var affiliate_code = "";
 
-        // CALL GOOGLE SCRIPT VIA REDIRECT (NO CORS)
-        // We navigate directly to the script, which then redirects to NganLuong.
-        // This bypasses all CORS issues because it is a standard navigation.
+        // Return URL (Current Page)
+        var return_url = window.location.href;
+        var cancel_url = window.location.href;
 
-        params.set('action', 'redirect_payment'); // Use the new HTML redirect handler
+        // --- 2. GENERATE URL (Button Payment Method) ---
+        // Using NganLuong Button Redirect format which assumes receiver email based routing
+        var url = NL_CONFIG.URL_PAYMENT;
 
-        // Show loading state before redirect happens
-        if (btn) {
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG CHUYỂN HƯỚNG...';
+
+        // --- 3. CREATE FORM ---
+        var form = document.createElement("form");
+        form.setAttribute("method", "post");
+        form.setAttribute("action", url);
+        form.setAttribute("target", "_self"); // Redirect same tab
+
+        // SECURE CODE GENERATION
+        var secure_string = merchant_site_code + " " + return_url + " " + receiver + " " + transaction_info + " " + order_code + " " + price + " " + currency + " " + quantity + " " + tax + " " + discount + " " + fee_cal + " " + fee_shipping + " " + order_description + " " + buyer_info + " " + affiliate_code + " " + NL_CONFIG.MERCHANT_PASS;
+        var secure_code = MD5(secure_string);
+
+        var params = {
+            'merchant_site_code': merchant_site_code,
+            'return_url': return_url,
+            'receiver': receiver,
+            'transaction_info': transaction_info,
+            'order_code': order_code,
+            'price': price,
+            'currency': currency,
+            'quantity': quantity,
+            'tax': tax,
+            'discount': discount,
+            'fee_cal': fee_cal,
+            'fee_shipping': fee_shipping,
+            'order_description': order_description,
+            'buyer_info': buyer_info,
+            'affiliate_code': affiliate_code,
+            'secure_code': secure_code
+        };
+
+        // NOTE: For simple button payment, strict MD5 might not be enforced if Merchant doesn't enable "Check Order LInk"
+        // But let's append other useful fields
+        params['tax'] = tax;
+        params['discount'] = discount;
+        params['fee_cal'] = fee_cal;
+        params['fee_shipping'] = fee_shipping;
+        params['order_description'] = order_description;
+        params['buyer_info'] = buyer_info;
+
+        // --- 4. SUBMIT ---
+        for (var key in params) {
+            if (params.hasOwnProperty(key)) {
+                var hiddenField = document.createElement("input");
+                hiddenField.setAttribute("type", "hidden");
+                hiddenField.setAttribute("name", key);
+                hiddenField.setAttribute("value", params[key]);
+                form.appendChild(hiddenField);
+            }
         }
 
-        console.log("Redirecting to GAS Backend:", GAS_API_URL + "?" + params.toString());
-        window.location.href = GAS_API_URL + "?" + params.toString();
-
-        // No code after this is executed because page unloads
-        return;
-
-        /* 
-        // OLD FETCH CODE (Disabled due to persistent CORS issues)
-        const response = await fetch(...) 
-        */
-
-        if (data.status === "success" && data.paymentUrl) {
-            console.log("Redirecting to:", data.paymentUrl);
-            window.location.href = data.paymentUrl;
-        } else {
-            throw new Error(data.message || "Lỗi tạo link thanh toán");
-        }
+        document.body.appendChild(form);
+        console.log("Submitting NganLuong Form...", params);
+        form.submit();
 
     } catch (e) {
         console.error("Payment Error:", e);
-        alert("Lỗi kết nối Server: " + e.message);
+        alert("Lỗi xử lý: " + e.message);
 
         if (btn) {
             btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> THỬ LẠI';

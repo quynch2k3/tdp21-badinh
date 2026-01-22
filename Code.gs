@@ -15,6 +15,12 @@ var NL_RECEIVER_EMAIL = "hoangquy@imail.edu.vn"; // Email nhận tiền
 
 // ====================================================
 
+function testAuthorization() {
+  // Run this function once to authorize UrlFetchApp
+  UrlFetchApp.fetch("https://www.google.com");
+  Logger.log("Authorized successfully!");
+}
+
 function setup() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   
@@ -358,88 +364,103 @@ function response(data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
 }
 
-// --- NGAN LUONG PAYMENT INTEGRATION ---
-// Documentation: https://www.nganluong.vn/vn/integrate/standard.html
+// --- NGAN LUONG PAYMENT INTEGRATION API v3.1 ---
+// Based on NL_Checkoutv3.php logic
 
-// Refactored helper to return DATA object
 function buildNganLuongData(params) {
   try {
     // 1. CONFIGURATION
+    var URL_API = 'https://www.nganluong.vn/checkout.api.nganluong.post.php';
     var MERCHANT_ID = NL_MERCHANT_ID;
     var MERCHANT_PASS = NL_MERCHANT_PASS;
     var RECEIVER_EMAIL = NL_RECEIVER_EMAIL;
-
-    // 2. GET ORDER DATA
+    
+    // 2. PREPARE PARAMETERS
     var order_code = params.order_code || ("ORD_" + new Date().getTime());
     var total_amount = params.total_amount || "10000";
     var buyer_fullname = params.buyer_fullname || "Khach vang lai";
     var buyer_email = params.buyer_email || "no-email@domain.com";
     var buyer_mobile = params.buyer_mobile || "0900000000";
-    var bank_code = params.bank_code || ""; // Optional
-    
-    // Redirect URL (Where NganLuong sends user back after payment)
     var return_url = params.return_url || "https://google.com";
     var cancel_url = params.cancel_url || "https://google.com";
-
-    // 3. BUILD CHECKOUT URL
-    var nluong_url = "https://www.nganluong.vn/checkout.php";
     
-    var data = {
-      "merchant_site_code": MERCHANT_ID,
-      "return_url": return_url,
-      "receiver": RECEIVER_EMAIL,
-      "transaction_info": "Ung ho quy " + order_code,
-      "order_code": order_code,
-      "price": total_amount,
-      "currency": "vnd",
-      "quantity": 1,
-      "tax": 0,
-      "discount": 0,
-      "fee_cal": 0,
-      "fee_shipping": 0,
-      "order_description": "Ung ho quy TDP21",
-      "buyer_info": buyer_fullname + "*|*" + buyer_email + "*|*" + buyer_mobile,
-      "affiliate_code": ""
+    // Parameters for SetExpressCheckout (API v3.1)
+    // IMPORTANT: If 'NL_MERCHANT_PASS' is already an MD5 Hash (32 chars), 
+    // you should NOT hash it again. 
+    // However, the standard SDK always hashes. 
+    // If you get Error 07 ("Wrong Password"), try removing MD5() wrapping below.
+    var requestParams = {
+        'function': 'SetExpressCheckout',
+        'version': '3.1',
+        'merchant_id': MERCHANT_ID,
+        'merchant_password': MD5(MERCHANT_PASS), // <--- Standard way. Remove MD5() if using pre-hashed key.
+        'receiver_email': RECEIVER_EMAIL,
+        'order_code': order_code,
+        'total_amount': total_amount,
+        'payment_method': 'NL', // Default to Wallet/General
+        'payment_type': '1',    // 1=Instant, 2=Hold. Default to 1 (Immediate)
+        'order_description': 'Ung ho quy TDP21',
+        'tax_amount': '0',
+        'fee_shipping': '0',
+        'discount_amount': '0',
+        'return_url': return_url,
+        'cancel_url': cancel_url,
+        'buyer_fullname': buyer_fullname,
+        'buyer_email': buyer_email,
+        'buyer_mobile': buyer_mobile,
+        'buyer_address': '',
+        'total_item': '0',
+        'cur_code': 'vnd'
     };
     
-    // 4. GENERATE CHECKSUM (MD5)
-    var secure_string = data.merchant_site_code + " " + 
-                        data.return_url + " " + 
-                        data.receiver + " " + 
-                        data.transaction_info + " " + 
-                        data.order_code + " " + 
-                        data.price + " " + 
-                        data.currency + " " + 
-                        data.quantity + " " + 
-                        data.tax + " " + 
-                        data.discount + " " + 
-                        data.fee_cal + " " + 
-                        data.fee_shipping + " " + 
-                        data.order_description + " " + 
-                        data.buyer_info + " " + 
-                        data.affiliate_code + " " + 
-                        MERCHANT_PASS;
-                        
-    var checksum = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, secure_string, Utilities.Charset.UTF_8);
-    var checksum_hex = bytesToHex(checksum); 
+    // 3. CALL NGAN LUONG API (Server-side)
+    var options = {
+      'method': 'post',
+      'payload': requestParams,
+      'muteHttpExceptions': true
+    };
     
-    // Append checksum
-    data["checksum"] = checksum_hex;
+    var response = UrlFetchApp.fetch(URL_API, options);
+    var xmlContent = response.getContentText();
     
-    // 5. CONSTRUCT FINAL URL
-    var qParams = [];
-    for (var key in data) {
-      qParams.push(key + "=" + encodeURIComponent(data[key]));
+    // 4. PARSE XML RESPONSE
+    var document = XmlService.parse(xmlContent);
+    var root = document.getRootElement();
+    var errorCode = root.getChild('error_code').getText();
+    
+    if (errorCode == '00') {
+       // Success
+       var checkoutUrl = root.getChild('checkout_url').getText();
+       var token = root.getChild('token').getText();
+       return { status: "success", paymentUrl: checkoutUrl };
+    } else {
+       // Error
+       var description = root.getChild('description') ? root.getChild('description').getText() : "Unknown error";
+       return { status: "error", message: "NganLuong Error " + errorCode + ": " + description };
     }
-    
-    var finalUrl = nluong_url + "?" + qParams.join("&");
-    
-    return { status: "success", paymentUrl: finalUrl };
-    
+
   } catch (ex) {
-    return { status: "error", message: ex.toString() };
+    return { status: "error", message: ex.toString() + " (Log: " + (xmlContent || "No Response") + ")" };
   }
 }
+
+// Helper: MD5
+function MD5(input) {
+  var rawHash = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, input, Utilities.Charset.UTF_8);
+  var txtHash = '';
+  for (i = 0; i < rawHash.length; i++) {
+    var hashVal = rawHash[i];
+    if (hashVal < 0) {
+      hashVal += 256;
+    }
+    if (hashVal.toString(16).length == 1) {
+      txtHash += '0';
+    }
+    txtHash += hashVal.toString(16);
+  }
+  return txtHash;
+}
+
 
 function bytesToHex(bytes) {
   var hex = [];
