@@ -600,3 +600,18 @@ body {
 .mobile-sticky-action {
     display: none;
 }
+
+/* ADDED FOR MODAL ANIMATION */
+@keyframes popIn {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Modal Overlay Animation */
+#donor-modal-overlay {
+    animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

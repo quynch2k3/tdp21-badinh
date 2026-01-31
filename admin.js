@@ -1547,6 +1547,10 @@ function openFundModal() {
     document.getElementById('fund-title').value = '';
     document.getElementById('fund-category').value = 'ALL';
     document.getElementById('fund-code').value = '';
+    document.getElementById('fund-target').value = ''; // New
+    document.getElementById('fund-image').value = ''; // New
+    document.getElementById('fund-img-preview').src = ''; // New
+    document.getElementById('fund-img-preview').style.display = 'none'; // New
     document.getElementById('fund-template').value = '';
     document.getElementById('fund-active').checked = true;
     currentEditingFundId = null;
@@ -1570,6 +1574,14 @@ async function editFund(id) {
         }
 
         document.getElementById('fund-code').value = data.code || '';
+        document.getElementById('fund-target').value = data.targetAmount || ''; // New
+        document.getElementById('fund-image').value = data.image || ''; // New
+        if (data.image) {
+            document.getElementById('fund-img-preview').src = data.image;
+            document.getElementById('fund-img-preview').style.display = 'block';
+        } else {
+            document.getElementById('fund-img-preview').style.display = 'none';
+        }
 
         document.getElementById('fund-template').value = data.contentTemplate || '';
         document.getElementById('fund-active').checked = data.isActive;
@@ -1583,6 +1595,8 @@ async function saveFund() {
     const title = document.getElementById('fund-title').value;
     const category = document.getElementById('fund-category').value;
     const summary = document.getElementById('fund-summary').value;
+    const targetAmount = document.getElementById('fund-target').value; // New
+    const image = document.getElementById('fund-image').value; // New
 
     // Get TinyMCE Content safely
     let content = '';
@@ -1604,7 +1618,9 @@ async function saveFund() {
         summary,
         content,
         category,
-        code, // New Field
+        code,
+        targetAmount: targetAmount ? Number(targetAmount) : 0,
+        image,
         contentTemplate,
         isActive,
         updatedAt: new Date().toISOString()

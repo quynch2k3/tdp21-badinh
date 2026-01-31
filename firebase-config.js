@@ -14,13 +14,11 @@ if (typeof firebase !== 'undefined') {
     // Enable Long Polling to bypass Firewall/Proxy/WebSocket issues
     var db = firebase.firestore();
     window.db = db; // Expose globally
-    // db.settings({
-    //     experimentalForceLongPolling: true, // Force HTTP instead of WebSockets
-    //     merge: true
-    // });
 
-    // Default settings are usually better for modern networks
+    // Default settings (Long Polling removed due to conflict)
     db.settings({ merge: true });
+
+    console.log("Firebase Firestore initialized.");
 
     // ENABLE OFFLINE PERSISTENCE (Fast Loading)
     // ENABLE OFFLINE PERSISTENCE
@@ -37,7 +35,7 @@ if (typeof firebase !== 'undefined') {
     //         }
     //     });
 
-    console.log("Firebase initialized (Persistence Enabled).");
+    // Persistence disabled to prevent hanging issues
 } else {
     console.error("Firebase SDK not loaded!");
 }

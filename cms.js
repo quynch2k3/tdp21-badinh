@@ -1,6 +1,7 @@
 ﻿﻿/**
  * CMS CLIENT SCRIPT - FIREBASE VERSION
  * Migrated from PocketBase
+ * LAST UPDATED: FORCE_CACHE_CLEAR_WIDGET_V2
  */
 
 // ----- CONFIG -----
@@ -22,7 +23,7 @@ function setCache(key, data) {
 
 // ----- HELPERS -----
 
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = 15000;
 function withTimeout(promise, ms = TIMEOUT_MS) {
     const timeout = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Mạng chậm/Không phản hồi")), ms)
@@ -467,11 +468,15 @@ async function checkAndLoadContextArticle() {
     const docUrl = params.get('docUrl');
 
     if (id || docUrl) {
-        // Look for the main container (left-col)
-        const leftCol = document.querySelector('.left-col');
-        if (leftCol) {
-            // Hide all children of left-col
-            Array.from(leftCol.children).forEach(child => child.style.display = 'none');
+        // Look for the main container (left-col) OR fallback to main-content
+        let targetContainer = document.querySelector('.left-col');
+        if (!targetContainer) {
+            targetContainer = document.querySelector('.main-content');
+        }
+
+        if (targetContainer) {
+            // Hide all children of targetContainer
+            Array.from(targetContainer.children).forEach(child => child.style.display = 'none');
 
             // Create or Reuse Article Container
             let articleContainer = document.getElementById('context-article-container');
@@ -486,7 +491,7 @@ async function checkAndLoadContextArticle() {
                         <div style="text-align: center; padding: 30px;">Đang tải nội dung...</div>
                     </div>
                 `;
-                leftCol.prepend(articleContainer); // Add to top
+                targetContainer.prepend(articleContainer); // Add to top
             }
 
             // Call the refactored function targetting the body of our new box
@@ -554,6 +559,26 @@ function initBackToTop() {
     btn.onclick = function () {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+}
+
+
+// HELPER: Detect Donor Identity
+function detectDonorIdentity(name) {
+    if (!name) return { type: 'individual', label: 'Nhà hảo tâm', icon: 'fa-user' };
+    const lower = name.toLowerCase();
+
+    // Enterprise / Organization
+    if (lower.match(/(công ty|doanh nghiệp|tập đoàn|hợp tác xã|ngân hàng|chi nhánh|văn phòng|tnhh|ctcp|dntn|htx|bank|quỹ|hội|nhóm|clb|câu lạc bộ|phòng khám|nhà thuốc|siêu thị|cửa hàng)/)) {
+        return { type: 'org', label: 'Doanh nghiệp / Tổ chức', icon: 'fa-building' };
+    }
+
+    // Family
+    if (lower.match(/(gia đình|hộ|nhà|vợ chồng|anh chị|ông bà|bác|cô|chú)/)) {
+        return { type: 'family', label: 'Gia đình', icon: 'fa-users' };
+    }
+
+    // Default: Individual
+    return { type: 'individual', label: 'Nhà hảo tâm', icon: 'fa-user' };
 }
 
 // --- FUNDS & PAYMENT WIDGET ---
@@ -630,8 +655,8 @@ async function renderFundList(container) {
 
         html += funds.map(fund => `
             <div class="fund-item" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s; display: flex; flex-direction: column;">
-                <div style="height: 160px; background: linear-gradient(135deg, #ef4444, #b91c1c); display: flex; align-items: center; justify-content: center; color: white;">
-                    <i class="fa-solid fa-hand-holding-heart" style="font-size: 50px; opacity: 0.9;"></i>
+                <div style="height: 160px; background: ${fund.image ? `url('${fund.image}') center/cover no-repeat` : 'linear-gradient(135deg, #ef4444, #b91c1c)'}; display: flex; align-items: center; justify-content: center; color: white;">
+                    ${!fund.image ? '<i class="fa-solid fa-hand-holding-heart" style="font-size: 50px; opacity: 0.9;"></i>' : ''}
                 </div>
                 <div style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
                     <h3 style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold; color: #111827; line-height: 1.4;">${fund.title}</h3>
@@ -763,7 +788,7 @@ async function renderFundDetail_OLD(container, fundId) {
                             </div>
 
                             <div class="p-input-group">
-                                <label><i class="fa-solid fa-user-pen fa-fade"></i> HỌ TÊN (Hoặc Gia đình)</label>
+                                <label><i class="fa-solid fa-user-pen fa-fade"></i> HỌ TÊN / GIA ĐÌNH / TỔ CHỨC</label>
                                 <input type="text" id="d-name-page" class="p-input-control" placeholder="Ví dụ: Gia đình ông A..." onkeyup="checkDonateInputPage()">
                             </div>
                             
@@ -778,8 +803,8 @@ async function renderFundDetail_OLD(container, fundId) {
                                 <button onclick="setAmountPage(500000)" class="btn-amount-chip">500k</button>
                             </div>
 
-                            <button onclick="registerAndGenNganLuong()" id="btn-gen-qr-page" class="btn-p-submit pulse-red" disabled>
-                                THANH TOÁN NGÂN LƯỢNG <i class="fa-solid fa-credit-card"></i>
+                            <button onclick="registerAndGenMoMo()" id="btn-gen-qr-page" class="btn-p-submit pulse-red" disabled>
+                                THANH TOÁN NGAY <i class="fa-solid fa-paper-plane"></i>
                             </button>
                             
                             <p style="font-size:11px; color:#666; margin-top:15px; text-align:center; line-height:1.4;">
@@ -842,6 +867,10 @@ async function renderFundDetail_OLD(container, fundId) {
                                 <div class="contributor-item">
                                     <div style="text-align: left;">
                                         <div class="contributor-name">
+                                            ${(() => {
+                            const ident = detectDonorIdentity(d.name);
+                            return `<i class="fa-solid ${ident.icon}" style="margin-right:4px; font-size:12px; color:#64748b;" title="${ident.label}"></i>`;
+                        })()}
                                             ${d.name || 'Ẩn danh'} 
                                             ${d.verified ?
                             '<i class="fa-solid fa-circle-check verified-badge" style="color:green; animation: icon-pulse 2s infinite;"></i>' :
@@ -868,25 +897,13 @@ async function renderFundDetail_OLD(container, fundId) {
 }
 
 // 4. ACTION: REGISTER & GEN QR
-// --- NGAN LUONG CONFIG (CLIENT-SIDE) ---
-// WARNING: MERCHANT PASSWORD IS EXPOSED IN CLIENT SIDE CODE
-// This is required for "No-Backend" integration as requested.
-const NL_CONFIG = {
-    MERCHANT_ID: "69462",
-    MERCHANT_PASS: "6260dda75f44acb15fc064d7be4697bb", // Mat khau ket noi
-    RECEIVER_EMAIL: "hoangquy@imail.edu.vn",
-    URL_PAYMENT: "https://www.nganluong.vn/checkout.php"
-};
-
-// Removed GAS_API_URL as requested
-// const GAS_API_URL = "...";
-
-// --- MD5 HELPER (Compact) ---
-var MD5 = function (d) { var r = M(V(Y(X(d), 8 * d.length))); return r.toLowerCase() }; function M(d) { for (var _, m = "0123456789ABCDEF", f = "", r = 0; r < d.length; r++)_ = d[r], f += m.charAt(_ >>> 4 & 15) + m.charAt(15 & _); return f } function X(d) { for (var _ = Array(d.length >> 2), m = 0; m < _.length; m++)_[m] = 0; for (m = 0; m < 8 * d.length; m += 8)_[m >> 5] |= (255 & d.charCodeAt(m / 8)) << m % 32; return _ } function V(d) { for (var _ = "", m = 0; m < 32 * d.length; m += 8)_ += String.fromCharCode(d[m >> 5] >>> m % 32 & 255); return _ } function Y(d, _) { d[_.constructor == String ? "push" : "length"] = _; for (var m = 8 * d.length, f = 1732584193, r = -271733879, t = -1732584194, h = 271733878, n = 0; n < d.length; n += 16) { var a = f, e = r, g = t, C = h; f = md5_ii(f = md5_ii(f = md5_ii(f = md5_ii(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_hh(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_gg(f = md5_ff(f = md5_ff(f = md5_ff(f = md5_ff(f, r, t, h, d[n + 0], 7, -680876936), r, t, h, d[n + 1], 12, -389564586), r, t, h, d[n + 2], 17, 606105819), r, t, h, d[n + 3], 22, -1044525330), r, t, h, d[n + 4], 7, -176418897), r, t, h, d[n + 5], 12, 1200080426), r, t, h, d[n + 6], 17, -1473231341), r, t, h, d[n + 7], 22, -45705983), r, t, h, d[n + 8], 7, 1770035416), r, t, h, d[n + 9], 12, -1958414417), r, t, h, d[n + 10], 17, -42063), r, t, h, d[n + 11], 22, -1990404162), r, t, h, d[n + 12], 7, 1804112514), r, t, h, d[n + 13], 12, -40341101), r, t, h, d[n + 14], 17, -1502002290), r, t, h, d[n + 15], 22, 1236535329), f = md5_hh(f, r = md5_hh(r, t = md5_hh(t, h = md5_hh(h, f, r, t, d[n + 1], 5, -165796510), f, r, t, d[n + 6], 9, -1069501632), h, f, r, d[n + 11], 14, 643717713), t, h, f, d[n + 0], 20, -373897302), r = md5_ii(r, t = md5_ii(t, h = md5_ii(h, f = md5_ii(f, r, t, h, d[n + 5], 4, -701558691), r, t, h, d[n + 10], 11, 38016083), f, r, t, d[n + 15], 16, -660478335), h, f, r, d[n + 4], 23, -405537848), f = md5_gg(f, r = md5_gg(r, t = md5_gg(t, h = md5_gg(h, f, r, t, d[n + 9], 21, 2127289290 ? 2127289290 : -2167180006), f, r, t, d[n + 14], 6, -1542279162), h, f, r, d[n + 3], 11, -1061905477 ? -1061905477 : -2147483648), t, h, f, d[n + 8], 16, 814660356); f = safe_add(f, a), r = safe_add(r, e), t = safe_add(t, g), h = safe_add(h, C) } return f } function md5_cmn(d, _, m, f, r, t) { return safe_add(bit_rol(safe_add(safe_add(_, d), safe_add(f, t)), r), m) } function md5_ff(d, _, m, f, r, t, h) { return md5_cmn(_ & m | ~_ & f, d, _, r, t, h) } function md5_gg(d, _, m, f, r, t, h) { return md5_cmn(_ & f | m & ~f, d, _, r, t, h) } function md5_hh(d, _, m, f, r, t, h) { return md5_cmn(_ ^ m ^ f, d, _, r, t, h) } function md5_ii(d, _, m, f, r, t, h) { return md5_cmn(m ^ (_ | ~f), d, _, r, t, h) } function safe_add(d, _) { var m = (65535 & d) + (65535 & _); return (d >> 16) + (_ >> 16) + (m >> 16) << 16 | 65535 & m } function bit_rol(d, _) { return d << _ | d >>> 32 - _ }
+// --- CONFIGURATION ---
+// MoMo Configuration is now in payment-gateway.js
 
 
-// 4. ACTION: REGISTER & PAY WITH NGAN LUONG
-async function registerAndGenNganLuong() {
+
+// 4. ACTION: REGISTER & PAY WITH MOMO
+async function registerAndGenMoMo() {
     if (!window.currentFundData) return;
     const fund = window.currentFundData;
     let name = document.getElementById('d-name-page').value.trim();
@@ -901,23 +918,30 @@ async function registerAndGenNganLuong() {
 
     if (isAnonymous) name = "Mạnh thường quân (Ẩn danh)";
 
-    const amount = parseInt(amountStr);
-    const orderId = "TDP21_" + new Date().getTime(); // Unique ID
+    // Sanitize: remove dots/commas
+    const amount = parseInt(amountStr.replace(/\./g, '').replace(/,/g, ''));
+
+    // Generate code: TDP21-UHXXXXXX
+    const rand = Math.floor(100000 + Math.random() * 900000); // 6 random digits
+
+    // Format: TDP21-UHXXXXXX
+    const orderId = `TDP21-UH${rand}`;
 
     // 1. DEFER SAVE (Store payload)
     window.pendingDonationPayload = {
         fundId: fund.id,
+        fundTitle: fund.title, // Persist title for receipt
         name: name,
         amount: amount,
         timestamp: new Date().toISOString(),
         verified: false, // Pending Admin Approval
-        method: 'NganLuong',
+        method: 'MoMo',
         isAnonymous: isAnonymous,
         code: orderId
     };
 
     // SAVE SESSION (Critical for Redirect Recovery)
-    localStorage.setItem('pending_nganluong_donation', JSON.stringify({
+    localStorage.setItem('pending_momo_donation', JSON.stringify({
         payload: window.pendingDonationPayload,
         timestamp: Date.now()
     }));
@@ -926,27 +950,29 @@ async function registerAndGenNganLuong() {
     const container = document.getElementById('donation-form-container');
     container.innerHTML = `<div style="text-align:center; padding:30px 20px;">
         <div style="margin-bottom:20px;">
-            <i class="fa-solid fa-wallet" style="font-size:50px; color:#f59e0b; animation: bounceIn 0.5s;"></i>
+            <div style="width: 80px; height: 80px; background: #a50064; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 10px 20px rgba(165, 0, 100, 0.3); animation: bounceIn 0.5s;">
+                 <i class="fa-solid fa-wallet" style="font-size: 40px; color: white;"></i>
+            </div>
         </div>
         
-        <h3 style="color:#b45309; font-weight:900; margin-bottom:10px;">XÁC NHẬN THANH TOÁN</h3>
+        <h3 style="color:#a50064; font-weight:900; margin-bottom:10px;">XÁC NHẬN THANH TOÁN</h3>
         <p style="font-size:13px; color:#555; margin-bottom:20px; line-height:1.5;">
-            Hệ thống sẽ chuyển bạn đến cổng thanh toán Ngân Lượng để hoàn tất.
+            Hệ thống sẽ chuyển bạn đến ví MoMo để hoàn tất.
         </p>
 
-        <div style="background:#fffbeb; padding:20px; border-radius:4px; border:2px dashed #f59e0b; margin-bottom:25px;">
-            <div style="font-size:12px; color:#b45309; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">MÃ GIAO DỊCH</div>
-            <div style="font-size:24px; font-weight:900; color:#92400e; letter-spacing:1px;">${orderId}</div>
+        <div style="background:#fdf2f8; padding:20px; border-radius:12px; border:2px dashed #a50064; margin-bottom:25px;">
+            <div style="font-size:12px; color:#a50064; margin-bottom:5px; text-transform:uppercase; font-weight:bold;">MÃ GIAO DỊCH</div>
+            <div style="font-size:18px; font-weight:900; color:#831843; letter-spacing:0.5px; word-break:break-all;">${orderId}</div>
             <div style="margin-top:10px; font-size:16px; font-weight:600; color:#333;">
-                Số tiền: <span style="color:#dc2626;">${amount.toLocaleString('vi-VN')} đ</span>
+                Số tiền: <span style="color:#a50064;">${amount.toLocaleString('vi-VN')} đ</span>
             </div>
         </div>
 
         <div style="display:grid; gap:10px;">
-            <button onclick="executeNganLuongPayment()" class="premium-submit-btn" style="background:#f59e0b; box-shadow:0 4px 15px rgba(245, 158, 11, 0.4); border-radius: 4px; width: 100%;">
-                <i class="fa-solid fa-credit-card"></i> THANH TOÁN QUA NGÂN LƯỢNG
+            <button onclick="executeMoMoPayment()" class="premium-submit-btn" style="background:#a50064; box-shadow:0 4px 15px rgba(165, 0, 100, 0.4); border-radius: 8px; width: 100%;">
+                <i class="fa-solid fa-wallet"></i> THANH TOÁN VÍ MOMO
             </button>
-            <button onclick="resetDonationForm()" class="premium-chip" style="width:100%; color:#555; border-radius: 4px;">
+            <button onclick="resetDonationForm()" class="premium-chip" style="width:100%; color:#555; border-radius: 8px;">
                 Quay lại / Hủy
             </button>
         </div>
@@ -954,8 +980,11 @@ async function registerAndGenNganLuong() {
     <style>@keyframes bounceIn {0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(0.9)}100%{transform:scale(1)}}</style>`;
 }
 
-// 4b. ACTION: DIRECT NGAN LUONG REDIRECT (Client-Side)
-async function executeNganLuongPayment() {
+// 4b. ACTION: EXECUTE MOMO PAYMENT (Via Separate Module)
+
+// 4b. ACTION: DIRECT MOMO REDIRECT (Client-Side)
+// 4b. ACTION: EXECUTE MOMO PAYMENT (Via Separate Module)
+async function executeMoMoPayment() {
     if (!window.pendingDonationPayload) {
         alert("Lỗi dữ liệu phiên. Vui lòng tải lại trang.");
         return;
@@ -964,99 +993,22 @@ async function executeNganLuongPayment() {
     const payload = window.pendingDonationPayload;
     const btn = document.querySelector('.premium-submit-btn');
 
-    // SHOW LOADING
+    // UI Loading
     if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG CHUYỂN HƯỚNG...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG KẾT NỐI MOMO...';
         btn.disabled = true;
     }
 
     try {
-        console.log("Preparing NganLuong Redirect:", payload);
-
-        // --- 1. PREPARE DATA ---
-        var merchant_site_code = NL_CONFIG.MERCHANT_ID;
-        var return_url = window.location.href;
-        var receiver = NL_CONFIG.RECEIVER_EMAIL;
-        var transaction_info = "Ung ho quy TDP21";
-        var order_code = payload.code;
-        var price = payload.amount.toString();
-        var currency = "vnd";
-        var quantity = "1";
-        var tax = "0";
-        var discount = "0";
-        var fee_cal = "0";
-        var fee_shipping = "0";
-        var order_description = "Ung ho quy TDP21: " + removeAccentsSimple(payload.name);
-        var cleanName = removeAccentsSimple(payload.name);
-        var buyer_info = cleanName + "*|*hotro@todanpho21.com*|*0900000000*|*HN";
-        var affiliate_code = "";
-
-        // Return URL (Current Page)
-        var return_url = window.location.href;
-        var cancel_url = window.location.href;
-
-        // --- 2. GENERATE URL (Button Payment Method) ---
-        // Using NganLuong Button Redirect format which assumes receiver email based routing
-        var url = NL_CONFIG.URL_PAYMENT;
-
-
-        // --- 3. CREATE FORM ---
-        var form = document.createElement("form");
-        form.setAttribute("method", "post");
-        form.setAttribute("action", url);
-        form.setAttribute("target", "_self"); // Redirect same tab
-
-        // SECURE CODE GENERATION
-        var secure_string = merchant_site_code + " " + return_url + " " + receiver + " " + transaction_info + " " + order_code + " " + price + " " + currency + " " + quantity + " " + tax + " " + discount + " " + fee_cal + " " + fee_shipping + " " + order_description + " " + buyer_info + " " + affiliate_code + " " + NL_CONFIG.MERCHANT_PASS;
-        var secure_code = MD5(secure_string);
-
-        var params = {
-            'merchant_site_code': merchant_site_code,
-            'return_url': return_url,
-            'receiver': receiver,
-            'transaction_info': transaction_info,
-            'order_code': order_code,
-            'price': price,
-            'currency': currency,
-            'quantity': quantity,
-            'tax': tax,
-            'discount': discount,
-            'fee_cal': fee_cal,
-            'fee_shipping': fee_shipping,
-            'order_description': order_description,
-            'buyer_info': buyer_info,
-            'affiliate_code': affiliate_code,
-            'secure_code': secure_code
-        };
-
-        // NOTE: For simple button payment, strict MD5 might not be enforced if Merchant doesn't enable "Check Order LInk"
-        // But let's append other useful fields
-        params['tax'] = tax;
-        params['discount'] = discount;
-        params['fee_cal'] = fee_cal;
-        params['fee_shipping'] = fee_shipping;
-        params['order_description'] = order_description;
-        params['buyer_info'] = buyer_info;
-
-        // --- 4. SUBMIT ---
-        for (var key in params) {
-            if (params.hasOwnProperty(key)) {
-                var hiddenField = document.createElement("input");
-                hiddenField.setAttribute("type", "hidden");
-                hiddenField.setAttribute("name", key);
-                hiddenField.setAttribute("value", params[key]);
-                form.appendChild(hiddenField);
-            }
+        // Delegate to External Module
+        if (typeof PaymentGateway !== 'undefined') {
+            await PaymentGateway.payWithMoMo(payload);
+        } else {
+            throw new Error("Module PaymentGateway chưa được tải!");
         }
 
-        document.body.appendChild(form);
-        console.log("Submitting NganLuong Form...", params);
-        form.submit();
-
     } catch (e) {
-        console.error("Payment Error:", e);
-        alert("Lỗi xử lý: " + e.message);
-
+        // Error already handled in module, but we reset UI here too
         if (btn) {
             btn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> THỬ LẠI';
             btn.disabled = false;
@@ -1064,59 +1016,789 @@ async function executeNganLuongPayment() {
     }
 }
 
-// 5. ACTION: CHECK PAYMENT RETURN (Handle Redirect from MoMo)
-// 5. ACTION: CHECK PAYMENT RETURN (Handle Redirect from NganLuong)
+// 5. ACTION: CHECK PAYMENT RETURN (Handle Redirect from MoMo / NganLuong)
 function checkPaymentReturn() {
     const urlParams = new URLSearchParams(window.location.search);
-    const errorCode = urlParams.get('error_code');
-    // const token = urlParams.get('token'); // NganLuong often sends token
 
-    // Only process if we have NganLuong result
-    if (errorCode !== null) {
+    // CHECK FOR LOOKUP URL FIRST (ref + status params)
+    const refCode = urlParams.get('ref');
+    const statusParam = urlParams.get('status');
+
+    if (refCode && statusParam) {
+        console.log("[Payment] Lookup URL detected:", { refCode, statusParam });
+
+        // Look up donation in Firebase by code
+        db.collection('donations')
+            .where('code', '==', refCode)
+            .limit(1)
+            .get()
+            .then(snapshot => {
+                if (!snapshot.empty) {
+                    const doc = snapshot.docs[0];
+                    const donation = doc.data();
+                    console.log("[Payment] Found donation:", donation);
+
+                    // Render appropriate page based on status
+                    if (statusParam === 'success') {
+                        renderFullPageSuccess(donation);
+                    } else if (statusParam === 'error' || statusParam === 'cancelled') {
+                        renderFullPageError({
+                            isCancelled: statusParam === 'cancelled',
+                            errorCode: 'LOOKUP',
+                            errorMessage: 'Tra cứu giao dịch',
+                            payload: donation
+                        });
+                    }
+                } else {
+                    console.warn("[Payment] Donation not found for code:", refCode);
+                    // Show not found message
+                    const container = document.getElementById('all-funds-container') || document.body;
+                    container.innerHTML = `
+                        <div style="max-width: 600px; margin: 50px auto; padding: 40px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center;">
+                            <i class="fa-solid fa-search" style="font-size: 50px; color: #94a3b8; margin-bottom: 20px;"></i>
+                            <h2 style="color: #334155; margin-bottom: 15px;">Không tìm thấy giao dịch</h2>
+                            <p style="color: #64748b; margin-bottom: 25px;">Mã tham chiếu <strong>${refCode}</strong> không tồn tại trong hệ thống.</p>
+                            <button onclick="window.location.href='dong-gop.html'" style="padding: 12px 25px; background: #be0000; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                <i class="fa-solid fa-arrow-left"></i> VỀ TRANG CHỦ
+                            </button>
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.error("[Payment] Lookup error:", err);
+            });
+
+        return true; // Stop loading fund detail
+    }
+
+    // MoMo Parameters - check all possible return params
+    const resultCode = urlParams.get('resultCode');
+    const momoOrderId = urlParams.get('orderId');
+    const momoAmount = urlParams.get('amount');
+    const momoTransId = urlParams.get('transId');
+    const momoMessage = urlParams.get('message');
+    const momoOrderInfo = urlParams.get('orderInfo'); // MoMo also returns this
+    const momoPartnerCode = urlParams.get('partnerCode');
+
+    // Legacy NganLuong
+    const errorCode = urlParams.get('error_code');
+
+    // Detect if this is a MoMo return - MORE FLEXIBLE detection
+    // MoMo returns: amount + orderInfo (always), optionally: resultCode, transId, orderId
+    const hasMoMoParams = momoAmount && momoOrderInfo;
+    const hasResultCode = resultCode !== null;
+    const hasTransactionInfo = momoTransId || momoOrderId;
+
+    const isMoMoReturn = hasResultCode || hasMoMoParams || (hasTransactionInfo && momoAmount);
+    const isLegacyReturn = (errorCode !== null);
+
+    console.log("[Payment] Checking return params:", {
+        resultCode, momoOrderId, momoAmount, momoTransId, momoOrderInfo,
+        isMoMoReturn, hasMoMoParams, hasResultCode
+    });
+
+    // Check if we have a payment return signal
+    if (isMoMoReturn || isLegacyReturn) {
+
+        // Determine Success
+        // MoMo: resultCode = 0 OR if no resultCode but has amount+orderInfo (successful redirect from MoMo)
+        // NganLuong: error_code = 00
+        let isSuccess = false;
+
+        if (resultCode !== null) {
+            // Explicit resultCode present
+            isSuccess = (resultCode == 0 || resultCode === '0');
+        } else if (hasMoMoParams) {
+            // No resultCode but has MoMo signature params = ASSUME successful redirect
+            // (Failed payments usually have resultCode != 0)
+            isSuccess = true;
+        } else if (errorCode !== null) {
+            isSuccess = (errorCode === '00');
+        }
+
+        const message = momoMessage || urlParams.get('message') || "Giao dịch không thành công.";
+
+        console.log("[Payment] isSuccess:", isSuccess, "message:", message);
+
         // Clear params to clean URL but PRESERVE id
         const newUrl = new URL(window.location.href);
-        const paramsToRemove = ['error_code', 'token', 'order_code', 'payment_id', 'payment_type', 'discount_amount', 'fee_shipping', 'integration_version', 'created_time', 'buyer_email', 'buyer_fullname', 'buyer_mobile'];
+        const paramsToRemove = [
+            'error_code', 'token', 'order_code', 'payment_id', 'payment_type',
+            'discount_amount', 'fee_shipping', 'integration_version', 'created_time',
+            'buyer_email', 'buyer_fullname', 'buyer_mobile',
+            'resultCode', 'message', 'orderId', 'requestId', 'partnerCode',
+            'orderType', 'transId', 'payType', 'signature', 'amount', 'orderInfo',
+            'responseTime', 'extraData'
+        ];
         paramsToRemove.forEach(k => newUrl.searchParams.delete(k));
         window.history.replaceState({}, document.title, newUrl.toString());
 
-        if (errorCode === '00') {
-            // SUCCESS
-            const stored = localStorage.getItem('pending_nganluong_donation');
+        if (isSuccess) {
+            // SUCCESS handling
+            const stored = localStorage.getItem('pending_momo_donation');
+            let payload = null;
+
+            // AUTO-VERIFY LOGIC:
+            // - resultCode === 0: MoMo explicitly confirms success
+            // - has transId: MoMo assigned a transaction ID = payment processed
+            const isAutoVerified = (resultCode == 0 || resultCode === '0') || (momoTransId && momoTransId.length > 0);
+
+            console.log("[Payment] Auto-verify decision:", {
+                resultCode, momoTransId, isAutoVerified
+            });
+
             if (stored) {
                 try {
                     const data = JSON.parse(stored);
-                    const payload = data.payload;
+                    payload = data.payload;
 
-                    // Recover payload and finalize
-                    payload.verified = true; // Auto-verify (Simple check)
-                    // payload.nlToken = token;
+                    // Add MoMo transaction info
+                    payload.verified = isAutoVerified; // AUTO-VERIFY if MoMo confirms
+                    payload.momoTransId = momoTransId || '';
+                    payload.momoOrderId = momoOrderId || payload.code;
+                    payload.paymentMethod = 'MoMo';
+                    payload.verifiedAt = isAutoVerified ? new Date().toISOString() : null;
+                    payload.verifiedBy = isAutoVerified ? 'SYSTEM_MOMO' : null;
 
-                    // Save to Firebase
-                    db.collection('donations').add(payload)
-                        .then(() => {
-                            renderFullPageSuccess(payload);
-                            localStorage.removeItem('pending_nganluong_donation');
-                        })
-                        .catch(e => {
-                            alert("Thanh toán thành công nhưng lỗi lưu dữ liệu: " + e.message);
-                        });
-
-                } catch (e) { console.error("Parse stored data error", e); }
-            } else {
-                alert("Thanh toán thành công! (Không tìm thấy dữ liệu phiên - vui lòng liên hệ Admin)");
+                } catch (e) {
+                    console.error("Parse stored data error", e);
+                    payload = null;
+                }
             }
+
+            // If no stored session or parse failed, create payload from URL params
+            if (!payload) {
+                console.warn("[Payment] No stored session found, creating from URL params");
+
+                // Extract name from orderInfo if possible
+                let extractedName = 'Mạnh thường quân';
+                if (momoOrderInfo) {
+                    // orderInfo format: "Ung ho quy TDP21: Ten Nguoi"
+                    const match = momoOrderInfo.match(/TDP21[:\s]+(.+)/i);
+                    if (match && match[1]) {
+                        extractedName = match[1].trim();
+                    }
+                }
+
+                payload = {
+                    code: momoOrderId || 'TDP-' + Date.now(),
+                    amount: parseInt(momoAmount) || 0,
+                    name: extractedName,
+                    fundId: urlParams.get('id') || '',
+                    momoTransId: momoTransId || '',
+                    momoOrderId: momoOrderId || '',
+                    timestamp: new Date().toISOString(),
+                    verified: isAutoVerified, // AUTO-VERIFY
+                    verifiedAt: isAutoVerified ? new Date().toISOString() : null,
+                    verifiedBy: isAutoVerified ? 'SYSTEM_MOMO' : null,
+                    paymentMethod: 'MoMo',
+                    isAnonymous: false
+                };
+            }
+
+            console.log("[Payment] Saving donation (verified=" + payload.verified + "):", payload);
+
+            // RENDER SUCCESS PAGE IMMEDIATELY (before Firebase save to avoid race condition)
+            renderFullPageSuccess(payload);
+
+            // Save to Firebase - TRY SDK first, FALLBACK to REST API
+            const saveDonation = async (data) => {
+                const projectId = 'tdp21-cms';
+                const collectionName = 'donations';
+
+                // Convert payload to Firestore REST format
+                const toFirestoreValue = (val) => {
+                    if (typeof val === 'string') return { stringValue: val };
+                    if (typeof val === 'number') return { integerValue: String(val) };
+                    if (typeof val === 'boolean') return { booleanValue: val };
+                    if (val === null) return { nullValue: null };
+                    return { stringValue: String(val) };
+                };
+
+                const firestoreDoc = { fields: {} };
+                for (const [key, value] of Object.entries(data)) {
+                    firestoreDoc.fields[key] = toFirestoreValue(value);
+                }
+
+                // TRY REST API DIRECTLY (bypasses SDK issues)
+                const restUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${collectionName}`;
+
+                console.log("[Payment] Trying REST API...");
+
+                const response = await fetch(restUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(firestoreDoc)
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error?.message || `HTTP ${response.status}`);
+                }
+
+                const result = await response.json();
+                const docId = result.name.split('/').pop();
+                return docId;
+            };
+
+            try {
+                console.log("[Payment] Saving via REST API...");
+
+                // Save using REST API with timeout
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('REST API timeout sau 20 giây')), 20000)
+                );
+
+                Promise.race([saveDonation(payload), timeoutPromise])
+                    .then((docId) => {
+                        console.log("[Payment] ✅ Donation saved via REST! DocID:", docId);
+                        localStorage.removeItem('pending_momo_donation');
+                    })
+                    .catch(e => {
+                        console.error("[Payment] ❌ REST API Save error:", e);
+                        // Save to localStorage as backup
+                        const backupKey = 'pending_donation_' + payload.code;
+                        localStorage.setItem(backupKey, JSON.stringify(payload));
+                        console.log("[Payment] Saved to localStorage backup:", backupKey);
+                        alert("Thanh toán thành công! Tuy nhiên hệ thống gặp lỗi khi lưu:\n\n" + (e.message || e) + "\n\nDữ liệu đã được lưu tạm. Vui lòng liên hệ Admin với mã: " + payload.code);
+                    });
+
+            } catch (err) {
+                console.error("[Payment] Exception during save:", err);
+            }
+
             return true; // STOP LOADING
         } else {
             // FAILED or CANCELLED
-            if (errorCode === 'CANCEL') {
-                alert("Bạn đã hủy giao dịch.");
-            } else {
-                alert("Giao dịch thất bại. Mã lỗi: " + errorCode);
+            const errorDisplay = resultCode || errorCode || 'UNKNOWN';
+            const isCancelled = (errorDisplay === '1006' || message.toLowerCase().includes('cancel') || message.toLowerCase().includes('hủy'));
+
+            // Get stored data for display
+            const stored = localStorage.getItem('pending_momo_donation');
+            let errorPayload = {
+                code: momoOrderId || 'N/A',
+                amount: momoAmount || 0,
+                name: 'Không xác định',
+                fundId: urlParams.get('id') || ''
+            };
+
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    errorPayload = data.payload || errorPayload;
+                } catch (e) { }
             }
-            return false; // CONTINUE LOADING FUND PAGE
+
+            // Render error page
+            renderFullPageError({
+                isCancelled: isCancelled,
+                errorCode: errorDisplay,
+                errorMessage: message,
+                payload: errorPayload
+            });
+
+            // Clean up localStorage
+            localStorage.removeItem('pending_momo_donation');
+
+            return true; // STOP LOADING (show error page instead of fund detail)
         }
     }
     return false;
+}
+
+// HELPER: Print Document
+function printDocument() {
+    window.print();
+}
+
+// HELPER: Copy Share URL
+function copyShareUrl() {
+    const input = document.getElementById('share-url-input');
+    if (input) {
+        input.select();
+        input.setSelectionRange(0, 99999); // For mobile
+        navigator.clipboard.writeText(input.value).then(() => {
+            // Show feedback
+            const btn = document.querySelector('.btn-copy-url');
+            if (btn) {
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                btn.style.background = '#16a34a';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.background = '';
+                }, 2000);
+            }
+        }).catch(() => {
+            // Fallback
+            document.execCommand('copy');
+            alert('Đã sao chép đường dẫn!');
+        });
+    }
+}
+
+// RENDER ERROR/CANCELLED PAGE (A4 Document Style)
+function renderFullPageError(errorData) {
+    const container = document.getElementById('all-funds-container') || document.body;
+
+    // Hide Intro Text if exists
+    const introText = document.getElementById('donation-intro-text');
+    if (introText) introText.style.display = 'none';
+
+    // Format date in Vietnamese
+    const now = new Date();
+    const day = now.getDate();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateStr = `Hà Nội, ngày ${day} tháng ${month} năm ${year}`;
+
+    const { isCancelled, errorCode, errorMessage, payload } = errorData;
+    const fundTitle = window.currentFundData?.title || 'Quỹ Đóng Góp Cộng Đồng';
+
+    // Dynamic content based on error type
+    const titleText = isCancelled ? 'GIAO DỊCH ĐÃ HỦY' : 'GIAO DỊCH THẤT BẠI';
+    const titleIcon = isCancelled ? 'fa-circle-xmark' : 'fa-triangle-exclamation';
+    const statusText = isCancelled ? 'Người dùng đã hủy giao dịch' : 'Giao dịch không thành công';
+    const reasonText = isCancelled
+        ? 'Ban Lãnh đạo Tổ dân phố số 21 trân trọng thông báo tới Quý vị về việc Hệ thống Cổng thanh toán điện tử đã ghi nhận tín hiệu <b>HỦY GIAO DỊCH</b> từ phía thiết bị của Quý vị. Để đảm bảo quyền lợi và sự minh bạch tài chính, chúng tôi xin xác nhận chi tiết trạng thái của giao dịch này như sau:'
+        : 'Ban Lãnh đạo Tổ dân phố số 21 trân trọng thông báo: Giao dịch đóng góp của Quý vị <b>CHƯA THỂ HOÀN TẤT</b> do phát sinh sự cố kỹ thuật từ phía hệ thống thanh toán trung gian. Chúng tôi xin thông báo chi tiết trạng thái giao dịch để Quý vị nắm rõ:';
+
+    // Generate shareable URL
+    const shareUrl = `${window.location.origin}${window.location.pathname}?id=${payload.fundId}&ref=${payload.code}&status=error`;
+
+    container.innerHTML = `
+        <div class="a4-document error-document" id="printable-document">
+            <!-- QUỐC HIỆU - TIÊU NGỮ -->
+            <div class="a4-header">
+                <div class="a4-header-left">
+                    <div class="org-name">TỔ DÂN PHỐ SỐ 21</div>
+                    <div class="org-sub">Phường Ba Đình, Thành phố Hà Nội</div>
+                    <div class="doc-number">Số: ${payload.code || 'N/A'}</div>
+                </div>
+                <div class="a4-header-right">
+                    <div class="quoc-hieu">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                    <div class="tieu-ngu">Độc lập - Tự do - Hạnh phúc</div>
+                    <div class="tieu-ngu-line"></div>
+                    <div class="doc-date">${dateStr}</div>
+                </div>
+            </div>
+
+            <!-- TIÊU ĐỀ VĂN BẢN -->
+            <div class="a4-title">
+                <div class="title-main error-title">
+                    <i class="fa-solid ${titleIcon}"></i> ${titleText}
+                </div>
+                <div class="title-sub">(${statusText})</div>
+            </div>
+
+            <!-- NỘI DUNG CHÍNH -->
+            <div class="a4-body">
+                <div class="receipt-intro">
+                    ${reasonText}
+                </div>
+
+                <!-- THÔNG TIN GIAO DỊCH -->
+                <div class="receipt-section">
+                    <div class="section-title">I. THÔNG TIN GIAO DỊCH</div>
+                    <table class="receipt-table">
+                        <tr>
+                            <td class="label-cell">Mã tham chiếu:</td>
+                            <td class="value-cell">${payload.code || 'Không có'}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Chương trình:</td>
+                            <td class="value-cell">${fundTitle}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Số tiền dự kiến:</td>
+                            <td class="value-cell">${parseInt(payload.amount || 0).toLocaleString('vi-VN')} đồng</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Thời gian:</td>
+                            <td class="value-cell">${time} - ${day}/${month}/${year}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- CHI TIẾT LỖI -->
+                <div class="receipt-section">
+                    <div class="section-title">II. CHI TIẾT ${isCancelled ? 'HỦY GIAO DỊCH' : 'LỖI'}</div>
+                    <table class="receipt-table">
+                        <tr>
+                            <td class="label-cell">Mã trạng thái:</td>
+                            <td class="value-cell error-code">${errorCode}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Thông báo:</td>
+                            <td class="value-cell">${errorMessage || (isCancelled ? 'Giao dịch bị hủy bởi người dùng' : 'Lỗi không xác định')}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- TRẠNG THÁI -->
+                <div class="receipt-section">
+                    <div class="section-title">III. TRẠNG THÁI XỬ LÝ HỒ SƠ</div>
+                    <div class="formal-text">
+                        <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">1. <b>Về mặt tài chính:</b> Hệ thống xác nhận giao dịch này đã bị <b>${isCancelled ? 'HỦY BỎ' : 'TỪ CHỐI'}</b>. Chúng tôi xin khẳng định và cam kết <b>không có bất kỳ khoản tiền nào bị khấu trừ</b> từ tài khoản ngân hàng hoặc ví điện tử của Quý vị đối với giao dịch này.</p>
+                        <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">2. <b>Về ghi nhận đóng góp:</b> Do giao dịch chưa thành công, thông tin đóng góp của Quý vị <b>tạm thời chưa được ghi nhận</b> vào Sổ vàng điện tử và Danh sách công khai của Tổ dân phố. Hồ sơ giao dịch này sẽ được lưu trữ ở trạng thái "Đã hủy" để phục vụ công tác tra cứu đối soát khi cần thiết.</p>
+                        ${!isCancelled ? '<p style="text-align: justify; text-indent: 0;">3. <b>Về hỗ trợ kỹ thuật:</b> Nếu Quý vị nghi ngờ có sự cố bất thường hoặc lỗi lặp lại nhiều lần, xin vui lòng liên hệ trực tiếp với Ban Quản trị hoặc bộ phận Chăm sóc khách hàng của dịch vụ thanh toán để được hỗ trợ kiểm tra.</p>' : ''}
+                    </div>
+                </div>
+
+                <!-- HƯỚNG DẪN -->
+                <div class="receipt-section">
+                    <div class="section-title">IV. HƯỚNG DẪN THỰC HIỆN LẠI GIAO DỊCH</div>
+                    <div class="formal-text">
+                         <p style="margin-bottom: 8px; text-indent: 0;">Để tiếp tục thực hiện đóng góp, Ban Lãnh đạo kính mong Quý vị vui lòng kiểm tra và thực hiện theo các bước hướng dẫn sau đây:</p>
+                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">1. Kính đề nghị Quý vị kiểm tra lại <b>kết nối mạng Internet (Wifi hoặc 4G/5G)</b> trên thiết bị di động để đảm bảo đường truyền ổn định, không bị gián đoạn trong quá trình thanh toán.</p>
+                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">2. Quý vị vui lòng kiểm tra và cập nhật ứng dụng <b>Ngân hàng (Mobile Banking) hoặc Ví điện tử lên phiên bản mới nhất</b> để đảm bảo tính tương thích và bảo mật an toàn thông tin.</p>
+                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">3. Trong trường hợp hệ thống thanh toán đang bận hoặc gặp sự cố tạm thời, Quý vị vui lòng <b>kiên nhẫn chờ đợi trong ít phút</b> và thực hiện lại thao tác quét mã/chuyển khoản.</p>
+                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">4. Nếu vẫn không thể thực hiện giao dịch, Quý vị có thể liên hệ Tổng đài hỗ trợ của <b>đơn vị cung cấp dịch vụ thanh toán</b> hoặc thông báo cho Tổ trưởng Tổ dân phố để được trợ giúp kịp thời.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR CODE -->
+            <div class="a4-signature">
+                <div class="sig-left">
+                    <div class="qr-box">
+                        <div class="qr-label">Quét mã để tra cứu:</div>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&margin=0&data=${encodeURIComponent(shareUrl)}" alt="QR Code" class="qr-img">
+                    </div>
+                </div>
+                <div class="sig-right"></div>
+            </div>
+
+            <!-- NÚT HÀNH ĐỘNG -->
+            <div class="a4-actions no-print">
+                <button onclick="printDocument()" class="btn-action btn-print">
+                    <i class="fa-solid fa-print"></i> IN / LƯU PDF
+                </button>
+                <button onclick="window.location.href='dong-gop.html?id=${payload.fundId}'" class="btn-action btn-primary">
+                    <i class="fa-solid fa-rotate-right"></i> THỬ LẠI
+                </button>
+                <button onclick="window.location.href='dong-gop.html'" class="btn-action btn-secondary">
+                    VỀ TRANG CHỦ
+                </button>
+            </div>
+        </div>
+
+        <style>
+            /* BASE A4 DOCUMENT STYLES */
+            .a4-document {
+                max-width: 800px;
+                margin: 30px auto;
+                background: white;
+                padding: 40px 50px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                font-family: 'Times New Roman', Georgia, serif;
+                font-size: 15px;
+                line-height: 1.6;
+                border: 1px solid #ddd;
+            }
+            .a4-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 25px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #ccc;
+            }
+            .a4-header-left {
+                text-align: center;
+                flex: 1;
+            }
+            .a4-header-right {
+                text-align: center;
+                flex: 1.2;
+            }
+            .org-name {
+                font-weight: bold;
+                font-size: 14px;
+                text-transform: uppercase;
+            }
+            .org-sub {
+                font-size: 13px;
+                color: #555;
+            }
+            .doc-number {
+                margin-top: 8px;
+                font-size: 13px;
+            }
+            .quoc-hieu {
+                font-weight: bold;
+                font-size: 14px;
+                text-transform: uppercase;
+            }
+            .tieu-ngu {
+                font-size: 14px;
+                font-weight: bold;
+                font-style: italic;
+                margin-top: 3px;
+            }
+            .tieu-ngu-line {
+                width: 180px;
+                height: 2px;
+                background: #333;
+                margin: 5px auto;
+            }
+            .doc-date {
+                font-size: 13px;
+                font-style: italic;
+                margin-top: 8px;
+            }
+            .a4-title {
+                text-align: center;
+                margin: 25px 0 30px;
+            }
+            .title-main {
+                font-size: 20px;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #333;
+            }
+            .title-sub {
+                font-size: 14px;
+                font-style: italic;
+                color: #666;
+                margin-top: 5px;
+            }
+            .a4-body {
+                margin-bottom: 30px;
+            }
+            .receipt-intro {
+                text-align: justify;
+                margin-bottom: 20px;
+                text-indent: 40px;
+            }
+            .receipt-section {
+                margin-bottom: 20px;
+            }
+            .section-title {
+                font-weight: bold;
+                margin-bottom: 10px;
+                color: #333;
+            }
+            .receipt-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .receipt-table tr {
+                border-bottom: 1px dotted #ccc;
+            }
+            .receipt-table td {
+                padding: 8px 5px;
+                vertical-align: top;
+            }
+            .label-cell {
+                width: 180px;
+                color: #555;
+            }
+            .value-cell {
+                font-weight: 500;
+                color: #222;
+            }
+            .status-box {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-weight: 600;
+            }
+            .a4-actions {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+            }
+            .btn-action {
+                padding: 12px 25px;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 14px;
+                font-family: 'Segoe UI', sans-serif;
+                transition: all 0.2s;
+            }
+            .btn-action.btn-primary {
+                background: #be0000;
+                color: white;
+            }
+            .btn-action.btn-primary:hover {
+                background: #a00;
+            }
+            .btn-action.btn-secondary {
+                background: #f1f5f9;
+                color: #475569;
+                border: 1px solid #e2e8f0;
+            }
+            .btn-action.btn-secondary:hover {
+                background: #e2e8f0;
+            }
+            
+            /* ERROR SPECIFIC STYLES */
+            .error-document {
+                border-left: 4px solid #dc2626;
+            }
+            .title-main.error-title {
+                color: #dc2626;
+            }
+            .title-main.error-title i {
+                margin-right: 8px;
+            }
+            .error-code {
+                color: #dc2626;
+                font-weight: bold;
+                font-family: monospace;
+                font-size: 14px;
+            }
+            .status-box.cancelled {
+                background: #fef3c7;
+                color: #92400e;
+                border: 1px solid #fcd34d;
+            }
+            .status-box.failed {
+                background: #fef2f2;
+                color: #dc2626;
+                border: 1px solid #fecaca;
+            }
+            .help-box {
+                margin-top: 25px;
+                padding: 20px;
+                background: #eff6ff;
+                border-left: 4px solid #3b82f6;
+                border-radius: 0 8px 8px 0;
+                display: flex;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            .help-box i {
+                color: #3b82f6;
+                font-size: 24px;
+                flex-shrink: 0;
+            }
+            .help-box ul li {
+                margin-bottom: 5px;
+            }
+            
+            /* SIGNATURE & QR CODE */
+            .a4-signature {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 40px;
+                margin-bottom: 30px;
+            }
+            .sig-left { flex: 1; }
+            .sig-right { flex: 1; }
+            
+            .qr-box {
+                text-align: center;
+                margin-top: 10px;
+                padding-left: 20px;
+            }
+            .qr-label {
+                font-size: 11px;
+                font-style: italic;
+                margin-bottom: 5px;
+                color: #555;
+            }
+            .qr-img {
+                width: 90px;
+                height: 90px;
+                display: block;
+                margin: 0 auto;
+            }
+            
+            /* PRINT BUTTON */
+            .btn-action.btn-print {
+                background: #059669;
+                color: white;
+            }
+            .btn-action.btn-print:hover {
+                background: #047857;
+            }
+            
+            @media (max-width: 768px) {
+                .a4-document {
+                    margin: 10px;
+                    padding: 20px;
+                }
+                .a4-header {
+                    flex-direction: column;
+                    gap: 15px;
+                }
+                .a4-actions {
+                    flex-direction: column;
+                }
+                .btn-action {
+                    width: 100%;
+                }
+            }
+            
+            /* PRINT STYLES */
+            @media print {
+                @page { margin: 0; size: A4; }
+                * {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                
+                html, body {
+                    width: 210mm;
+                    height: auto;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: white !important;
+                    visibility: hidden;
+                }
+                
+                #printable-document {
+                    visibility: visible;
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 210mm !important;
+                    min-height: 297mm !important;
+                    margin: 0 !important;
+                    padding: 0 15mm !important; /* Side padding only */
+                    box-shadow: none !important;
+                    border: none !important;
+                    background: white !important;
+                    font-size: 11pt !important;
+                    line-height: 1.3 !important;
+                    z-index: 2147483647; /* Max Z-Index */
+                    transform: none !important;
+                }
+
+                #printable-document * {
+                    visibility: visible;
+                }
+                
+                .no-print { display: none !important; }
+                
+                .a4-document {
+                    box-shadow: none !important;
+                    border: none !important;
+                    max-width: none !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+                
+                .a4-header { margin-bottom: 10px !important; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+                .a4-title { margin: 10px 0 !important; }
+                .receipt-section { margin-bottom: 10px !important; }
+                .receipt-section p { margin-bottom: 5px; } /* Tighten paragraphs */
+                .thank-you-box { margin-top: 15px; padding: 10px; }
+                .a4-signature { margin-top: 15px !important; }
+                
+                .receipt-table td { padding: 4px 2px !important; }
+            }
+        </style>
+    `;
 }
 
 function renderFullPageSuccess(payload) {
@@ -1126,51 +1808,628 @@ function renderFullPageSuccess(payload) {
     const introText = document.getElementById('donation-intro-text');
     if (introText) introText.style.display = 'none';
 
+    // Format date in Vietnamese
+    const now = new Date();
+    const day = now.getDate();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+    const time = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateStr = `Hà Nội, ngày ${day} tháng ${month} năm ${year}`;
+
+    // Get fund title if available
+    const fundTitle = payload.fundTitle || window.currentFundData?.title || 'Quỹ Đóng Góp Cộng Đồng';
+
+    // Generate shareable URL
+    const shareUrl = `${window.location.origin}${window.location.pathname}?id=${payload.fundId}&ref=${payload.code}&status=success`;
+
     container.innerHTML = `
-        <div style="max-width: 600px; margin: 50px auto; background: white; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); overflow: hidden; font-family: 'Segoe UI', sans-serif;">
-            <div style="background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); padding: 30px; text-align: center; color: white;">
-                <i class="fa-solid fa-circle-check" style="font-size: 60px; margin-bottom: 15px; animation: bounceIn 0.8s;"></i>
-                <h2 style="margin: 0; font-weight: 800;">CẢM ƠN TẤM LÒNG VÀNG!</h2>
-                <p style="margin: 10px 0 0; opacity: 0.9;">Giao dịch thành công</p>
+        <div class="a4-document" id="printable-document">
+            <!-- QUỐC HIỆU - TIÊU NGỮ -->
+            <div class="a4-header">
+                <div class="a4-header-left">
+                    <div class="org-name">TỔ DÂN PHỐ SỐ 21</div>
+                    <div class="org-sub">Phường Ba Đình, Thành phố Hà Nội</div>
+                    <div class="doc-number">Số: ${payload.code}</div>
+                </div>
+                <div class="a4-header-right">
+                    <div class="quoc-hieu">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                    <div class="tieu-ngu">Độc lập - Tự do - Hạnh phúc</div>
+                    <div class="tieu-ngu-line"></div>
+                    <div class="doc-date">${dateStr}</div>
+                </div>
             </div>
-            
-            <div style="padding: 30px;">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <p style="color: #64748b; margin-bottom: 5px;">Số tiền ủng hộ</p>
-                    <div style="color: #16a34a; font-size: 32px; font-weight: 900;">${parseInt(payload.amount).toLocaleString()} đ</div>
-                    <div style="margin-top: 15px; padding:10px; background:#f0fdf4; border:1px dashed #16a34a; border-radius:8px;">
-                        <div style="font-size:13px; color:#15803d; margin-bottom:5px;">MÃ GIAO DỊCH</div>
-                        <div style="font-size: 28px; font-weight: 900; color: #166534; letter-spacing:1px;">${payload.code}</div>
-                    </div>
+
+            <!-- TIÊU ĐỀ VĂN BẢN -->
+            <div class="a4-title">
+                <div class="title-main success-title">
+                    <i class="fa-solid fa-circle-check"></i> BIÊN NHẬN ĐÓNG GÓP
+                </div>
+                <div class="title-sub">(Giao dịch thành công)</div>
+            </div>
+
+            <!-- NỘI DUNG CHÍNH -->
+            <div class="a4-body">
+                <div class="receipt-intro">
+                    Ban Lãnh đạo Tổ dân phố số 21 trân trọng xác nhận đã nhận được khoản đóng góp từ Quý vị thông qua hệ thống thanh toán trực tuyến với thông tin chi tiết như sau:
                 </div>
 
-                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 30px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
-                        <span style="color: #64748b;">Người gửi:</span>
-                        <span style="font-weight: 600; color: #334155;">${payload.name}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
-                        <span style="color: #64748b;">Thời gian:</span>
-                        <span style="font-weight: 600; color: #334155;">${new Date().toLocaleString('vi-VN')}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 14px;">
-                        <span style="color: #64748b;">Trạng thái:</span>
-                        <span style="font-weight: 600; color: #ea580c;">Đang chờ duyệt</span>
-                    </div>
+                <!-- THÔNG TIN GIAO DỊCH -->
+                <div class="receipt-section">
+                    <div class="section-title">I. THÔNG TIN GIAO DỊCH</div>
+                    <table class="receipt-table">
+                        <tr>
+                            <td class="label-cell">Mã giao dịch:</td>
+                            <td class="value-cell highlight-code">${payload.code}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Chương trình:</td>
+                            <td class="value-cell">${fundTitle}</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Phương thức:</td>
+                            <td class="value-cell">Thanh toán điện tử MoMo</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Thời gian:</td>
+                            <td class="value-cell">${time} - ${day}/${month}/${year}</td>
+                        </tr>
+                    </table>
                 </div>
 
-                <div style="display: flex; gap: 15px;">
-                    <button onclick="window.location.href='dong-gop.html?id=${payload.fundId}'" class="premium-submit-btn" style="background: #3b82f6; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);">
-                        <i class="fa-solid fa-arrow-left"></i> QUAY LẠI CHƯƠNG TRÌNH
-                    </button>
-                    <button onclick="window.location.href='dong-gop.html'" class="premium-submit-btn" style="background: #e2e8f0; color: #475569; box-shadow: none;">
-                        VỀ TRANG CHỦ
-                    </button>
+                <!-- THÔNG TIN NGƯỜI ĐÓNG GÓP -->
+                <div class="receipt-section">
+                    <div class="section-title">II. THÔNG TIN NGƯỜI ĐÓNG GÓP</div>
+                    <table class="receipt-table">
+                        ${(() => {
+            const ident = detectDonorIdentity(payload.name);
+            let label = 'Họ và tên:';
+            let showSuffix = true;
+
+            if (ident.type === 'org') {
+                label = 'Doanh nghiệp / Tổ chức:';
+                showSuffix = false;
+            } else if (ident.type === 'family') {
+                label = 'Đại diện gia đình:';
+            }
+
+            return `
+                            <tr>
+                                <td class="label-cell">${label}</td>
+                                <td class="value-cell">
+                                    <span style="display:inline-flex; align-items:center; gap:5px;">
+                                        <i class="fa-solid ${ident.icon}" style="color:#64748b;"></i> 
+                                        ${payload.name} 
+                                        ${showSuffix ? `<span style="font-size:12px; color:#94a3b8; font-weight:normal;">(${ident.label})</span>` : ''}
+                                    </span>
+                                </td>
+                            </tr>`;
+        })()}
+                        <tr>
+                            <td class="label-cell">Số tiền đóng góp:</td>
+                            <td class="value-cell amount-highlight">${parseInt(payload.amount).toLocaleString('vi-VN')} đồng</td>
+                        </tr>
+                        <tr>
+                            <td class="label-cell">Bằng chữ:</td>
+                            <td class="value-cell italic-text">(${numberToVietnameseWords(parseInt(payload.amount))} đồng)</td>
+                        </tr>
+                    </table>
                 </div>
+
+                <!-- TRẠNG THÁI -->
+                <div class="receipt-section">
+                    <div class="section-title">III. TRẠNG THÁI XỬ LÝ</div>
+                    ${payload.verified ? `
+                        <div class="formal-text">
+                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">1. Giao dịch chuyển khoản của Quý vị đã được hệ thống thanh toán điện tử xác thực hợp lệ. Số tiền đóng góp đã được hạch toán đầy đủ vào tài khoản Quỹ của Tổ dân phố số 21 theo đúng quy định hiện hành về quản lý tài chính.</p>
+                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">2. Thông tin đóng góp đã được hệ thống tự động cập nhật vào Sổ vàng điện tử và niêm yết công khai trên Cổng thông tin điện tử của Tổ dân phố. Chúng tôi cam kết đảm bảo tính minh bạch, chính xác và kịp thời trong công tác ghi nhận đóng góp, thực hiện nghiêm túc quy chế dân chủ ở cơ sở.</p>
+                            <p style="text-align: justify; text-indent: 0;">3. Ban Lãnh đạo Tổ dân phố cam kết quản lý và sử dụng nguồn đóng góp này đúng mục đích, tiết kiệm, hiệu quả và sẽ báo cáo công khai kết quả thực hiện tới toàn thể nhân dân trong các hội nghị sơ kết, tổng kết hoặc niêm yết công khai tại Nhà sinh hoạt cộng đồng.</p>
+                        </div>
+                    ` : `
+                        <div class="status-box pending">
+                            <i class="fa-solid fa-clock"></i>
+                            <span>Đang chờ Ban Quản trị xác nhận</span>
+                        </div>
+                        <div class="status-note">
+                            * Thông tin đóng góp sẽ được hiển thị công khai sau khi được xác minh.
+                        </div>
+                    `}
+                </div>
+
+                <!-- LỜI CẢM ƠN -->
+                <div class="thank-you-box">
+                    <i class="fa-solid fa-heart"></i>
+                    <p>Thay mặt Ban Lãnh đạo và toàn thể nhân dân Tổ dân phố số 21, xin trân trọng gửi lời cảm ơn sâu sắc nhất tới tấm lòng vàng của Quý vị. Sự đóng góp quý báu này không chỉ là nguồn lực thiết thực hỗ trợ các hoạt động chung của Tổ dân phố mà còn thể hiện tinh thần đoàn kết, tương thân tương ái cao đẹp. Kính chúc Quý vị và gia đình luôn mạnh khỏe, hạnh phúc và bình an!</p>
+                </div>
+            </div>
+
+            <!-- CHỮ KÝ & QR CODE -->
+            <div class="a4-signature">
+                <div class="sig-left">
+                    <div class="qr-box">
+                        <div class="qr-label">Quét mã để tra cứu:</div>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=90x90&margin=0&data=${encodeURIComponent(shareUrl)}" alt="QR Code" class="qr-img">
+                    </div>
+                </div>
+                <div class="sig-right">
+                    <div class="sig-title">TM. BAN LÃNH ĐẠO</div>
+                    <div class="sig-org">TỔ DÂN PHỐ SỐ 21</div>
+                    <div class="sig-note">(Xác nhận tự động)</div>
+                    <div class="sig-name">TỔ TRƯỞNG</div>
+                </div>
+            </div>
+
+            <!-- NÚT HÀNH ĐỘNG -->
+            <div class="a4-actions no-print">
+                <button onclick="printDocument()" class="btn-action btn-print">
+                    <i class="fa-solid fa-print"></i> IN / LƯU PDF
+                </button>
+                <button onclick="window.location.href='dong-gop.html?id=${payload.fundId}'" class="btn-action btn-primary">
+                    <i class="fa-solid fa-arrow-left"></i> QUAY LẠI CHƯƠNG TRÌNH
+                </button>
+                <button onclick="window.location.href='dong-gop.html'" class="btn-action btn-secondary">
+                    VỀ TRANG CHỦ
+                </button>
             </div>
         </div>
-        <style>@keyframes bounceIn {0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(0.9)}100%{transform:scale(1)}}</style>
+
+        <style>
+            .a4-document {
+                max-width: 800px;
+                margin: 30px auto;
+                background: white;
+                padding: 40px 50px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                font-family: 'Times New Roman', Georgia, serif;
+                font-size: 15px;
+                line-height: 1.6;
+                border: 1px solid #ddd;
+            }
+            .a4-header {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 25px;
+                padding-bottom: 15px;
+                border-bottom: 1px solid #ccc;
+            }
+            .a4-header-left {
+                text-align: center;
+                flex: 1;
+            }
+            .a4-header-right {
+                text-align: center;
+                flex: 1.2;
+            }
+            .org-name {
+                font-weight: bold;
+                font-size: 14px;
+                text-transform: uppercase;
+            }
+            .org-sub {
+                font-size: 13px;
+                color: #555;
+            }
+            .doc-number {
+                margin-top: 8px;
+                font-size: 13px;
+            }
+            .quoc-hieu {
+                font-weight: bold;
+                font-size: 14px;
+                text-transform: uppercase;
+            }
+            .tieu-ngu {
+                font-size: 14px;
+                font-weight: bold;
+                font-style: italic;
+                margin-top: 3px;
+            }
+            .tieu-ngu-line {
+                width: 180px;
+                height: 2px;
+                background: #333;
+                margin: 5px auto;
+            }
+            .doc-date {
+                font-size: 13px;
+                font-style: italic;
+                margin-top: 8px;
+            }
+            .a4-title {
+                text-align: center;
+                margin: 25px 0 30px;
+            }
+            .title-main {
+                font-size: 20px;
+                font-weight: bold;
+                text-transform: uppercase;
+                color: #333;
+            }
+            .title-main.success-title {
+                color: #16a34a;
+            }
+            .title-main.success-title i {
+                margin-right: 8px;
+            }
+            .title-sub {
+                font-size: 14px;
+                font-style: italic;
+                color: #666;
+                margin-top: 5px;
+            }
+            .a4-body {
+                margin-bottom: 30px;
+            }
+            .receipt-intro {
+                text-align: justify;
+                margin-bottom: 20px;
+                text-indent: 40px;
+            }
+            .receipt-section {
+                margin-bottom: 20px;
+            }
+            .section-title {
+                font-weight: bold;
+                margin-bottom: 10px;
+                color: #333;
+            }
+            .receipt-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .receipt-table tr {
+                border-bottom: 1px dotted #ccc;
+            }
+            .receipt-table td {
+                padding: 8px 5px;
+                vertical-align: top;
+            }
+            .label-cell {
+                width: 180px;
+                color: #555;
+            }
+            .value-cell {
+                font-weight: 500;
+                color: #222;
+            }
+            .highlight-code {
+                font-weight: bold;
+                color: #be0000;
+                font-size: 16px;
+                letter-spacing: 1px;
+            }
+            .amount-highlight {
+                font-weight: bold;
+                color: #16a34a;
+                font-size: 18px;
+            }
+            .italic-text {
+                font-style: italic;
+                font-weight: normal;
+                color: #555;
+            }
+            .status-box {
+                display: inline-flex;
+                align-items: center;
+                gap: 10px;
+                padding: 12px 20px;
+                border-radius: 6px;
+                font-weight: 600;
+            }
+            .status-box.pending {
+                background: #fff7ed;
+                color: #c2410c;
+                border: 1px solid #fed7aa;
+            }
+            .status-box.success {
+                background: #f0fdf4;
+                color: #16a34a;
+                border: 1px solid #86efac;
+            }
+            .status-box.verified {
+                background: #f0fdf4;
+                color: #16a34a;
+                border: 1px solid #86efac;
+            }
+            .status-box.verified i {
+                animation: pulse 2s infinite;
+            }
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.5; }
+            }
+            .status-note {
+                font-size: 13px;
+                font-style: italic;
+                color: #666;
+                margin-top: 10px;
+            }
+            .status-note.success-note {
+                color: #16a34a;
+                font-style: normal;
+                font-weight: 500;
+            }
+            .formal-text {
+                font-family: 'Times New Roman', Georgia, serif;
+                font-size: 15px;
+                color: #333;
+                text-align: justify;
+                padding-left: 20px;
+                margin-top: 5px;
+            }
+            .thank-you-box {
+                margin-top: 25px;
+                padding: 20px;
+                background: linear-gradient(135deg, #fef2f2, #fff);
+                border-left: 4px solid #be0000;
+                border-radius: 0 8px 8px 0;
+            }
+            .thank-you-box i {
+                color: #be0000;
+                font-size: 24px;
+                margin-bottom: 10px;
+                display: block;
+            }
+            .thank-you-box p {
+                margin: 0;
+                text-align: justify;
+                color: #333;
+            }
+            .a4-signature {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 40px;
+                margin-bottom: 30px;
+            }
+            .sig-left { flex: 1; }
+            .sig-right {
+                flex: 1;
+                text-align: center;
+            }
+            .sig-title, .sig-org {
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 14px;
+            }
+            .sig-note {
+                font-style: italic;
+                color: #888;
+                font-size: 12px;
+                margin: 30px 0 10px;
+            }
+            .sig-name {
+                font-weight: bold;
+                font-size: 15px;
+            }
+            /* QR CODE STYLES */
+            .qr-box {
+                text-align: center;
+                margin-top: 10px;
+                padding-left: 20px;
+            }
+            .qr-label {
+                font-size: 11px;
+                font-style: italic;
+                margin-bottom: 5px;
+                color: #555;
+            }
+            .qr-img {
+                width: 90px;
+                height: 90px;
+                display: block;
+                margin: 0 auto;
+            }
+            .a4-actions {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+            }
+            .btn-action {
+                padding: 12px 25px;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                font-size: 14px;
+                font-family: 'Segoe UI', sans-serif;
+                transition: all 0.2s;
+            }
+            .btn-action.btn-primary {
+                background: #be0000;
+                color: white;
+            }
+            .btn-action.btn-primary:hover {
+                background: #a00;
+            }
+            .btn-action.btn-secondary {
+                background: #f1f5f9;
+                color: #475569;
+                border: 1px solid #e2e8f0;
+            }
+            .btn-action.btn-secondary:hover {
+                background: #e2e8f0;
+            }
+            @media (max-width: 768px) {
+                .a4-document {
+                    margin: 10px;
+                    padding: 20px;
+                }
+                .a4-header {
+                    flex-direction: column;
+                    gap: 15px;
+                }
+                .a4-actions {
+                    flex-direction: column;
+                }
+                .btn-action {
+                    width: 100%;
+                }
+            }
+            
+            /* SHARE URL BOX */
+            .share-url-box {
+                margin-top: 25px;
+                padding: 15px;
+                background: #f8fafc;
+                border: 1px dashed #cbd5e1;
+                border-radius: 8px;
+            }
+            .share-url-label {
+                font-size: 13px;
+                color: #64748b;
+                margin-bottom: 8px;
+            }
+            .share-url-label i {
+                margin-right: 5px;
+            }
+            .share-url-content {
+                display: flex;
+                gap: 8px;
+            }
+            .share-url-input {
+                flex: 1;
+                padding: 10px 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 6px;
+                font-size: 13px;
+                background: white;
+                color: #334155;
+                font-family: monospace;
+            }
+            .btn-copy-url {
+                padding: 10px 15px;
+                background: #3b82f6;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .btn-copy-url:hover {
+                background: #2563eb;
+            }
+            
+            /* PRINT BUTTON */
+            .btn-action.btn-print {
+                background: #059669;
+                color: white;
+            }
+            .btn-action.btn-print:hover {
+                background: #047857;
+            }
+            
+            /* PRINT STYLES */
+            @media print {
+                @page { margin: 0; size: A4; }
+                * {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                
+                html, body {
+                    width: 210mm;
+                    height: auto;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    background: white !important;
+                    visibility: hidden;
+                }
+                
+                #printable-document {
+                    visibility: visible;
+                    position: absolute !important;
+                    left: 0 !important;
+                    top: 0 !important;
+                    width: 210mm !important;
+                    min-height: 297mm !important;
+                    margin: 0 !important;
+                    padding: 0 15mm !important; /* Side padding only */
+                    box-shadow: none !important;
+                    border: none !important;
+                    background: white !important;
+                    font-size: 11pt !important;
+                    line-height: 1.3 !important;
+                    z-index: 2147483647;
+                    transform: none !important;
+                }
+
+                #printable-document * {
+                    visibility: visible;
+                }
+                
+                .no-print { display: none !important; }
+                
+                .a4-document {
+                    box-shadow: none !important;
+                    border: none !important;
+                    max-width: none !important;
+                    padding: 0 !important;
+                    margin: 0 !important;
+                }
+                
+                .a4-header { margin-bottom: 10px !important; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+                .a4-title { margin: 10px 0 !important; }
+                .receipt-section { margin-bottom: 10px !important; }
+                .receipt-section p { margin-bottom: 5px; }
+                .thank-you-box { margin-top: 15px; padding: 10px; }
+                .a4-signature { margin-top: 15px !important; }
+                
+                .receipt-table td { padding: 4px 2px !important; }
+            }
+        </style>
     `;
+}
+
+// Helper function to convert number to Vietnamese words
+function numberToVietnameseWords(num) {
+    if (num === 0) return 'Không';
+
+    const ones = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+    const teens = ['mười', 'mười một', 'mười hai', 'mười ba', 'mười bốn', 'mười lăm', 'mười sáu', 'mười bảy', 'mười tám', 'mười chín'];
+
+    function readThreeDigits(n) {
+        let result = '';
+        const hundreds = Math.floor(n / 100);
+        const remainder = n % 100;
+        const tens = Math.floor(remainder / 10);
+        const units = remainder % 10;
+
+        if (hundreds > 0) {
+            result += ones[hundreds] + ' trăm ';
+        }
+        if (tens === 0 && units > 0 && hundreds > 0) {
+            result += 'lẻ ' + ones[units];
+        } else if (tens === 1) {
+            result += teens[units];
+        } else if (tens > 1) {
+            result += ones[tens] + ' mươi ';
+            if (units === 1 && tens > 1) {
+                result += 'mốt';
+            } else if (units === 5 && tens > 0) {
+                result += 'lăm';
+            } else {
+                result += ones[units];
+            }
+        } else if (tens === 0 && units > 0 && hundreds === 0) {
+            result += ones[units];
+        }
+        return result.trim();
+    }
+
+    const billion = Math.floor(num / 1000000000);
+    const million = Math.floor((num % 1000000000) / 1000000);
+    const thousand = Math.floor((num % 1000000) / 1000);
+    const remainder = num % 1000;
+
+    let result = '';
+    if (billion > 0) result += readThreeDigits(billion) + ' tỷ ';
+    if (million > 0) result += readThreeDigits(million) + ' triệu ';
+    if (thousand > 0) result += readThreeDigits(thousand) + ' nghìn ';
+    if (remainder > 0) result += readThreeDigits(remainder);
+
+    result = result.trim();
+    return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
 // 6. INIT
@@ -1249,6 +2508,119 @@ async function finalizeDonation() {
         console.error("Save Donation Error:", e);
         alert("Lỗi kết nối! Không thể lưu thông tin. Vui lòng chụp màn hình và gửi cho Admin.");
     }
+}
+
+// ROBUST PRINT FUNCTION (IFRAME METHOD)
+function printDocument() {
+    const content = document.getElementById('printable-document');
+    if (!content) {
+        alert("Không tìm thấy nội dung để in!");
+        return;
+    }
+
+    // Create hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    // Get HTML content
+    const doc = iframe.contentWindow.document;
+
+    // Write content
+    doc.open();
+    doc.write('<!DOCTYPE html>');
+    doc.write('<html><head><title>Biên nhận đóng góp</title>');
+
+    // Copy FontAwesome for icons
+    doc.write('<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">');
+
+    // Internal styles
+    doc.write('<style>');
+    doc.write(`
+        @page { size: A4; margin: 0; }
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: 'Times New Roman', serif; 
+            background: white;
+            -webkit-print-color-adjust: exact;
+        }
+        .a4-document {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm 10mm 0mm 10mm; /* Top 20mm, Sides 10mm, Bottom 0mm */
+            box-sizing: border-box;
+            background: white;
+            position: relative;
+        }
+        /* Reuse existing classes but stripped down */
+        .a4-header { display: flex; justify-content: space-between; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 20px; }
+        .a4-header-left, .a4-header-right { text-align: center; flex: 1; }
+        .org-name { font-weight: bold; text-transform: uppercase; font-size: 11pt; }
+        .org-sub { font-size: 10pt; color: #555; }
+        .doc-number { font-size: 10pt; margin-top: 5px; }
+        .quoc-hieu { font-weight: bold; text-transform: uppercase; font-size: 11pt; }
+        .tieu-ngu { font-size: 11pt; font-weight: bold; font-style: italic; }
+        .tieu-ngu-line { width: 100px; height: 1px; background: #333; margin: 5px auto; }
+        .doc-date { font-size: 10pt; font-style: italic; margin-top: 5px; }
+        
+        .a4-title { text-align: center; margin: 20px 0; }
+        .title-main { font-size: 16pt; font-weight: bold; text-transform: uppercase; }
+        .title-sub { font-size: 12pt; font-style: italic; margin-top: 5px; }
+        .success-title { color: #16a34a; }
+        .error-title { color: #dc2626; }
+        
+        .receipt-intro { text-align: justify; text-indent: 30px; margin-bottom: 15px; font-size: 12pt; line-height: 1.5; }
+        
+        .receipt-section { margin-bottom: 15px; }
+        .section-title { font-weight: bold; margin-bottom: 8px; font-size: 11pt; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 11pt; }
+        td { padding: 4px 0; vertical-align: top; }
+        .label-cell { width: 40%; color: #444; }
+        .value-cell { width: 60%; font-weight: 500; }
+        
+        .highlight-code { font-weight: bold; color: #be0000; font-size: 12pt; }
+        .amount-highlight { font-weight: bold; color: #16a34a; font-size: 13pt; }
+        .italic-text { font-style: italic; }
+        
+        .formal-text p { margin: 5px 0; text-align: justify; line-height: 1.4; }
+        
+        .thank-you-box { margin-top: 20px; padding: 15px; border: 1px solid #eee; background: #fafafa; font-style: italic; text-align: justify; font-size: 11pt; line-height: 1.4; }
+        .thank-you-box i { display: none; }
+        
+        .a4-signature { display: flex; justify-content: space-between; margin-top: 30px; }
+        .sig-left, .sig-right { flex: 1; text-align: center; }
+        .sig-title { font-weight: bold; text-transform: uppercase; font-size: 11pt; }
+        .sig-name { font-weight: bold; margin-top: 50px; font-size: 11pt; }
+        .sig-note { font-style: italic; font-size: 10pt; }
+        
+        .qr-box { margin-top: 10px; }
+        .qr-img { width: 80px; height: 80px; }
+        .qr-label { font-size: 9pt; font-style: italic; margin-bottom: 3px; }
+        
+        /* HIDE NON-PRINT */
+        .no-print, .a4-actions { display: none !important; }
+    `);
+    doc.write('</style>');
+    doc.write('</head><body>');
+    doc.write(content.innerHTML); // Write the raw content
+    doc.write('</body></html>');
+    doc.close();
+
+    // Print after load (give images time)
+    setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        // Remove iframe after print dialog closes (approximate)
+        // setTimeout(() => document.body.removeChild(iframe), 1000); 
+        // Keeping it doesn't hurt, removing too early breaks print in some browsers
+    }, 500);
 }
 
 // UTILS
@@ -1374,12 +2746,14 @@ function removeAccents(str) {
 }
 
 /* --- MISSING DONATION HELPER FUNCTIONS --- */
+/* --- MISSING DONATION HELPER FUNCTIONS --- */
 function checkDonateInputPage() {
     const name = document.getElementById('d-name-page').value;
-    const amount = document.getElementById('d-amount-page').value;
+    const amountStr = document.getElementById('d-amount-page').value;
+    const amount = amountStr ? parseInt(amountStr.replace(/\./g, '')) : 0;
     const btn = document.getElementById('btn-gen-qr-page');
 
-    if ((name || document.getElementById('d-anonymous-page')?.checked) && amount && parseInt(amount) > 0) {
+    if ((name || document.getElementById('d-anonymous-page')?.checked) && amount > 0) {
         btn.disabled = false;
         btn.style.opacity = '1';
         btn.style.cursor = 'pointer';
@@ -1391,8 +2765,30 @@ function checkDonateInputPage() {
 }
 
 function setAmountPage(val) {
-    document.getElementById('d-amount-page').value = val;
-    checkDonateInputPage(); // Trigger validation to enable button
+    const input = document.getElementById('d-amount-page');
+    // Format with dots
+    input.value = val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    input.dispatchEvent(new Event('input')); // Trigger formatter
+    checkDonateInputPage();
+}
+
+function handleAmountInput(el) {
+    // 1. Get raw value, remove non-digits
+    let raw = el.value.replace(/\D/g, '');
+    if (!raw) {
+        el.value = '';
+        document.getElementById('amount-in-words').innerText = '';
+        return;
+    }
+
+    // 2. Format with dots
+    const formatted = raw.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    el.value = formatted;
+
+    // 3. Convert to words
+    const num = parseInt(raw);
+    const words = numberToVietnameseWords(num);
+    document.getElementById('amount-in-words').innerText = words ? `(${words} đồng)` : '';
 }
 
 /* --- NEW REAL-TIME RENDER FUNCTION --- */
@@ -1462,7 +2858,7 @@ async function renderFundDetail(container, fundId) {
     }
 }
 
-function renderStaticLayout(container, fund) {
+function renderStaticLayout_OLD(container, fund) {
     container.innerHTML = `
         <div style="margin-bottom: 30px;">
             <a href="dong-gop.html" style="color: var(--p-gray); text-decoration: none; font-weight: 600; font-size: 14px;">
@@ -1561,8 +2957,8 @@ function renderStaticLayout(container, fund) {
                         </div>
 
                         <!-- BUTTON -->
-                        <button onclick="registerAndGenNganLuong()" id="btn-gen-qr-page" class="premium-submit-btn" disabled>
-                            <span>THANH TOÁN NGÂN LƯỢNG</span> <i class="fa-solid fa-credit-card"></i>
+                        <button onclick="registerAndGenMoMo()" id="btn-gen-qr-page" class="premium-submit-btn momo-btn" disabled style="background: linear-gradient(135deg, #ae2070 0%, #d82d8b 100%); box-shadow: 0 8px 20px rgba(174, 32, 112, 0.35);">
+                            <span>THANH TOÁN (MOMO)</span> <i class="fa-solid fa-wallet"></i>
                         </button>
                         
                         <p style="font-size:12px; color:#94a3b8; margin-top:20px; text-align:center; font-style:italic;">
@@ -1589,12 +2985,6 @@ function renderStaticLayout(container, fund) {
 function updateStaticContent(fund) {
     const titleEl = document.getElementById('live-fund-title');
     if (titleEl) titleEl.innerText = fund.title;
-
-    const summaryEl = document.getElementById('live-fund-summary');
-    if (summaryEl) summaryEl.innerText = fund.summary || '';
-
-    const dateEl = document.getElementById('live-fund-date');
-    if (dateEl) dateEl.innerText = formatDateDisplay(fund.createdAt || fund.created);
 
     const contentEl = document.getElementById('live-fund-content');
     if (contentEl) contentEl.innerHTML = fund.content || '<p><em>Nội dung đang được cập nhật...</em></p>';
@@ -1627,8 +3017,28 @@ function renderDonationStats(donations, fund) {
         `;
     }
 
-    // Update List
-    const listEl = document.getElementById('live-contributor-section');
+    // Update Hidden Summary Widget
+    const summaryWidget = document.getElementById('donor-summary-widget');
+    if (summaryWidget) {
+        const count = donations.filter(d => d.verified).length;
+        // Last 1 donor
+        const lastDonor = donations.find(d => d.verified);
+        let lastHtml = '';
+        if (lastDonor) {
+            const timeAgo = formatTimeAgo(lastDonor.timestamp);
+            const name = lastDonor.isAnonymous ? 'Nhà hảo tâm' : (lastDonor.name || 'Nhà hảo tâm');
+            lastHtml = `<div style="margin-top:5px; font-weight:bold; color:#1e293b;">⚡ ${name} <span style="font-weight:normal; color:#64748b;">vừa ủng hộ</span> <span style="color:#ef4444;">${parseInt(lastDonor.amount).toLocaleString()}đ</span></div><div style="font-size:12px;">(${timeAgo})</div>`;
+        }
+
+        summaryWidget.innerHTML = `
+            <div style="font-size: 24px; font-weight: 800; color: #1e293b;">${count}</div>
+            <div style="font-size: 12px; text-transform: uppercase;">Lượt ủng hộ</div>
+            ${lastHtml}
+        `;
+    }
+
+    // Update Modal List
+    const listEl = document.getElementById('modal-contributor-list');
     if (listEl) {
         // SEARCH FILTER
         const rawSearchTerm = window.currentSearchTerm ? window.currentSearchTerm.trim() : '';
@@ -1636,22 +3046,18 @@ function renderDonationStats(donations, fund) {
         // 1. Determine Base List
         let displayDonations = [];
         if (rawSearchTerm) {
-            // If Searching: Search EVERYTHING (including Rejected/Spam)
+            // If Searching: Search EVERYTHING
             displayDonations = donations;
         } else {
-            // If NOT Searching: Show ONLY Verified (Green Tick)
-            // User Request: "chỉ hiển thị những ô tích xanh thôi"
+            // If NOT Searching: Show ONLY Verified
             displayDonations = donations.filter(d => d.verified);
         }
 
         // 2. Apply Search
         if (rawSearchTerm) {
-            // Normalization Helper: Aggressive Alphanumeric Only
             const normalize = (str) => {
                 if (!str) return '';
-                // 1. Remove accents
                 const noAccents = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
-                // 2. Lowercase and KEEP ONLY a-z, 0-9
                 return noAccents.toLowerCase().replace(/[^a-z0-9]/g, '');
             };
 
@@ -1663,8 +3069,6 @@ function renderDonationStats(donations, fund) {
                 const normCode = normalize(d.code);
                 const normAmount = normalize(d.amount?.toString());
 
-                // Check 1: Strict Normalized Match
-                // Check 2: Loose Original Match
                 return (normName.includes(searchKey)) ||
                     (normCode.includes(searchKey)) ||
                     (normAmount.includes(searchKey)) ||
@@ -1673,65 +3077,59 @@ function renderDonationStats(donations, fund) {
         }
 
         listEl.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
-                <h4 style="margin:0; font-weight: 800; color: var(--p-slate); font-size: 20px; text-transform: uppercase;">DANH SÁCH ỦNG HỘ</h4>
-                <span style="font-size: 13px; color: var(--p-gray);"><i class="fa-solid fa-users"></i> ${donations.filter(d => d.verified || d.status !== 'rejected').length} lượt hiển thị</span>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                 <div class="p-input-group" style="margin:0;">
-                    <div style="position:relative;">
-                        <i class="fa-solid fa-search" style="position:absolute; left:15px; top:50%; transform:translateY(-50%); color:#9ca3af;"></i>
-                        <input type="text" id="donation-search-input" 
-                               placeholder="Tìm tên, mã giao dịch, số tiền..." 
-                               class="p-input-control" 
-                               style="padding-left: 40px; height: 45px;"
-                               value="${window.currentSearchTerm || ''}"
-                               onkeyup="filterDonationList(this.value)"
-                               onfocus="var val=this.value; this.value=''; this.value=val;" autofocus>
-                    </div>
-                </div>
-            </div>
-
-            <div class="contributor-list-card custom-scrollbar" style="max-height: 500px; overflow-y: auto; padding-right: 5px;">
-                ${displayDonations.length > 0 ? displayDonations.map(d => `
-                    <div class="contributor-item" style="position:relative;">
+            <div style="padding: 0;">
+                ${displayDonations.length > 0 ? displayDonations.map((d, index) => `
+                    <div style="padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: ${index % 2 === 0 ? 'white' : '#f8fafc'};">
                         <div style="text-align: left;">
-                            <div style="font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 3px; display:flex; align-items:center gap:5px;">
-                                <span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #e2e8f0;">
-                                    <i class="fa-solid fa-hashtag" style="color:#d97706; font-size:10px;"></i> ${d.code || '---'}
+                            <div style="font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 3px; display:flex; align-items:center; gap:5px;">
+                                <span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px;">
+                                    #${d.code || '---'}
                                 </span>
                             </div>
-                            <div class="contributor-name">
+                            <div class="contributor-name" style="font-weight: 600; color: #334155; margin-bottom: 2px;">
                                 ${d.isAnonymous ? 'Nhà hảo tâm (Ẩn danh)' : (d.name || 'Ẩn danh')} 
                                 ${getDonationStatusBadge(d)}
                             </div>
-                            <div class="contributor-time"><i class="fa-regular fa-clock fa-spin-pulse" style="--fa-animation-duration: 3s;"></i> ${formatTimeAgo(d.timestamp)}</div>
-                            ${(!d.verified && !d.status) ? '<div style="font-size:11px; color:#f59e0b; margin-top:2px;">* Đang chờ BQT xác nhận</div>' : ''}
-                            ${(d.status === 'hold') ? '<div style="font-size:11px; color:#eab308; margin-top:2px;">* Đang tạm giữ / Cần kiểm tra</div>' : ''}
-                            ${d.note ? `<div style="font-size:11px; color:#7f1d1d; font-style:italic; margin-top:3px; background:#fef2f2; padding:3px 6px; border-radius:4px; display:inline-block; border:1px dashed #fca5a5;"><i class="fa-solid fa-circle-exclamation"></i> ${d.note}</div>` : ''}
+                            <div class="contributor-time" style="font-size: 12px; color: #94a3b8;">
+                                ${formatTimeAgo(d.timestamp)}
+                            </div>
+                            ${d.note ? `<div style="font-size:12px; color:#475569; font-style:italic; margin-top:3px;"><i class="fa-solid fa-message" style="color:#cbd5e1;"></i> "${d.note}"</div>` : ''}
                         </div>
-                        <div class="contributor-amount" style="font-weight:900; color:var(--p-red);">${parseInt(d.amount).toLocaleString('vi-VN')} đ</div>
+                        <div class="contributor-amount" style="font-weight:900; color:var(--p-red); font-size: 15px;">${parseInt(d.amount).toLocaleString('vi-VN')} đ</div>
                     </div>
                 `).join('') : '<div style="padding:40px; text-align:center; color:#999; font-style:italic;">Không tìm thấy dữ liệu phù hợp.</div>'}
             </div>
         `;
 
-        // Update Sticky Footer Percent (Mobile)
-        const stickyPercent = document.getElementById('sticky-percent-text');
-        if (stickyPercent) {
-            stickyPercent.innerText = `${percent}%`;
-        }
-
         // Restore focus if searching
         if (window.currentSearchTerm) {
-            const searchInput = document.getElementById('donation-search-input');
+            const searchInput = document.getElementById('modal-search-input');
             if (searchInput) {
                 searchInput.value = window.currentSearchTerm;
                 searchInput.focus();
             }
         }
     }
+}
+
+function openDonorModal() {
+    const modal = document.getElementById('donor-modal-overlay');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Trigger render to ensure list is populated
+        if (window.localDonationsCache && window.currentFundData) {
+            renderDonationStats(window.localDonationsCache, window.currentFundData);
+        }
+    }
+}
+
+function closeDonorModal() {
+    const modal = document.getElementById('donor-modal-overlay');
+    if (modal) modal.style.display = 'none';
+
+    // Clear search on close
+    window.currentSearchTerm = '';
+    renderDonationStats(window.localDonationsCache, window.currentFundData);
 }
 
 function toggleAnonymousInput() {
@@ -1833,4 +3231,599 @@ function startClock() {
     }
     setInterval(update, 1000);
     update();
+}
+
+// --- NEW SEARCH PAGE LOGIC ---
+async function handleSearchPageInput(term) {
+    if (!term || term.trim().length < 2) {
+        if (!term || term.length === 0) {
+            const area = document.getElementById('search-results-area');
+            if (area) area.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #94a3b8; background: white; border-radius: 12px; border: 1px dashed #e2e8f0;">
+                    <i class="fa-regular fa-folder-open" style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p>Vui lòng nhập thông tin để tra cứu.</p>
+                </div>`;
+        }
+        return;
+    }
+
+    const container = document.getElementById('search-results-area');
+    if (!container) return;
+
+    container.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Đang tìm kiếm...</div>';
+
+    let allDonations = [];
+    try {
+        const db = firebase.firestore();
+        // Use window.currentFundData if available, otherwise fetch active
+        if (window.currentFundData && window.currentFundData.donations) {
+            // If we have cached data (unlikely if deep linked, but possible)
+            // Actually currentFundData usually just has metadata. 
+            // We need to fetch.
+        }
+
+        const fundsSnap = await db.collection('funds').where('status', '==', 'active').limit(1).get();
+        if (!fundsSnap.empty) {
+            const fundDoc = fundsSnap.docs[0];
+            const donateSnap = await fundDoc.ref.collection('donations').orderBy('timestamp', 'desc').limit(500).get();
+            allDonations = donateSnap.docs.map(d => d.data());
+        }
+    } catch (e) {
+        console.error("Search fetch error:", e);
+        container.innerHTML = '<div style="color:red; text-align:center;">Lỗi kết nối. Vui lòng thử lại.</div>';
+        return;
+    }
+
+    // Filter
+    const normalize = (str) => {
+        if (!str) return '';
+        const noAccents = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
+        return noAccents.toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
+
+    const searchKey = normalize(term);
+    const searchKeyOriginal = term.toLowerCase();
+
+    const results = allDonations.filter(d => {
+        if (d.status === 'rejected') return false;
+        const normName = normalize(d.name);
+        const normCode = normalize(d.code);
+        const normAmount = normalize(d.amount?.toString());
+        return (normName.includes(searchKey)) ||
+            (normCode.includes(searchKey)) ||
+            (normAmount.includes(searchKey)) ||
+            (d.name && d.name.toLowerCase().includes(searchKeyOriginal));
+    });
+
+    // Render
+    if (results.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #ef4444; background: white; border-radius: 12px; border: 1px dashed #fca5a5;">
+                <i class="fa-regular fa-face-frown" style="font-size: 40px; margin-bottom: 15px;"></i>
+                <p>Không tìm thấy kết quả nào cho "<strong>${term}</strong>".</p>
+                <p style="font-size: 13px; color: #64748b;">Hãy thử tìm bằng Tên, Mã giao dịch, hoặc Số tiền chính xác.</p>
+            </div>`;
+    } else {
+        container.innerHTML = `
+            <div style="margin-bottom: 15px; color: #64748b; font-size: 14px;">
+                Tìm thấy <strong>${results.length}</strong> kết quả:
+            </div>
+            ${results.map(d => `
+                <div class="result-highlight">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div style="font-weight: 700; color: #1e293b; font-size: 16px;">
+                                ${d.isAnonymous ? 'Nhà hảo tâm (Ẩn danh)' : (d.name || 'Ẩn danh')}
+                            </div>
+                            <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
+                                <i class="fa-regular fa-clock"></i> ${formatTimeAgo(d.timestamp)} &bull; 
+                                <span style="background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace;">#${d.code || '---'}</span>
+                            </div>
+                             ${d.note ? `<div style="margin-top:8px; font-style:italic; font-size:13px; color:#475569; background:#f8fafc; padding:8px; border-radius:6px; border-left:3px solid #cbd5e1;">"${d.note}"</div>` : ''}
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 900; color: var(--gov-red); font-size: 18px;">${parseInt(d.amount).toLocaleString('vi-VN')} đ</div>
+                             <div style="margin-top: 5px;">${getDonationStatusBadge(d)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        `;
+    }
+}
+
+function switchViewMode(mode) {
+    const url = new URL(window.location);
+    if (mode) {
+        url.searchParams.set('view', mode);
+    } else {
+        url.searchParams.delete('view');
+    }
+    window.history.pushState({}, '', url);
+
+    // Force re-render if data is available
+    if (window.currentFundData) {
+        renderStaticLayout(document.getElementById('fund-content-container') || document.getElementById('donation-detail-container') || document.querySelector('.main-content'), window.currentFundData);
+        if (!mode) {
+            // If switching back to normal, reload to ensure listeners re-attach properly
+            window.location.reload();
+        }
+    } else {
+        window.location.reload();
+    }
+}
+
+function renderStaticLayout(container, fund) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewMode = urlParams.get('view');
+    const searchQuery = urlParams.get('q');
+
+    // --- VIEW: SEARCH INTERFACE ---
+    if (viewMode === 'search') {
+        container.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <a href="dong-gop.html" style="color: #64748b; text-decoration: none; font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s;">
+                    <i class="fa-solid fa-arrow-left"></i> Quay lại trang đóng góp
+                </a>
+            </div>
+
+            <div class="search-hero" style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); padding: 40px 20px; text-align: center; border-radius: 12px; margin-bottom: 30px;">
+                <h1 style="color: #1e293b; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; font-size: 24px;">Tra Cứu Thông Tin Công Khai</h1>
+                <p style="color: #64748b; font-size: 16px;">Nhập tên, mã giao dịch hoặc số tiền để kiểm tra thông tin đóng góp của bạn.</p>
+            </div>
+
+            <div class="search-container-large" style="max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);">
+                <div class="p-input-group" style="margin-bottom: 0;">
+                    <label style="font-size: 14px; margin-bottom: 8px;">Nhập từ khóa tìm kiếm:</label>
+                    <div style="position: relative;">
+                        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 18px;"></i>
+                        <input type="text" id="large-search-input" 
+                               class="p-input-control" 
+                               placeholder="Ví dụ: Nguyễn Văn A, hoặc TDP-123456..." 
+                               style="padding-left: 50px; height: 55px; font-size: 16px;"
+                               value="${searchQuery || ''}"
+                               onkeyup="handleSearchPageInput(this.value)">
+                        <button onclick="handleSearchPageInput(document.getElementById('large-search-input').value)"
+                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: var(--gov-blue); color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">
+                            Tra Cứu
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="search-results-area" style="max-width: 800px; margin: 40px auto; min-height: 200px;">
+                <div style="text-align: center; padding: 40px; color: #94a3b8; background: white; border-radius: 12px; border: 1px dashed #e2e8f0;">
+                    <i class="fa-regular fa-folder-open" style="font-size: 40px; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p>Vui lòng nhập thông tin để tra cứu.</p>
+                </div>
+            </div>
+            
+            <style>
+                .result-highlight { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; padding: 15px; transition: all 0.2s; }
+                .result-highlight:hover { border-color: #94a3b8; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+            </style>
+        `;
+
+        if (searchQuery) {
+            setTimeout(() => handleSearchPageInput(searchQuery), 500);
+        }
+        return;
+    }
+
+
+    // --- VIEW: NORMAL FUND DETAIL (FORMAL LETTER) ---
+    container.innerHTML = `
+        <div style="margin-bottom: 20px;">
+            <a href="dong-gop.html" style="color: #64748b; text-decoration: none; font-weight: 500; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; transition: color 0.2s;">
+                <i class="fa-solid fa-arrow-left"></i> Quay lại danh sách
+            </a>
+        </div>
+
+        <div class="fund-redesign-grid" style="display: grid; grid-template-columns: 1fr 380px; gap: 30px; align-items: start;">
+            
+            <!-- LEFT COLUMN: FORMAL LETTER STYLE -->
+            <div class="formal-letter-paper" style="background: white; padding: 50px; border-radius: 2px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; font-family: 'Times New Roman', Times, serif; position: relative;">
+                
+                <!-- National Emblem & Motto -->
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="font-weight: bold; font-size: 14px; text-transform: uppercase;">Cộng Hòa Xã Hội Chủ Nghĩa Việt Nam</div>
+                    <div style="font-weight: bold; font-size: 14px; border-bottom: 1px solid #ccc; display: inline-block; padding-bottom: 3px; margin-bottom: 5px;">Độc lập - Tự do - Hạnh phúc</div>
+                    <div style="margin-top: 5px; font-size: 13px; font-style: italic;">Hà Nội, ngày ${new Date(fund.createdAt || Date.now()).getDate()} tháng ${new Date(fund.createdAt || Date.now()).getMonth() + 1} năm ${new Date(fund.createdAt || Date.now()).getFullYear()}</div>
+                </div>
+
+                <!-- Title -->
+                <div style="text-align: center; margin: 30px 0;">
+                    <h1 id="live-fund-title" style="font-size: 22px; font-weight: bold; color: #be0000; text-transform: uppercase; margin: 0; line-height: 1.4;">${fund.title}</h1>
+                    <div style="width: 50px; height: 2px; background: #be0000; margin: 10px auto;"></div>
+                </div>
+
+                <!-- Body Content -->
+                <div id="live-fund-content" class="formal-content" style="font-size: 17px; line-height: 1.6; text-align: justify; color: #1e293b;">
+                    ${fund.content || '<p><em>Nội dung đang được cập nhật...</em></p>'}
+                </div>
+
+                <!-- Signature Block -->
+                <div style="margin-top: 50px; display: flex; justify-content: flex-end;">
+                    <div style="text-align: center; min-width: 200px;">
+                        <div style="font-weight: bold; text-transform: uppercase; font-size: 15px;">TM. Ban Lãnh Đạo<br>Tổ Dân Phố Số 21</div>
+                        <div style="margin-top: 10px; font-style: italic; color: #64748b;">(Đã ký)</div>
+                        <div style="margin-top: 60px; font-weight: bold; color: #be0000; text-transform: uppercase;">Tổ Trưởng</div>
+                    </div>
+                </div>
+
+                <!-- Watermark -->
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.03; pointer-events: none;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Emblem_of_Vietnam.svg/1200px-Emblem_of_Vietnam.svg.png" width="300" alt="">
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: ACTION DASHBOARD -->
+            <div class="action-dashboard" style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- 1. STATUS CARD -->
+                <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9;">
+                    <div style="font-weight: 600; color: #334155; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-chart-pie" style="color: var(--primary-red);"></i> TIẾN ĐỘ VẬN ĐỘNG
+                    </div>
+                    <div id="live-progress-bar">
+                        <!-- Progress Rendered Via JS -->
+                    </div>
+                </div>
+
+                <!-- 2. DONATION FORM CARD -->
+                <div class="premium-widget-card" id="donation-action-card" style="border: 0; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);">
+                    <div style="background: linear-gradient(135deg, #be0000 0%, #dc2626 100%); padding: 15px 20px; border-radius: 12px 12px 0 0; color: white; font-weight: bold; text-align: center;">
+                        <i class="fa-solid fa-hand-holding-heart"></i> ĐÓNG GÓP NGAY
+                    </div>
+                    <div id="donation-form-container" style="padding: 20px;">
+                        
+                        <!-- 1. NAME -->
+                        <div class="premium-input-group">
+                            <label style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px; display: block;">HỌ TÊN / GIA ĐÌNH / TỔ CHỨC</label>
+                            <input type="text" id="d-name-page" class="premium-input" placeholder="Ví dụ: Gia đình ông Nguyễn Văn A..." onkeyup="checkDonateInputPage()" 
+                                style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s;">
+                        </div>
+
+                        <!-- 2. ANONYMOUS -->
+                        <div class="premium-checkbox-wrapper" onclick="document.getElementById('d-anonymous-page').click()" style="margin: 10px 0 15px;">
+                            <input type="checkbox" id="d-anonymous-page" class="premium-checkbox" onclick="event.stopPropagation(); toggleAnonymousInput()">
+                            <span style="font-size: 13px; color: #64748b; margin-left: 5px;">Quyên góp ẩn danh</span>
+                        </div>
+
+                        <!-- 3. MONEY -->
+                        <div class="premium-input-group">
+                             <label style="font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 5px; display: block;">Số tiền (VNĐ)</label>
+                            <input type="text" id="d-amount-page" class="premium-input" placeholder="Ví dụ: 50.000" oninput="handleAmountInput(this); checkDonateInputPage()"
+                                style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; transition: all 0.2s;">
+                            <div id="amount-in-words" style="font-size: 12px; color: #64748b; margin-top: 5px; font-style: italic; min-height: 18px;"></div>
+                        </div>
+
+                        <!-- Chips -->
+                        <div class="premium-amount-grid" style="display: flex; gap: 8px; margin: 10px 0 20px;">
+                            <button onclick="setAmountPage(100000)" class="premium-chip" style="flex: 1; padding: 6px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; cursor: pointer;">100k</button>
+                            <button onclick="setAmountPage(200000)" class="premium-chip" style="flex: 1; padding: 6px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; cursor: pointer;">200k</button>
+                            <button onclick="setAmountPage(500000)" class="premium-chip" style="flex: 1; padding: 6px; font-size: 12px; border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; cursor: pointer;">500k</button>
+                        </div>
+
+                        <!-- BUTTON -->
+                        <button onclick="registerAndGenMoMo()" id="btn-gen-qr-page" class="premium-submit-btn momo-btn" disabled
+                            style="width: 100%; padding: 12px; border: none; border-radius: 8px; background: linear-gradient(135deg, #ae2070 0%, #d82d8b 100%); color: white; font-weight: bold; cursor: not-allowed; transition: all 0.3s; box-shadow: 0 4px 15px rgba(174, 32, 112, 0.3);">
+                            THANH TOÁN NGAY <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3. DONOR PRIVACY WIDGET -->
+                 <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9; text-align: center;">
+                    <div style="font-weight: 600; color: #334155; margin-bottom: 10px;">
+                        <i class="fa-solid fa-users-viewfinder" style="color: #0ea5e9;"></i> TRA CỨU CÔNG KHAI
+                    </div>
+                    
+                    <div id="donor-summary-widget" style="margin-bottom: 15px; font-size: 14px; color: #64748b;">
+                        Đang tải dữ liệu...
+                    </div>
+
+                    <button onclick="switchViewMode('search')" class="premium-submit-btn" style="text-decoration:none; display:inline-block; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; padding: 10px 15px; width: 100%; box-shadow: none;">
+                        <i class="fa-solid fa-magnifying-glass"></i> TRA CỨU CHI TIẾT
+                    </button>
+                    
+                    <div style="margin-top: 10px; font-size: 11px; color: #94a3b8; font-style: italic;">
+                        * Chỉ hiển thị kết quả khi tìm kiếm để bảo vệ riêng tư.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- MOBILE RESPONSIVE CSS INJECT -->
+        <style>
+            @media (max-width: 900px) {
+                .fund-redesign-grid {
+                    grid-template-columns: 1fr !important;
+                }
+                .formal-letter-paper {
+                    padding: 20px !important;
+                }
+            }
+        </style>
+    `;
+}
+
+// --- NEW SEARCH PAGE LOGIC ---
+async function handleSearchPageInput(term, forceRender = false) {
+    const container = document.getElementById('search-results-area');
+    if (!container) return;
+
+    // INITIAL STATE: Show Hero Search Instructions if empty
+    if (!term || term.trim().length < 2) {
+        if (!term) {
+            container.innerHTML = `
+                <div style="text-align: center; padding: 60px 40px; color: #64748b; background: white; border-radius: 16px; border: 1px dashed #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                    <div style="width: 80px; height: 80px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                        <i class="fa-solid fa-magnifying-glass" style="font-size: 30px; color: #94a3b8;"></i>
+                    </div>
+                    <h3 style="color: #334155; font-weight: 700; margin-bottom: 10px;">Tra cứu thông tin đóng góp</h3>
+                    <p style="font-size: 15px; max-width: 400px; margin: 0 auto; line-height: 1.6;">
+                        Nhập <strong>Mã giao dịch (TDP-...)</strong>, <strong>Họ tên</strong> hoặc <strong>Số điện thoại</strong> để xem chi tiết và tải biên nhận điện tử.
+                    </p>
+                </div>`;
+        }
+        return;
+    }
+
+    container.innerHTML = `
+        <div style="text-align:center; padding:40px; color:#64748b;">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 30px; color: var(--gov-blue);"></i> 
+            <div style="margin-top: 15px; font-weight: 500;">Đang tìm kiếm dữ liệu...</div>
+        </div>`;
+
+    const projectId = "tdp21-cms";
+    const normalize = (str) => {
+        if (!str) return '';
+        const noAccents = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
+        return noAccents.toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
+
+    let results = [];
+    const searchKey = normalize(term);
+    const searchTermDisplay = term;
+
+    try {
+        // STRATEGY: Hybrid Search via REST API
+        // 1. Precise Code Search 
+        // 2. Fallback to Recent Listing + Client Filter
+
+        // Detect if user is searching for a transaction code
+        const upperTerm = term.toUpperCase().trim();
+        let isCodeSearch = upperTerm.startsWith('TDP') || (upperTerm.length >= 6 && /^\d+$/.test(upperTerm));
+
+        const runQuery = async (body) => {
+            const response = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:runQuery`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            return await response.json();
+        };
+
+        let rawDocs = [];
+
+        // QUERY 1: EXACT CODE MATCH (Fastest & Most Accurate)
+        if (isCodeSearch) {
+            const codeQuery = {
+                structuredQuery: {
+                    from: [{ collectionId: 'donations' }],
+                    where: {
+                        fieldFilter: {
+                            field: { fieldPath: 'code' },
+                            op: 'GREATER_THAN_OR_EQUAL', // Allow partial prefix search slightly
+                            value: { stringValue: term.trim() }
+                        }
+                    }
+                }
+            };
+            const codeRes = await runQuery(codeQuery);
+            if (codeRes && codeRes.length > 0 && codeRes[0].document) {
+                rawDocs = codeRes.map(r => r.document);
+            }
+        }
+
+        // SPECIAL CASE: User entered just the random digits (e.g., 471414)
+        // We can't query this efficiently in Firestore without full code
+        // So we just rely on the fallback below.
+
+        // QUERY 2: RECENT TRANSACTIONS (Fallback for Name Search)
+        // Only if code search failed or wasn't a code search
+        if (rawDocs.length === 0) {
+            const recentQuery = {
+                structuredQuery: {
+                    from: [{ collectionId: 'donations' }],
+                    orderBy: [{ field: { fieldPath: 'timestamp' }, direction: 'DESCENDING' }],
+                    limit: 200 // Increased limit for better coverage
+                }
+            };
+            const recentRes = await runQuery(recentQuery);
+            if (recentRes) {
+                rawDocs = recentRes.filter(r => r.document).map(r => r.document);
+            }
+        }
+
+        const mapDoc = (doc) => {
+            const data = {};
+            const fields = doc.fields || {};
+            for (const key in fields) {
+                const val = fields[key];
+                if (val.stringValue !== undefined) data[key] = val.stringValue;
+                else if (val.integerValue !== undefined) data[key] = parseInt(val.integerValue);
+                else if (val.booleanValue !== undefined) data[key] = val.booleanValue;
+                else if (val.timestampValue !== undefined) data[key] = val.timestampValue;
+            }
+            return data;
+        };
+
+        const allDonations = rawDocs.map(mapDoc);
+
+        // Client-side Intelligence Filter
+        results = allDonations.filter(d => {
+            if (d.status === 'rejected') return false;
+
+            // Strict code match override
+            if (d.code === term.trim()) return true;
+
+            // Allow searching by sub-part of the code (e.g. just the random digits)
+            if (d.code && d.code.includes(term.trim())) return true;
+
+            const normName = normalize(d.name);
+            const normCode = normalize(d.code);
+            const normAmount = normalize(d.amount?.toString());
+            const normNote = normalize(d.note || '');
+
+            return (normName.includes(searchKey)) ||
+                (normCode.includes(searchKey)) ||
+                (normAmount.includes(searchKey)) ||
+                (normNote.includes(searchKey)) ||
+                (d.name && d.name.toLowerCase().includes(term.toLowerCase()));
+        });
+
+    } catch (e) {
+        console.error("Search fetch error:", e);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 30px; background: #fef2f2; border-radius: 12px; border: 1px solid #fecaca; color: #b91c1c;">
+                <i class="fa-solid fa-triangle-exclamation" style="font-size: 24px; margin-bottom: 10px;"></i>
+                <p>Lỗi kết nối. Vui lòng kiểm tra mạng và thử lại.</p>
+            </div>`;
+        return;
+    }
+
+    // RENDER RESULTS
+    if (results.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 50px 20px; color: #64748b; background: white; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);">
+                <div style="font-size: 50px; margin-bottom: 20px;">🤔</div>
+                <h3 style="color: #334155; font-size: 18px; margin-bottom: 10px;">Không tìm thấy kết quả nào</h3>
+                <p style="margin-bottom: 25px;">Không tìm thấy dữ liệu phù hợp với từ khóa "<strong>${searchTermDisplay}</strong>".</p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <span style="background: #f1f5f9; padding: 5px 12px; border-radius: 20px; font-size: 13px;">Kiểm tra lại chính tả</span>
+                    <span style="background: #f1f5f9; padding: 5px 12px; border-radius: 20px; font-size: 13px;">Thử nhập Mã giao dịch</span>
+                </div>
+            </div>`;
+    } else {
+        container.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px;">
+                <div style="font-size: 15px; color: #334155; font-weight: 600;">
+                    <i class="fa-solid fa-list-check" style="color: var(--gov-blue); margin-right: 5px;"></i>
+                    Tìm thấy <span style="color: var(--gov-red); font-size: 17px;">${results.length}</span> kết quả
+                </div>
+            </div>
+            
+            <div class="search-result-grid" style="display: grid; gap: 20px;">
+                ${results.map((d, index) => {
+            const statusConfig = d.verified ?
+                { badge: 'Đã Tiếp Nhận', color: 'green', bg: '#ecfdf5', icon: 'fa-circle-check' } :
+                { badge: 'Đang Xử Lý', color: '#f59e0b', bg: '#fffbeb', icon: 'fa-clock' };
+
+            const receiptUrl = `dong-gop.html?id=${d.fundId || 'oX3JjCHkmrTmxAM5jcqJ'}&ref=${d.code}&status=success`;
+            const uniqueId = d.code || index;
+
+            return `
+                    <div class="result-card" style="background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; transition: all 0.2s; position: relative;">
+                        <!-- Status Strip -->
+                        <div style="height: 4px; background: ${d.verified ? 'var(--gov-green)' : '#f59e0b'}; width: 100%;"></div>
+                        
+                        <div style="padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                            <!-- Header: Name & Code -->
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div style="display: flex; gap: 15px;">
+                                    <div style="width: 50px; height: 50px; background: ${d.verified ? '#f0fdf4' : '#fffbeb'}; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa-solid ${d.isAnonymous ? 'fa-user-secret' : detectDonorIdentity(d.name).icon}" style="font-size: 20px; color: ${statusConfig.color};" title="${d.isAnonymous ? 'Ẩn danh' : detectDonorIdentity(d.name).label}"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 700; color: #1e293b; font-size: 16px; line-height: 1.4; margin-bottom: 4px;">
+                                            ${d.isAnonymous ? 'Nhà hảo tâm (Ẩn danh)' : (d.name || 'Chưa cập nhật tên')}
+                                            ${!d.isAnonymous && d.name ? `<span style="display:block; font-size: 11px; color: #64748b; font-weight: normal; margin-top: 2px;">${detectDonorIdentity(d.name).label}</span>` : ''}
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b;">
+                                            <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 6px; font-family: monospace; font-weight: 600; color: #475569;">
+                                                <i class="fa-solid fa-hashtag" style="font-size: 10px; opacity: 0.7;"></i> ${d.code || '---'}
+                                            </span>
+                                            <span>&bull;</span>
+                                            <span>${formatTimeAgo(d.timestamp)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Info Grid -->
+                            <div style="background: #f8fafc; border-radius: 10px; padding: 15px; display: grid; grid-template-columns: 1fr auto; align-items: center;">
+                                <div>
+                                    <div style="font-size: 12px; color: #64748b; margin-bottom: 3px; text-transform: uppercase; font-weight: 600;">Số tiền ủng hộ</div>
+                                    <div style="font-size: 20px; font-weight: 800; color: var(--gov-red);">
+                                        ${parseInt(d.amount || 0).toLocaleString('vi-VN')} <span style="font-size: 14px; font-weight: 600; color: #94a3b8;">VNĐ</span>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="display: inline-flex; align-items: center; gap: 6px; background: ${statusConfig.bg}; color: ${statusConfig.color}; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;">
+                                        <i class="fa-solid ${statusConfig.icon}"></i> ${statusConfig.badge}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- NEW: EXPAND BUTTON (Arrow Down) -->
+                            <div style="text-align: center; margin-top: -5px;">
+                                 <button onclick="document.getElementById('detail-${uniqueId}').classList.toggle('show'); this.querySelector('i').classList.toggle('fa-rotate-180');" 
+                                         style="background:none; border:none; color:#64748b; cursor:pointer; font-size:13px; padding: 5px 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+                                    Xem chi tiết <i class="fa-solid fa-chevron-down" style="transition: transform 0.3s;"></i>
+                                 </button>
+                            </div>
+
+                            <!-- NEW: HIDDEN DETAILS SECTION -->
+                            <div id="detail-${uniqueId}" class="search-detail-panel" style="display:none; background: #fff; border-top: 1px dashed #e2e8f0; padding-top: 15px;">
+                                <div style="display:grid; gap: 12px; font-size: 14px; text-align: left;">
+                                     <div>
+                                        <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight:700;">Nội dung / Lời nhắn</div>
+                                        <div style="color: #334155; margin-top: 4px; font-style: italic; background: #f8fafc; padding: 8px; border-radius: 6px;">"${d.note || 'Không có nội dung'}"</div>
+                                    </div>
+                                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                        <div>
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight:700;">Thời gian</div>
+                                            <div style="color: #334155; margin-top: 2px; font-family: monospace;">${d.timestamp ? new Date(d.timestamp).toLocaleString('vi-VN') : '---'}</div>
+                                        </div>
+                                         <div>
+                                            <div style="font-size: 11px; color: #94a3b8; text-transform: uppercase; font-weight:700;">Hình thức</div>
+                                            <div style="color: #334155; margin-top: 2px;">${d.method || 'Chuyển khoản'}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Action -->
+                            <div style="border-top: 1px solid #f1f5f9; padding-top: 15px; margin-top: 5px;">
+                                <a href="${receiptUrl}" target="_blank" class="view-receipt-btn" style="display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: white; border: 2px solid var(--gov-blue); color: var(--gov-blue); border-radius: 8px; font-weight: 700; transition: all 0.2s; text-decoration: none;">
+                                    <i class="fa-solid fa-file-invoice dollar-sign"></i> XEM BIÊN NHẬN ĐIỆN TỬ <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 12px; margin-left: auto; opacity: 0.6;"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        ${d.verified ? `<div style="position: absolute; top: 0; right: 0; background: var(--gov-green); color: white; padding: 4px 10px; border-radius: 0 0 0 10px; font-size: 10px; font-weight: bold;">ĐÃ XÁC THỰC</div>` : ''}
+                    </div>
+                    `;
+        }).join('')}
+            </div>
+            
+            <style>
+                .search-detail-panel.show { display: block !important; animation: fadeIn 0.3s; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+                .view-receipt-btn:hover {
+                    background: var(--gov-blue) !important;
+                    color: white !important;
+                    box-shadow: 0 4px 10px rgba(14, 165, 233, 0.3);
+                }
+                .result-card:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+                    border-color: #cbd5e1 !important;
+                }
+            </style>
+        `;
+    }
 }

@@ -993,7 +993,22 @@
                                         style="padding: 15px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
                                         <h5
                                             style="margin: 0 0 15px 0; font-size: 14px; color: var(--primary-red); border-bottom: 1px solid #eee; padding-bottom: 8px;">
-                                            THÔNG TIN MÃ QUỸ</h5>
+                                            CẤU HÌNH CHI TIẾT</h5>
+
+                                        <div class="form-group">
+                                            <label>Mục tiêu (Số tiền cần thu)</label>
+                                            <input type="number" id="fund-target" class="form-control"
+                                                placeholder="0 (Không giới hạn)">
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Ảnh đại diện / Banner (URL)</label>
+                                            <input type="text" id="fund-image" class="form-control"
+                                                placeholder="https://..."
+                                                onchange="document.getElementById('fund-img-preview').src = this.value || ''">
+                                            <img id="fund-img-preview" src=""
+                                                style="width: 100%; height: auto; margin-top: 5px; border-radius: 4px; display: block; min-height: 10px; background: #f9f9f9;">
+                                        </div>
 
                                         <div class="form-group">
                                             <label>Mã Tên Quỹ (Dùng cho nội dung CK)</label>

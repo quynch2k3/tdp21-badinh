@@ -2,7 +2,8 @@ const http = require('http');
 const https = require('https');
 
 const PORT = 3000;
-const MOMO_HOST = 'payment.momo.vn';
+// SANDBOX Environment (use 'test-payment.momo.vn' for sandbox credentials)
+const MOMO_HOST = 'test-payment.momo.vn';
 const MOMO_PATH = '/v2/gateway/api/create';
 
 const server = http.createServer((req, res) => {

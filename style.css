@@ -1289,3 +1289,20 @@ footer {
 }
 
 /* Animations included in original CSS */
+
+/* MoMo Button Styling */
+.premium-submit-btn.momo-btn {
+    background: linear-gradient(135deg, #ae2070 0%, #d82d8b 100%);
+    box-shadow: 0 8px 20px rgba(174, 32, 112, 0.35);
+}
+
+.premium-submit-btn.momo-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #c4287f 0%, #e63c9a 100%);
+    box-shadow: 0 12px 25px rgba(174, 32, 112, 0.45);
+    transform: translateY(-2px);
+}
+
+.premium-submit-btn.momo-btn:disabled {
+    background: #cbd5e1;
+    box-shadow: none;
+}
