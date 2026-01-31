@@ -1,45 +1,24 @@
 /**
- * PAYMENT GATEWAY MODULE - MOMO DIRECT API
- * STRATEGY: Client-Side with CORS Proxy
- * - Removes Google Apps Script dependency
- * - Uses local proxy (proxy.js) OR HTTPS proxy for CORS bypass
- * - Generates signature client-side using CryptoJS
+ * PAYMENT GATEWAY MODULE - MOMO SERVERLESS
+ * STRATEGY: Serverless via Google Apps Script (GAS)
+ * - Removes local terminal dependency
+ * - Bypasses CORS via GAS Proxy
+ * - Secures Secret Key (hidden in GAS)
  */
 
 const PaymentGateway = (function () {
 
     // ============================================================
-    // CONFIGURATION - PRODUCTION/SANDBOX TOGGLE
+    // CONFIGURATION
     // ============================================================
-    const ENV = 'SANDBOX'; // 'PROD' or 'SANDBOX' - Use SANDBOX for test credentials
-
-    const CONFIG = {
-        // SANDBOX (TEST)
-        SANDBOX: {
-            PARTNER_CODE: "MOMO9LID20260123_TEST",
-            ACCESS_KEY: "vveSdoaTZmBo09ks",
-            SECRET_KEY: "zcSkh7dxPLyZXLurEVbZrTUYWz8IQIks",
-            API_ENDPOINT: "https://test-payment.momo.vn/v2/gateway/api/create"
-        },
-        // PRODUCTION - Update with real keys from MoMo Business
-        PROD: {
-            PARTNER_CODE: "MOMO9LID20260123",
-            ACCESS_KEY: "vveSdoaTZmBo09ks",
-            SECRET_KEY: "zcSkh7dxPLyZXLurEVbZrTUYWz8IQIks",
-            API_ENDPOINT: "https://payment.momo.vn/v2/gateway/api/create"
-        }
-    };
-
-    // Select active config
-    const ACTIVE_CONFIG = CONFIG[ENV];
-
-    // CORS Proxy - Local Node.js proxy only (run: node proxy.js)
-    const PROXY_URL = "http://localhost:3000";
+    // PASTE YOUR GAS WEB APP URL HERE AFTER DEPLOYMENT
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnM2gxOLNCKWz3-aftQydWzUgvwtg8PCTlBZr7ExUoTVv1zCpxzOe8LpZHDhOkAHIueg/exec";
 
     // ============================================================
     // UTILITY FUNCTIONS
     // ============================================================
     function removeAccents(str) {
+        if (!str) return "";
         return str.normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .replace(/đ/g, "d").replace(/Đ/g, "D")
@@ -47,65 +26,35 @@ const PaymentGateway = (function () {
     }
 
     /**
-     * Generate HMAC-SHA256 Signature using CryptoJS
-     * Requires: <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+     * Call MoMo API via Google Apps Script Proxy
      */
-    function generateSignature(rawData, secretKey) {
-        if (typeof CryptoJS === 'undefined') {
-            throw new Error("CryptoJS not loaded! Please include crypto-js library.");
-        }
-        return CryptoJS.HmacSHA256(rawData, secretKey).toString(CryptoJS.enc.Hex);
-    }
-
-    /**
-     * Build MoMo Raw Signature String (strict alphabetical order)
-     */
-    function buildRawSignature(params) {
-        return `accessKey=${params.accessKey}` +
-            `&amount=${params.amount}` +
-            `&extraData=${params.extraData}` +
-            `&ipnUrl=${params.ipnUrl}` +
-            `&orderId=${params.orderId}` +
-            `&orderInfo=${params.orderInfo}` +
-            `&partnerCode=${params.partnerCode}` +
-            `&redirectUrl=${params.redirectUrl}` +
-            `&requestId=${params.requestId}` +
-            `&requestType=${params.requestType}`;
-    }
-
-    /**
-     * Call MoMo API via local proxy
-     */
-    async function callMoMoAPI(momoPayload) {
+    async function callProxyAPI(payload) {
         try {
-            console.log(`[PaymentGateway] Calling MoMo via proxy: ${PROXY_URL}`);
+            console.log(`[PaymentGateway] Calling MoMo via GAS: ${GAS_WEB_APP_URL}`);
 
-            const response = await fetch(PROXY_URL, {
+            const response = await fetch(GAS_WEB_APP_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(momoPayload)
+                body: JSON.stringify(payload)
             });
 
             const result = await response.json();
-            console.log("[PaymentGateway] MoMo Response:", result);
+            console.log("[PaymentGateway] Response:", result);
 
-            // Check MoMo result code (0 = success)
             if (result.resultCode === 0 && result.payUrl) {
                 return { success: true, payUrl: result.payUrl, data: result };
             } else {
-                // MoMo returned an error
                 return {
                     success: false,
-                    message: result.message || `MoMo Error Code: ${result.resultCode}`,
+                    message: result.message || `Lỗi MoMo: ${result.resultCode}`,
                     data: result
                 };
             }
 
         } catch (e) {
-            console.error(`[PaymentGateway] Proxy error:`, e.message);
+            console.error(`[PaymentGateway] GAS Error:`, e.message);
             return {
                 success: false,
-                message: `Không thể kết nối proxy. Vui lòng chạy: node proxy.js\n\nLỗi: ${e.message}`
+                message: "Không thể kết nối đến hệ thống thanh toán. Vui lòng kiểm tra lại cấu hình GAS_WEB_APP_URL."
             };
         }
     }
@@ -115,83 +64,43 @@ const PaymentGateway = (function () {
     // ============================================================
     return {
         /**
-         * Pay with MoMo - Direct API Call
-         * @param {Object} payload - { code, amount, name }
+         * Pay with MoMo
+         * @param {Object} payload - { code, amount, name, fundId }
          */
         payWithMoMo: async function (payload) {
             console.log("[PaymentGateway] Initiating MoMo Payment...", payload);
 
             try {
-                // Validate CryptoJS
-                if (typeof CryptoJS === 'undefined') {
-                    alert("Lỗi hệ thống: Thư viện mã hóa chưa được tải. Vui lòng làm mới trang.");
-                    throw new Error("CryptoJS not loaded!");
+                // Validate Config
+                if (!GAS_WEB_APP_URL || GAS_WEB_APP_URL.includes('...')) {
+                    alert("Chưa cấu hình Google Apps Script URL. Vui lòng liên hệ Admin.");
+                    return;
                 }
 
-                // Prepare Parameters
+                // Prepare Parameters for Proxy
                 const orderId = payload.code;
-                const requestId = orderId; // Same as orderId for simplicity
-                const amount = payload.amount.toString();
                 const cleanName = removeAccents(payload.name);
                 const orderInfo = "Ung ho quy TDP21: " + cleanName;
-                const redirectUrl = window.location.href.split('?')[0] + "?id=" + (payload.fundId || ''); // Clean redirect
-                const ipnUrl = redirectUrl; // For simple setup, IPN = Redirect
-                const extraData = "";
-                const requestType = "captureWallet";
+                const redirectUrl = window.location.href.split('?')[0] + "?id=" + (payload.fundId || '') + "&orderId=" + orderId;
 
-                // Build Signature
-                const signatureParams = {
-                    accessKey: ACTIVE_CONFIG.ACCESS_KEY,
-                    amount: amount,
-                    extraData: extraData,
-                    ipnUrl: ipnUrl,
+                const proxyPayload = {
                     orderId: orderId,
-                    orderInfo: orderInfo,
-                    partnerCode: ACTIVE_CONFIG.PARTNER_CODE,
-                    redirectUrl: redirectUrl,
-                    requestId: requestId,
-                    requestType: requestType
-                };
-
-                const rawSignature = buildRawSignature(signatureParams);
-                console.log("[PaymentGateway] Raw Signature:", rawSignature);
-
-                const signature = generateSignature(rawSignature, ACTIVE_CONFIG.SECRET_KEY);
-                console.log("[PaymentGateway] Signature:", signature);
-
-                // MoMo Request Body
-                const momoPayload = {
-                    partnerCode: ACTIVE_CONFIG.PARTNER_CODE,
-                    partnerName: "To Dan Pho 21",
-                    storeId: "TDP21",
-                    requestId: requestId,
-                    amount: amount,
-                    orderId: orderId,
+                    amount: payload.amount,
                     orderInfo: orderInfo,
                     redirectUrl: redirectUrl,
-                    ipnUrl: ipnUrl,
-                    lang: "vi",
-                    requestType: requestType,
-                    autoCapture: true,
-                    extraData: extraData,
-                    signature: signature
+                    name: cleanName // For extra metadata
                 };
 
-                console.log("[PaymentGateway] Calling MoMo API...", momoPayload);
 
-                // Call API with CORS handling
-                const result = await callMoMoAPI(momoPayload);
+                // Call API via POST (original method)
+                const result = await callProxyAPI(proxyPayload);
 
                 if (result.success && result.payUrl) {
                     console.log("[PaymentGateway] Redirecting to MoMo:", result.payUrl);
                     window.location.href = result.payUrl;
                 } else {
-                    // Show error to user
-                    const errorMsg = result.message || "Không thể kết nối MoMo. Vui lòng thử lại.";
-                    console.error("[PaymentGateway] Error:", errorMsg);
-
-                    // Fallback: Show QR Code
-                    showQRCodeFallback(payload, orderId);
+                    console.error("[PaymentGateway] Error:", result.message);
+                    showQRCodeFallback(proxyPayload, orderId);
                 }
 
             } catch (e) {
@@ -201,29 +110,41 @@ const PaymentGateway = (function () {
         },
 
         /**
-         * Get current config info
+         * Check if returning from MoMo
          */
+        checkPaymentStatus: function () {
+            const params = new URLSearchParams(window.location.search);
+            const resultCode = params.get('resultCode');
+            const orderId = params.get('orderId');
+
+            if (resultCode !== null) {
+                return {
+                    isReturn: true,
+                    success: resultCode === "0",
+                    orderId: orderId,
+                    message: params.get('message')
+                };
+            }
+            return { isReturn: false };
+        },
+
         getConfigInfo: function () {
             return {
-                mode: "DIRECT_API",
-                environment: ENV,
-                partnerCode: ACTIVE_CONFIG.PARTNER_CODE.substring(0, 10) + "..."
+                mode: "SERVERLESS",
+                isConfigured: !GAS_WEB_APP_URL.includes('...')
             };
         }
     };
 
     // ============================================================
-    // FALLBACK: QR CODE (VietQR format)
+    // FALLBACK: QR CODE
     // ============================================================
     function showQRCodeFallback(payload, orderId) {
-        // Generate VietQR compatible QR for manual scanning
-        const bankId = "MB"; // Default bank
-        const accNo = "0904568973"; // Update with actual account
+        const bankId = "MB";
+        const accNo = "0904568973";
         const content = `TDP21 ${orderId} ${removeAccents(payload.name)}`.toUpperCase();
-
         const qrUrl = `https://img.vietqr.io/image/${bankId}-${accNo}-compact2.png?amount=${payload.amount}&addInfo=${encodeURIComponent(content)}`;
 
-        // Show in modal or inline
         const container = document.getElementById('donation-form-container');
         if (container) {
             container.innerHTML = `
@@ -231,23 +152,23 @@ const PaymentGateway = (function () {
                     <div style="margin-bottom:15px;">
                         <i class="fa-solid fa-triangle-exclamation" style="font-size:40px; color:#f59e0b;"></i>
                     </div>
-                    <h3 style="color:#92400e; margin-bottom:10px;">MOMO TẠM THỜI KHÔNG KHẢ DỤNG</h3>
-                    <p style="color:#666; font-size:14px; margin-bottom:20px;">Vui lòng quét mã QR dưới đây để chuyển khoản ngân hàng:</p>
+                    <h3 style="color:#92400e; margin-bottom:10px;">PHƯƠNG THỨC TỰ ĐỘNG GIÁN ĐOẠN</h3>
+                    <p style="color:#666; font-size:14px; margin-bottom:20px;">Quý khách vui lòng quét mã QR chuyển khoản thủ công:</p>
                     
-                    <img src="${qrUrl}" alt="QR Code" style="max-width:250px; border:2px solid #ddd; border-radius:12px; margin-bottom:15px;">
+                    <img src="${qrUrl}" alt="QR Code" style="max-width:250px; border:2px solid #ddd; border-radius:12px; margin-bottom:15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                     
-                    <div style="background:#fff7ed; padding:15px; border-radius:8px; border:1px dashed #f97316; margin-bottom:20px;">
-                        <div style="font-size:12px; color:#92400e; margin-bottom:5px;">Nội dung chuyển khoản</div>
-                        <div style="font-weight:bold; color:#c2410c;">${content}</div>
+                    <div style="background:#fff7ed; padding:15px; border-radius:8px; border:1px dashed #f97316; margin-bottom:20px; text-align:left;">
+                        <div style="font-size:12px; color:#92400e; margin-bottom:5px;">Nội dung chuyển khoản (Bắt buộc)</div>
+                        <div style="font-weight:bold; color:#c2410c; font-family:monospace; background:#fff; padding:8px; border-radius:4px; border:1px solid #fed7aa;">${content}</div>
                     </div>
                     
-                    <button onclick="location.reload()" style="background:#3b82f6; color:white; border:none; padding:12px 25px; border-radius:8px; font-weight:bold; cursor:pointer;">
-                        <i class="fa-solid fa-rotate-left"></i> THỬ LẠI
+                    <button onclick="location.reload()" style="background:#3b82f6; color:white; border:none; padding:12px 25px; border-radius:8px; font-weight:bold; cursor:pointer; width:100%;">
+                        <i class="fa-solid fa-rotate-left"></i> QUAY LẠI
                     </button>
                 </div>
             `;
         } else {
-            alert("MoMo không khả dụng. Vui lòng liên hệ Admin.");
+            alert("MoMo hiện chưa khả dụng. Vui lòng chuyển khoản thủ công theo thông tin trên trang.");
         }
     }
 

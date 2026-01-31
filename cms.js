@@ -993,10 +993,24 @@ async function executeMoMoPayment() {
     const payload = window.pendingDonationPayload;
     const btn = document.querySelector('.premium-submit-btn');
 
-    // UI Loading
+
+    // UI Loading on Button
     if (btn) {
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ĐANG KẾT NỐI MOMO...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner" style="animation: spin 1s linear infinite;"></i> ĐANG KẾT NỐI MOMO...';
         btn.disabled = true;
+
+        // Add CSS animation if not already present
+        if (!document.getElementById('momo-spinner-animation')) {
+            const style = document.createElement('style');
+            style.id = 'momo-spinner-animation';
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 
     try {
@@ -1015,6 +1029,7 @@ async function executeMoMoPayment() {
         }
     }
 }
+
 
 // 5. ACTION: CHECK PAYMENT RETURN (Handle Redirect from MoMo / NganLuong)
 function checkPaymentReturn() {
@@ -1441,9 +1456,13 @@ function renderFullPageError(errorData) {
                 <div class="receipt-section">
                     <div class="section-title">III. TRẠNG THÁI XỬ LÝ HỒ SƠ</div>
                     <div class="formal-text">
-                        <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">1. <b>Về mặt tài chính:</b> Hệ thống xác nhận giao dịch này đã bị <b>${isCancelled ? 'HỦY BỎ' : 'TỪ CHỐI'}</b>. Chúng tôi xin khẳng định và cam kết <b>không có bất kỳ khoản tiền nào bị khấu trừ</b> từ tài khoản ngân hàng hoặc ví điện tử của Quý vị đối với giao dịch này.</p>
-                        <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">2. <b>Về ghi nhận đóng góp:</b> Do giao dịch chưa thành công, thông tin đóng góp của Quý vị <b>tạm thời chưa được ghi nhận</b> vào Sổ vàng điện tử và Danh sách công khai của Tổ dân phố. Hồ sơ giao dịch này sẽ được lưu trữ ở trạng thái "Đã hủy" để phục vụ công tác tra cứu đối soát khi cần thiết.</p>
-                        ${!isCancelled ? '<p style="text-align: justify; text-indent: 0;">3. <b>Về hỗ trợ kỹ thuật:</b> Nếu Quý vị nghi ngờ có sự cố bất thường hoặc lỗi lặp lại nhiều lần, xin vui lòng liên hệ trực tiếp với Ban Quản trị hoặc bộ phận Chăm sóc khách hàng của dịch vụ thanh toán để được hỗ trợ kiểm tra.</p>' : ''}
+                        <p style="margin-bottom: 12px; text-align: justify; text-indent: 0;"><b>1. Về mặt tài chính và kế toán:</b></p>
+                        <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Căn cứ vào kết quả xử lý từ hệ thống thanh toán điện tử, Ban Lãnh đạo Tổ dân phố xin khẳng định rằng giao dịch mang mã tham chiếu nêu trên đã bị <b>${isCancelled ? 'HỦY BỎ' : 'TỪ CHỐI'}</b> theo đúng quy trình nghiệp vụ. Chúng tôi cam kết và xin xác nhận với Quý vị rằng: <b>Không có bất kỳ khoản tiền nào đã bị trừ, phát sinh hoặc đóng băng</b> từ tài khoản ngân hàng, thẻ tín dụng, hoặc ví điện tử của Quý vị trong suốt quá trình xử lý giao dịch này. Mọi giao dịch tài chính đều tuân thủ nghiêm ngặt các quy định về minh bạch và bảo mật thông tin người dùng.</p>
+                        
+                        <p style="margin-bottom: 12px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>2. Về ghi nhận đóng góp và công khai minh bạch:</b></p>
+                        <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Do giao dịch thanh toán chưa hoàn tất theo đúng quy trình chuẩn, thông tin về khoản đóng góp của Quý vị <b>tạm thời chưa được ghi nhận chính thức</b> vào các hệ thống quản lý và công khai của Tổ dân phố, bao gồm: Sổ vàng điện tử, Danh sách công khai trên Cổng thông tin điện tử, và Bảng tin cộng đồng tại Nhà sinh hoạt Tổ dân phố. Tuy nhiên, để đảm bảo tính minh bạch và khả năng tra cứu, toàn bộ hồ sơ và lịch sử thao tác của giao dịch này đã được hệ thống tự động lưu trữ ở trạng thái <b>"Đã hủy"</b> hoặc <b>"Không thành công"</b>, phục vụ cho công tác đối soát, kiểm tra nội bộ khi có yêu cầu từ các cơ quan chức năng hoặc theo yêu cầu của chính Quý vị.</p>
+                        
+                        ${!isCancelled ? '<p style="margin-bottom: 12px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>3. Về hỗ trợ kỹ thuật và giải quyết sự cố:</b></p><p style="text-align: justify; text-indent: 20px; line-height: 1.8;">Trong trường hợp Quý vị nghi ngờ có sự bất thường trong quá trình xử lý giao dịch, hoặc lỗi này xảy ra lặp đi lặp lại nhiều lần gây ảnh hưởng đến trải nghiệm đóng góp của Quý vị, chúng tôi kính mong Quý vị vui lòng liên hệ trực tiếp với Ban Quản trị Tổ dân phố hoặc bộ phận Chăm sóc khách hàng của đơn vị cung cấp dịch vụ thanh toán để được hỗ trợ kỹ thuật chuyên sâu, kiểm tra lịch sử giao dịch chi tiết và giải quyết kịp thời. Chúng tôi cam kết sẽ theo dõi sát sao và hỗ trợ Quý vị đến khi vấn đề được giải quyết hoàn toàn.</p>' : ''}
                     </div>
                 </div>
 
@@ -1451,11 +1470,21 @@ function renderFullPageError(errorData) {
                 <div class="receipt-section">
                     <div class="section-title">IV. HƯỚNG DẪN THỰC HIỆN LẠI GIAO DỊCH</div>
                     <div class="formal-text">
-                         <p style="margin-bottom: 8px; text-indent: 0;">Để tiếp tục thực hiện đóng góp, Ban Lãnh đạo kính mong Quý vị vui lòng kiểm tra và thực hiện theo các bước hướng dẫn sau đây:</p>
-                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">1. Kính đề nghị Quý vị kiểm tra lại <b>kết nối mạng Internet (Wifi hoặc 4G/5G)</b> trên thiết bị di động để đảm bảo đường truyền ổn định, không bị gián đoạn trong quá trình thanh toán.</p>
-                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">2. Quý vị vui lòng kiểm tra và cập nhật ứng dụng <b>Ngân hàng (Mobile Banking) hoặc Ví điện tử lên phiên bản mới nhất</b> để đảm bảo tính tương thích và bảo mật an toàn thông tin.</p>
-                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">3. Trong trường hợp hệ thống thanh toán đang bận hoặc gặp sự cố tạm thời, Quý vị vui lòng <b>kiên nhẫn chờ đợi trong ít phút</b> và thực hiện lại thao tác quét mã/chuyển khoản.</p>
-                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">4. Nếu vẫn không thể thực hiện giao dịch, Quý vị có thể liên hệ Tổng đài hỗ trợ của <b>đơn vị cung cấp dịch vụ thanh toán</b> hoặc thông báo cho Tổ trưởng Tổ dân phố để được trợ giúp kịp thời.</p>
+                         <p style="margin-bottom: 12px; text-indent: 0; line-height: 1.8;">Nhằm tạo điều kiện thuận lợi nhất cho Quý vị trong việc tiếp tục thực hiện đóng góp và hoàn tất giao dịch thành công, Ban Lãnh đạo Tổ dân phố kính đề nghị Quý vị vui lòng kiểm tra kỹ lưỡng các yếu tố kỹ thuật và môi trường thanh toán, sau đó thực hiện lại theo hướng dẫn chi tiết dưới đây:</p>
+                         
+                         <p style="margin-bottom: 10px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>Bước 1: Kiểm tra kết nối mạng Internet</b></p>
+                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Kính đề nghị Quý vị kiểm tra và đảm bảo đường truyền <b>kết nối mạng Internet (Wifi hoặc 4G/5G)</b> trên thiết bị di động đang ở trạng thái ổn định, không bị gián đoạn trong suốt quá trình thực hiện thanh toán. Đường truyền mạng yếu hoặc không ổn định có thể gây ra tình trạng mất kết nối giữa chừng, dẫn đến việc giao dịch không được hệ thống xác nhận đầy đủ. Nếu Quý vị đang sử dụng mạng Wifi công cộng hoặc mạng di động có tín hiệu yếu, xin vui lòng chuyển sang môi trường mạng ổn định hơn trước khi thực hiện lại.</p>
+                         
+                         <p style="margin-bottom: 10px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>Bước 2: Cập nhật phiên bản ứng dụng thanh toán</b></p>
+                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Quý vị vui lòng kiểm tra và cập nhật ứng dụng <b>Ngân hàng (Mobile Banking), Ví điện tử (MoMo, ZaloPay, VNPay,...)</b> lên phiên bản mới nhất được cung cấp chính thức trên App Store (iOS) hoặc Google Play Store (Android). Việc sử dụng phiên bản cũ có thể dẫn đến các lỗi tương thích với hệ thống thanh toán, đồng thời gây ra các lỗ hổng bảo mật không mong muốn. Sau khi cập nhật xong, Quý vị nên khởi động lại ứng dụng và kiểm tra thông tin tài khoản để đảm bảo mọi chức năng hoạt động bình thường trước khi tiến hành giao dịch.</p>
+                         
+                         <p style="margin-bottom: 10px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>Bước 3: Chờ đợi và thực hiện lại khi hệ thống ổn định</b></p>
+                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Trong trường hợp lỗi xảy ra do hệ thống thanh toán điện tử đang bận hoặc đang trong thời gian bảo trì kỹ thuật, giao dịch có thể bị gián đoạn tạm thời. Quý vị vui lòng <b>kiên nhẫn chờ đợi trong khoảng 5-10 phút</b>, sau đó quay lại trang đóng góp và thực hiện lại thao tác quét mã QR hoặc chuyển khoản. Thời gian cao điểm (như cuối tháng, đầu tháng, hoặc các ngày lễ) có thể khiến hệ thống xử lý chậm hơn bình thường, do đó Quý vị nên thử lại vào khung giờ ít tải hơn nếu gặp phải tình trạng này.</p>
+                         
+                         <p style="margin-bottom: 10px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>Bước 4: Liên hệ hỗ trợ kỹ thuật chuyên sâu</b></p>
+                         <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Nếu sau khi thực hiện đầy đủ các bước hướng dẫn trên mà giao dịch vẫn không thành công, Quý vị có thể liên hệ <b>Tổng đài hỗ trợ khách hàng của đơn vị cung cấp dịch vụ thanh toán</b> (Ngân hàng hoặc Nhà cung cấp ví điện tử) để được hướng dẫn chi tiết hơn. Đồng thời, Quý vị cũng có thể thông báo cho <b>Tổ trưởng Tổ dân phố hoặc Ban Quản trị</b> qua số điện thoại, email hoặc Zalo chính thức để được hỗ trợ kịp thời và ghi nhận thông tin đóng góp bằng phương thức thủ công nếu cần thiết. Chúng tôi luôn sẵn sàng đồng hành và hỗ trợ Quý vị trong suốt quá trình tham gia đóng góp xây dựng cộng đồng.</p>
+                         
+                         <p style="margin-top: 15px; text-align: justify; text-indent: 0; font-style: italic; color: #555; line-height: 1.8;"><b>Lưu ý quan trọng:</b> Nếu Quý vị chọn phương thức chuyển khoản thủ công qua ngân hàng, xin vui lòng ghi chính xác nội dung chuyển khoản theo mã giao dịch để chúng tôi có thể đối chiếu và ghi nhận chính xác khoản đóng góp của Quý vị vào hệ thống.</p>
                     </div>
                 </div>
             </div>
@@ -1849,9 +1878,20 @@ function renderFullPageSuccess(payload) {
 
             <!-- NỘI DUNG CHÍNH -->
             <div class="a4-body">
-                <div class="receipt-intro">
-                    Ban Lãnh đạo Tổ dân phố số 21 trân trọng xác nhận đã nhận được khoản đóng góp từ Quý vị thông qua hệ thống thanh toán trực tuyến với thông tin chi tiết như sau:
-                </div>
+                ${(() => {
+            const ident = detectDonorIdentity(payload.name);
+            let intro = '';
+
+            if (ident.type === 'org') {
+                intro = 'Ban Lãnh đạo Tổ dân phố số 21 trân trọng xác nhận đã nhận được khoản đóng góp, tài trợ thiết thực từ Quý Đơn vị thông qua hệ thống thanh toán trực tuyến. Chúng tôi ghi nhận và đánh giá cao tinh thần trách nhiệm xã hội, nghĩa cử cao đẹp của Quý Đơn vị đối với cộng đồng và các hoạt động chung của Tổ dân phố. Thông tin giao dịch chi tiết như sau:';
+            } else if (ident.type === 'family') {
+                intro = 'Ban Lãnh đạo Tổ dân phố số 21 trân trọng xác nhận đã nhận được khoản đóng góp thiết thực từ Quý Hộ gia đình thông qua hệ thống thanh toán trực tuyến. Chúng tôi ghi nhận và đánh giá cao truyền thống tốt đẹp, tinh thần đoàn kết của Quý Hộ gia đình đối với các hoạt động chung của Tổ dân phố. Thông tin giao dịch chi tiết như sau:';
+            } else {
+                intro = 'Ban Lãnh đạo Tổ dân phố số 21 trân trọng xác nhận đã nhận được khoản đóng góp thiết thực từ Quý vị thông qua hệ thống thanh toán trực tuyến. Chúng tôi ghi nhận và đánh giá cao tấm lòng nhiệt huyết của Quý vị đối với các hoạt động chung của Tổ dân phố. Thông tin giao dịch chi tiết như sau:';
+            }
+
+            return `<div class="receipt-intro">${intro}</div>`;
+        })()}
 
                 <!-- THÔNG TIN GIAO DỊCH -->
                 <div class="receipt-section">
@@ -1917,14 +1957,54 @@ function renderFullPageSuccess(payload) {
 
                 <!-- TRẠNG THÁI -->
                 <div class="receipt-section">
-                    <div class="section-title">III. TRẠNG THÁI XỬ LÝ</div>
-                    ${payload.verified ? `
+                    <div class="section-title">III. TRẠNG THÁI XỬ LÝ VÀ CAM KẾT</div>
+                    ${payload.verified ? (() => {
+            const ident = detectDonorIdentity(payload.name);
+            let content = '';
+
+            if (ident.type === 'org') {
+                // DOANH NGHIỆP - TỔ CHỨC
+                content = `
                         <div class="formal-text">
-                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">1. Giao dịch chuyển khoản của Quý vị đã được hệ thống thanh toán điện tử xác thực hợp lệ. Số tiền đóng góp đã được hạch toán đầy đủ vào tài khoản Quỹ của Tổ dân phố số 21 theo đúng quy định hiện hành về quản lý tài chính.</p>
-                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 0;">2. Thông tin đóng góp đã được hệ thống tự động cập nhật vào Sổ vàng điện tử và niêm yết công khai trên Cổng thông tin điện tử của Tổ dân phố. Chúng tôi cam kết đảm bảo tính minh bạch, chính xác và kịp thời trong công tác ghi nhận đóng góp, thực hiện nghiêm túc quy chế dân chủ ở cơ sở.</p>
-                            <p style="text-align: justify; text-indent: 0;">3. Ban Lãnh đạo Tổ dân phố cam kết quản lý và sử dụng nguồn đóng góp này đúng mục đích, tiết kiệm, hiệu quả và sẽ báo cáo công khai kết quả thực hiện tới toàn thể nhân dân trong các hội nghị sơ kết, tổng kết hoặc niêm yết công khai tại Nhà sinh hoạt cộng đồng.</p>
-                        </div>
-                    ` : `
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0;"><b>1. Về xác thực và hạch toán tài chính:</b></p>
+                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Căn cứ vào kết quả xác thực từ hệ thống thanh toán điện tử MoMo, chúng tôi xác nhận rằng khoản tài trợ, đóng góp của Quý Đơn vị mang mã tham chiếu nêu trên đã được xử lý hoàn tất và <b>xác thực hợp lệ</b> theo đúng quy trình nghiệp vụ chặt chẽ. Toàn bộ số tiền đã được <b>hạch toán đầy đủ, chính xác và kịp thời</b> vào tài khoản Quỹ chính thức của Tổ dân phố số 21, tuân thủ nghiêm ngặt các quy định hiện hành của Nhà nước về quản lý tài chính, minh bạch thu - chi trong hoạt động của tổ chức cơ sở. Quý Đơn vị có thể sử dụng Biên nhận này làm chứng từ hợp pháp để ghi nhận vào sổ sách kế toán và hồ sơ trách nhiệm xã hội của doanh nghiệp (nếu có nhu cầu).</p>
+                            
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>2. Về ghi nhận, công khai và tôn vinh:</b></p>
+                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Thông tin về khoản đóng góp quý báu của Quý Đơn vị đã được hệ thống tự động <b>cập nhật ngay lập tức</b> vào <b>Sổ vàng điện tử</b> và <b>niêm yết công khai minh bạch</b> trên Cổng thông tin điện tử chính thức của Tổ dân phố. Tên doanh nghiệp và số tiền đóng góp sẽ được <b>tôn vinh đặc biệt</b> trong danh sách các đơn vị tài trợ, thể hiện vai trò tiên phong của Quý Đơn vị trong công tác an sinh xã hội và xây dựng cộng đồng. Chúng tôi cam kết <b>đảm bảo tính chính xác, kịp thời và minh bạch tuyệt đối</b>, thực hiện nghiêm túc quy chế dân chủ ở cơ sở theo tinh thần Chỉ thị của Đảng và quy định của Pháp luật.</p>
+                            
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>3. Về quản lý, sử dụng và báo cáo công khai:</b></p>
+                            <p style="text-align: justify; text-indent: 20px; line-height: 1.8;">Ban Lãnh đạo Tổ dân phố trân trọng cam kết sẽ <b>quản lý và sử dụng nguồn tài trợ này đúng mục đích, tiết kiệm, hiệu quả</b>, phù hợp với các chương trình, dự án đã được thông qua tại Hội nghị dân cư hoặc Hội nghị Ban Công tác Mặt trận. Kết quả sử dụng nguồn kinh phí sẽ được <b>báo cáo công khai, minh bạch đầy đủ</b> tới Quý Đơn vị và toàn thể nhân dân trong Tổ dân phố thông qua các hội nghị sơ kết, tổng kết định kỳ (quý, 6 tháng, năm), đồng thời được <b>niêm yết công khai tại Nhà sinh hoạt cộng đồng</b> và trên các kênh thông tin điện tử. Mọi yêu cầu về báo cáo chi tiết hoặc giải trình việc sử dụng nguồn kinh phí sẽ được Ban Lãnh đạo Tổ dân phố tiếp nhận và phản hồi kịp thời, rõ ràng.</p>
+                        </div>`;
+            } else if (ident.type === 'family') {
+                // HỘ GIA ĐÌNH
+                content = `
+                        <div class="formal-text">
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0;"><b>1. Về xác thực và hạch toán tài chính:</b></p>
+                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Căn cứ vào kết quả xác thực từ hệ thống thanh toán điện tử MoMo, chúng tôi xác nhận rằng khoản đóng góp của Quý Hộ gia đình mang mã tham chiếu nêu trên đã được xử lý hoàn tất và <b>xác thực hợp lệ</b> theo đúng quy trình nghiệp vụ chặt chẽ. Toàn bộ số tiền đóng góp đã được <b>hạch toán đầy đủ, chính xác và kịp thời</b> vào tài khoản Quỹ chính thức của Tổ dân phố số 21, tuân thủ nghiêm ngặt các quy định hiện hành của Nhà nước về quản lý tài chính, minh bạch thu - chi trong hoạt động của tổ chức cơ sở.</p>
+                            
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>2. Về ghi nhận, công khai và tôn vinh gia đình:</b></p>
+                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Thông tin về khoản đóng góp của Quý Hộ gia đình đã được hệ thống tự động <b>cập nhật ngay lập tức</b> vào <b>Sổ vàng điện tử</b> và <b>niêm yết công khai minh bạch</b> trên Cổng thông tin điện tử chính thức của Tổ dân phố. Tên gia đình sẽ được ghi nhận đặc biệt trong danh sách <b>"Gia đình tiêu biểu, gương mẫu"</b>, thể hiện rõ nét truyền thống tốt đẹp, tinh thần đoàn kết tương thân tương ái của các thế hệ trong gia đình. Chúng tôi cam kết <b>đảm bảo tính chính xác, kịp thời và minh bạch tuyệt đối</b> trong công tác ghi nhận, thực hiện nghiêm túc quy chế dân chủ ở cơ sở theo đúng tinh thần Chỉ thị của Đảng và quy định của Pháp luật.</p>
+                            
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>3. Về quản lý, sử dụng và báo cáo công khai:</b></p>
+                            <p style="text-align: justify; text-indent: 20px; line-height: 1.8;">Ban Lãnh đạo Tổ dân phố trân trọng cam kết sẽ <b>quản lý và sử dụng nguồn đóng góp này đúng mục đích, tiết kiệm, hiệu quả</b>, phù hợp với các chương trình, dự án đã được thông qua tại Hội nghị dân cư hoặc Hội nghị Ban Công tác Mặt trận. Kết quả thực hiện sẽ được <b>báo cáo công khai, minh bạch đầy đủ</b> tới toàn thể nhân dân trong Tổ dân phố (bao gồm Quý Hộ gia đình) thông qua các hội nghị sơ kết, tổng kết định kỳ (quý, 6 tháng, năm), đồng thời được <b>niêm yết công khai tại Nhà sinh hoạt cộng đồng</b> và trên các kênh thông tin điện tử để các hộ dân thuận tiện theo dõi, giám sát. Mọi nghi vấn hoặc yêu cầu giải trình sẽ được Ban Lãnh đạo Tổ dân phố tiếp nhận, giải đáp kịp thời và rõ ràng.</p>
+                        </div>`;
+            } else {
+                // CÁ NHÂN
+                content = `
+                        <div class="formal-text">
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0;"><b>1. Về xác thực và hạch toán tài chính:</b></p>
+                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Căn cứ vào kết quả xác thực từ hệ thống thanh toán điện tử MoMo, chúng tôi xác nhận rằng giao dịch chuyển khoản mang mã tham chiếu nêu trên của Quý vị đã được xử lý hoàn tất và <b>xác thực hợp lệ</b> theo đúng quy trình nghiệp vụ chặt chẽ. Toàn bộ số tiền đóng góp đã được <b>hạch toán đầy đủ, chính xác và kịp thời</b> vào tài khoản Quỹ chính thức của Tổ dân phố số 21, tuân thủ nghiêm ngặt các quy định hiện hành của Nhà nước về quản lý tài chính, minh bạch thu - chi trong hoạt động của tổ chức cơ sở.</p>
+                            
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>2. Về ghi nhận, công khai và minh bạch thông tin:</b></p>
+                            <p style="margin-bottom: 8px; text-align: justify; text-indent: 20px; line-height: 1.8;">Thông tin về khoản đóng góp quý báu của Quý vị đã được hệ thống tự động <b>cập nhật ngay lập tức</b> vào <b>Sổ vàng điện tử</b> và <b>niêm yết công khai minh bạch</b> trên Cổng thông tin điện tử chính thức của Tổ dân phố, phù hợp với nguyên tắc dân chủ công khai trong hoạt động ở cơ sở. Bất kỳ người dân nào cũng có thể tra cứu, xem xét và giám sát thông tin đóng góp một cách dễ dàng, rõ ràng. Chúng tôi cam kết <b>đảm bảo tính chính xác, kịp thời và minh bạch tuyệt đối</b> trong công tác ghi nhận, thực hiện nghiêm túc quy chế dân chủ ở cơ sở theo đúng tinh thần Chỉ thị của Đảng và quy định của Pháp luật.</p>
+                            
+                            <p style="margin-bottom: 12px; text-align: justify; text-indent: 0; margin-top: 15px;"><b>3. Về quản lý, sử dụng và báo cáo công khai:</b></p>
+                            <p style="text-align: justify; text-indent: 20px; line-height: 1.8;">Ban Lãnh đạo Tổ dân phố trân trọng cam kết sẽ <b>quản lý và sử dụng nguồn đóng góp này đúng mục đích, tiết kiệm, hiệu quả</b>, phù hợp với các chương trình, dự án đã được thông qua tại Hội nghị dân cư hoặc Hội nghị Ban Công tác Mặt trận. Kết quả thực hiện sẽ được <b>báo cáo công khai, minh bạch đầy đủ</b> tới toàn thể nhân dân trong Tổ dân phố thông qua các hội nghị sơ kết, tổng kết định kỳ (quý, 6 tháng, năm), đồng thời được <b>niêm yết công khai tại Nhà sinh hoạt cộng đồng</b> và trên các kênh thông tin điện tử của Tổ dân phố để nhân dân thuận tiện theo dõi, giám sát. Mọi nghi vấn hoặc yêu cầu giải trình về việc sử dụng nguồn kinh phí đóng góp sẽ được Ban Lãnh đạo Tổ dân phố tiếp nhận, giải đáp kịp thời và rõ ràng.</p>
+                        </div>`;
+            }
+
+            return content;
+        })() : `
                         <div class="status-box pending">
                             <i class="fa-solid fa-clock"></i>
                             <span>Đang chờ Ban Quản trị xác nhận</span>
@@ -1936,10 +2016,24 @@ function renderFullPageSuccess(payload) {
                 </div>
 
                 <!-- LỜI CẢM ƠN -->
+                ${(() => {
+            const ident = detectDonorIdentity(payload.name);
+            let thankYou = '';
+
+            if (ident.type === 'org') {
+                thankYou = 'Thay mặt Ban Lãnh đạo và toàn thể nhân dân Tổ dân phố số 21, chúng tôi xin gửi tới Quý Đơn vị <b>lời cảm ơn trân trọng và sâu sắc nhất</b>. Khoản tài trợ, đóng góp quý báu này không chỉ là nguồn lực thiết thực, ý nghĩa giúp Tổ dân phố triển khai thành công các hoạt động chung phục vụ cộng đồng, mà còn thể hiện rõ nét <b>tinh thần trách nhiệm xã hội cao cả, nghĩa cử cao đẹp</b> của Quý Đơn vị đối với sự phát triển bền vững của cộng đồng địa phương. Chúng tôi hy vọng rằng mối quan hệ hợp tác, đồng hành giữa Quý Đơn vị và Tổ dân phố sẽ được tiếp tục phát triển, mở rộng và ngày càng bền chặt hơn. Kính chúc Quý Đơn vị luôn <b>phát triển vững mạnh, thịnh vượng và đạt được nhiều thành công cao hơn nữa trong sự nghiệp kinh doanh, đóng góp tích cực cho sự phát triển chung của đất nước</b>!';
+            } else if (ident.type === 'family') {
+                thankYou = 'Thay mặt Ban Lãnh đạo và toàn thể nhân dân Tổ dân phố số 21, chúng tôi xin gửi tới Quý Hộ gia đình <b>lời cảm ơn trân trọng và sâu sắc nhất</b>. Khoản đóng góp quý báu này không chỉ là nguồn lực thiết thực, ý nghĩa giúp Tổ dân phố triển khai thành công các hoạt động chung phục vụ cộng đồng, mà còn thể hiện rõ nét <b>truyền thống tốt đẹp, tinh thần đoàn kết, tương thân tương ái của các thế hệ trong gia đình</b> - một giá trị văn hóa quý báu cần được gìn giữ và phát huy. Chúng tôi hy vọng rằng tấm gương của Quý Hộ gia đình sẽ lan tỏa mạnh mẽ, truyền cảm hứng cho các hộ dân khác cùng chung tay xây dựng Tổ dân phố văn hóa, văn minh, đoàn kết và phát triển bền vững. Kính chúc Quý Hộ gia đình luôn <b>sum vầy, hạnh phúc, con cháu hiếu thảo, học hành tấn tới, sự nghiệp hanh thông và cuộc sống ngày càng ấm no, sung túc</b>!';
+            } else {
+                thankYou = 'Thay mặt Ban Lãnh đạo và toàn thể nhân dân Tổ dân phố số 21, chúng tôi xin gửi tới Quý vị <b>lời cảm ơn trân trọng và sâu sắc nhất</b>. Sự đóng góp quý báu này không chỉ là nguồn lực thiết thực, ý nghĩa giúp Tổ dân phố triển khai thành công các hoạt động chung phục vụ cộng đồng, mà còn thể hiện rõ nét <b>tinh thần trách nhiệm, đoàn kết, tương thân tương ái cao đẹp</b> của người dân Tổ dân phố số 21 - một truyền thống tốt đẹp cần được phát huy và nhân rộng. Chúng tôi hy vọng rằng tấm gương của Quý vị sẽ lan tỏa mạnh mẽ, truyền cảm hứng cho mọi người cùng chung tay xây dựng Tổ dân phố văn hóa, văn minh, đoàn kết và phát triển bền vững. Kính chúc Quý vị và gia đình luôn <b>dồi dào sức khỏe, thành đạt, hạnh phúc và bình an</b>!';
+            }
+
+            return `
                 <div class="thank-you-box">
                     <i class="fa-solid fa-heart"></i>
-                    <p>Thay mặt Ban Lãnh đạo và toàn thể nhân dân Tổ dân phố số 21, xin trân trọng gửi lời cảm ơn sâu sắc nhất tới tấm lòng vàng của Quý vị. Sự đóng góp quý báu này không chỉ là nguồn lực thiết thực hỗ trợ các hoạt động chung của Tổ dân phố mà còn thể hiện tinh thần đoàn kết, tương thân tương ái cao đẹp. Kính chúc Quý vị và gia đình luôn mạnh khỏe, hạnh phúc và bình an!</p>
-                </div>
+                    <p style="text-align: justify; line-height: 1.8;">${thankYou}</p>
+                </div>`;
+        })()}
             </div>
 
             <!-- CHỮ KÝ & QR CODE -->
