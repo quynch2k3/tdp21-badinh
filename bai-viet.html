@@ -4,23 +4,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi Ti?t Bài Vi?t - Tổ Dân Phố 21</title>
+    <title>Chi Tiết Bài Viết - Tổ Dân Phố 21</title>
     <link rel="stylesheet" href="style.css?v=SPIN_FIX_V1">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
-    <!-- FONT CH? M?I: ROBOTO (H? tr? Ti?ng Vi?t) -->
+    <!-- FONT CHỮ MỚI: ROBOTO (Hỗ trợ Tiếng Việt) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- FONT CH? M?I: ARIAL (Chu?n h�a h? th?ng) -->
+    <!-- FONT CHỮ MỚI: ARIAL (Chuẩn hóa hệ thống) -->
     <style>
-        /* �p d?ng font Roboto cho to�n b? c�c th? tr�n trang web */
-        /* �p d?ng font Arial cho to�n b? c�c th? tr�n trang web */
-        body, h1, h2, h3, h4, h5, h6, p, span, div, a, li, ul, ol, td, th, input, button, select, textarea, i, b, strong, em {
-            font-family: 'Roboto', sans-serif !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            line-height: 1.5;
+        /* Áp dụng font Roboto cho toàn bộ các thẻ trên trang web */
+        * {
+            box-sizing: border-box;
+        }
+
+        body,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        p,
+        span,
+        div,
+        a,
+        li,
+        ul,
+        ol,
+        td,
+        th,
+        input,
+        button,
+        select,
+        textarea,
+        b,
+        strong,
+        em {
+            font-family: 'Roboto', Arial, sans-serif !important;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+
+
+        /* Hình ảnh trong bài viết */
+        #article-container img {
+            max-width: 100% !important;
+            height: auto !important;
+            display: block;
+            margin: 15px auto;
+            border-radius: 8px;
+            cursor: zoom-in;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Lightbox */
+        #lightbox-overlay {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #lightbox-overlay.active {
+            opacity: 1;
+        }
+
+        #lightbox-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        #lightbox-overlay.active #lightbox-img {
+            transform: scale(1);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            cursor: pointer;
+            z-index: 10001;
+            transition: color 0.2s;
+        }
+
+        .lightbox-close:hover {
+            color: var(--primary-red);
         }
     </style>
 
@@ -150,138 +237,70 @@
         </header>
 
         <!-- NAVIGATION -->
+
         <nav class="main-nav">
             <ul>
-                <li><a href="index.html" class="nav-item"><i class="fa-solid fa-home"></i> <span
-                            data-i18n="nav_home">Trang Ch?��</span></a></li>
-                <li><a href="dong-gop.html" class="nav-item" style="background-color: var(--primary-red);"><i
-                            class="fa-solid fa-hand-holding-heart"></i> <span>ĐÓNG GÓP & VẬN ĐỘNG</span></a></li>
-                <li class="dropdown">
-                    <a href="cac-doan-the.html" class="nav-item"><i class="fa-solid fa-users"></i> <span
-                            data-i18n="nav_groups">Các Đoàn Thể</span> <i class="fa-solid fa-caret-down"
-                            style="margin-left:5px;"></i></a>
-                    <div class="dropdown-content">
-                        <!-- CHI BỘ -->
-                        <div class="dropdown-sub">
-                            <a href="chi-bo.html?category=CB" data-i18n="group_chibo">Chi Bộ</a>
-                            <div class="dropdown-sub-content">
-                                <a href="chi-bo.html?category=CB">Giới Thiệu Chung</a>
-                                <a href="tin-tuc.html?category=CB">Tin Tức Chi Bộ</a>
-                                <a href="chi-bo.html?category=CB&section=notify">Văn Bản - Chỉ Đạo</a>
-                            </div>
-                        </div>
-
-                        <!-- M?t Tr?n T? Qu?c -->
-                        <div class="dropdown-sub">
-                            <a href="mat-tran-to-quoc.html?category=MT" data-i18n="group_mttq">Mặt Trận Tổ Quốc</a>
-                            <div class="dropdown-sub-content">
-                                <a href="mat-tran-to-quoc.html?category=MT">Giới Thiệu Chung</a>
-                                <a href="tin-tuc.html?category=MT">Tin Tức - Sự Kiện</a>
-                            </div>
-                        </div>
-
-                        <!-- H?I Ph? N? -->
-                        <div class="dropdown-sub">
-                            <a href="hoi-phu-nu.html?category=PHU_NU" data-i18n="group_phunu">Hội Phụ Nữ</a>
-                            <div class="dropdown-sub-content">
-                                <a href="hoi-phu-nu.html?category=PHU_NU">Giới Thiệu Chung</a>
-                                <a href="tin-tuc.html?category=PHU_NU">Tin Tức Hội Phụ Nữ</a>
-                                <a href="hoi-phu-nu.html?category=PHU_NU&section=movements">Phong Trào Thi Đua</a>
-                            </div>
-                        </div>
-
-                        <!-- H?I C?u Chi?n Binh -->
-                        <div class="dropdown-sub">
-                            <a href="hoi-cuu-chien-binh.html?category=CCB" data-i18n="group_ccb">Hội Cựu Chiến Binh</a>
-                            <div class="dropdown-sub-content">
-                                <a href="hoi-cuu-chien-binh.html?category=CCB">Giới Thiệu Chung</a>
-                                <a href="tin-tuc.html?category=CCB">Tin Tức CCB</a>
-                            </div>
-                        </div>
-
-                        <!-- ĐOÀN THANH NIÊN -->
-                        <div class="dropdown-sub">
-                            <a href="doan-thanh-nien.html?category=TN" data-i18n="group_thanhnien">Đoàn Thanh Niên</a>
-                            <div class="dropdown-sub-content">
-                                <a href="doan-thanh-nien.html?category=TN">Giới Thiệu Chung</a>
-                                <a href="tin-tuc.html?category=TN">Tin Tức - Hoạt Động</a>
-                                <a href="doan-thanh-nien.html?category=TN&section=youth">Góc Thanh Niên</a>
-                            </div>
-                        </div>
-
-                        <!-- H?I NGU?I CAO TU?I -->
-                        <div class="dropdown-sub">
-                            <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="group_nct">Hội Người Cao Tuổi</a>
-                            <div class="dropdown-sub-content">
-                                <a href="hoi-nguoi-cao-tuoi.html?category=NCT" data-i18n="intro_general">Giới Thiệu
-                                    Chung</a>
-                                <a href="tin-tuc.html?category=NCT" data-i18n="news_nct">Tin Tức NCT</a>
-                            </div>
-                        </div>
-
-                        <!-- BAN Khuy?n H?c -->
-                        <div class="dropdown-sub">
-                            <a href="ban-khuyen-hoc.html?category=KH" data-i18n="group_khuyenhoc">Ban Khuyến Học</a>
-                            <div class="dropdown-sub-content">
-                                <a href="ban-khuyen-hoc.html?category=KH" data-i18n="intro_general">Giới Thiệu Chung</a>
-                                <a href="tin-tuc.html?category=KH" data-i18n="news_khuyenhoc">Tin Tức Khuy?n H?c</a>
-                            </div>
-                        </div>
-
-                    </div>
-                </li>
-
-                <li><a href="lien-he.html" class="nav-item"><i class="fa-solid fa-address-book"></i> Liên Hệ</a></li>
-                <li class="login-item"><a href="admin.html"><i class="fa-solid fa-user-gear"></i> Đăng Nhập</a></li>
+                <!-- Menu sẽ được tải tự động từ cms.js -->
             </ul>
         </nav>
 
-        </nav>
+        <!-- BANNER BẦU CỬ 2026 -->
+        <div style="margin-bottom: 15px; margin-top: 0px; text-align: center;">
+            <a href="https://hoidongbaucu.quochoi.vn/" target="_blank" title="Hội đồng bầu cử Quốc gia">
+                <img src="https://datafiles.hanoi.gov.vn/gov-hni/1/vannt/bau%20cu%202026.png"
+                    alt="Bầu cử đại biểu Quốc hội và Hội đồng nhân dân các cấp nhiệm kỳ 2026-2031"
+                    style="width: 100%; height: 110px; object-fit: fill; display: block;">
+            </a>
+        </div>
+
+
 
         <!-- MAIN LAYOUT -->
         <div class="main-content">
-            <!-- LEFT COLUMN (Article Content) -->
-            <div class="left-col">
-                <div class="section-box">
-                    <div class="box-header">
-                        <span class="box-title" data-i18n="box_article_content">N?I DUNG BÀI VI?T</span>
-                    </div>
-                    <div class="box-body" id="article-container">
-                        <!-- Content will be loaded here -->
-                        <div style="text-align: center; padding: 50px;">
-                            <p data-i18n="loading_data">Đang tải n?i dung...</p>
+            <div id="dashboard-view">
+                <!-- LEFT COLUMN (Article Content) -->
+                <div class="left-col">
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title" data-i18n="box_article_content">NỘI DUNG BÀI VIẾT</span>
+                        </div>
+                        <div class="box-body" id="article-container">
+                            <!-- Content will be loaded here -->
+                            <div style="text-align: center; padding: 50px;">
+                                <p data-i18n="loading_data">Đang tải nội dung...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- RIGHT COLUMN (Sidebar) -->
-            <div class="right-col">
-                <!-- Notifications -->
-                <div class="section-box">
-                    <div class="box-header">
-                        <span class="box-title">THÔNG BÁO M?I</span>
+                <!-- RIGHT COLUMN (Sidebar) -->
+                <div class="right-col">
+                    <!-- Notifications -->
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title">THÔNG BÁO MỚI</span>
+                        </div>
+                        <div class="box-body">
+                            <marquee direction="up" scrollamount="2" height="150" onmouseover="this.stop()"
+                                onmouseout="this.start()" id="qt-marquee">
+                                <div style="padding:10px;">Đang tải thông báo...</div>
+                            </marquee>
+                        </div>
                     </div>
-                    <div class="box-body">
-                        <marquee direction="up" scrollamount="2" height="150" onmouseover="this.stop()"
-                            onmouseout="this.start()" id="qt-marquee">
-                            <div style="padding:10px;">Đang tải thông báo...</div>
-                        </marquee>
-                    </div>
-                </div>
 
-                <div class="section-box">
-                    <div class="box-header">
-                        <span class="box-title">ĐI?U HÀNH TÁC NGHI?P</span>
-                    </div>
-                    <div class="box-body" style="padding: 10px;">
-                        <a href="chi-bo.html" class="sidebar-link">Chi Bộ</a>
-                        <a href="mat-tran-to-quoc.html" class="sidebar-link">Mặt Trận Tổ Quốc</a>
-                        <a href="hoi-phu-nu.html" class="sidebar-link">Hội Phụ Nữ</a>
-                        <a href="hoi-cuu-chien-binh.html" class="sidebar-link">Hội Cựu Chiến Binh</a>
-                        <a href="doan-thanh-nien.html" class="sidebar-link">Đoàn Thanh Niên</a>
-                        <a href="hoi-nguoi-cao-tuoi.html" class="sidebar-link">Hội Người Cao Tuổi</a>
+                    <div class="section-box">
+                        <div class="box-header">
+                            <span class="box-title">ĐIỀU HÀNH TÁC NGHIỆP</span>
+                        </div>
+                        <div class="box-body" style="padding: 10px;">
+                            <a href="chi-bo.html" class="sidebar-link">Chi Bộ</a>
+                            <a href="mat-tran-to-quoc.html" class="sidebar-link">Mặt Trận Tổ Quốc</a>
+                            <a href="hoi-phu-nu.html" class="sidebar-link">Hội Phụ Nữ</a>
+                            <a href="hoi-cuu-chien-binh.html" class="sidebar-link">Hội Cựu Chiến Binh</a>
+                            <a href="doan-thanh-nien.html" class="sidebar-link">Đoàn Thanh Niên</a>
+                            <a href="hoi-nguoi-cao-tuoi.html" class="sidebar-link">Hội Người Cao Tuổi</a>
 
+                        </div>
                     </div>
                 </div>
             </div>
@@ -315,9 +334,11 @@
     <script src="db.js"></script>
 
     <script src="cms.js?v=UI_UPGRADE_V5"></script>
-    <!-- <script src="lang.js?v=2"></script> -->
+    <script src="lang.js?v=2"></script>
     <script>
         window.onload = function () {
+            // Tải menu tự động
+            renderGlobalMenu();
             // Lấy tham số ID từ URL và tải bài viết
             loadArticleDetail();
             // Tải marquee
@@ -327,8 +348,49 @@
             initBackToTop();
         };
     </script>
-<script src="fix_text.js"></script>
+
+    <!-- Lightbox Structure -->
+    <div id="lightbox-overlay" onclick="closeLightbox()">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="Full size">
+    </div>
+
+    <script>
+        // Lightbox Logic
+        function openLightbox(src) {
+            const overlay = document.getElementById('lightbox-overlay');
+            const img = document.getElementById('lightbox-img');
+            img.src = src;
+            overlay.style.display = 'flex';
+            // Trigger reflow
+            void overlay.offsetWidth;
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        function closeLightbox() {
+            const overlay = document.getElementById('lightbox-overlay');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                document.getElementById('lightbox-img').src = '';
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+        // Event Delegation for dynamic content
+        document.getElementById('article-container').addEventListener('click', function (e) {
+            if (e.target.tagName === 'IMG') {
+                openLightbox(e.target.src);
+            }
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === "Escape") closeLightbox();
+        });
+    </script>
+    <script src="fix_text.js"></script>
 </body>
 
 </html>
-

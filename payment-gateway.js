@@ -12,7 +12,7 @@ const PaymentGateway = (function () {
     // CONFIGURATION
     // ============================================================
     // PASTE YOUR GAS WEB APP URL HERE AFTER DEPLOYMENT
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnM2gxOLNCKWz3-aftQydWzUgvwtg8PCTlBZr7ExUoTVv1zCpxzOe8LpZHDhOkAHIueg/exec";
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycby6jXE4KnXqf2-xk2j9TkneGmNE470on3HYMAWNb-r-ESQMmD1VZTxKGp7zAuAMVantTw/exec";
 
     // ============================================================
     // UTILITY FUNCTIONS
@@ -40,12 +40,12 @@ const PaymentGateway = (function () {
             const result = await response.json();
             console.log("[PaymentGateway] Response:", result);
 
-            if (result.resultCode === 0 && result.payUrl) {
-                return { success: true, payUrl: result.payUrl, data: result };
+            if ((result.resultCode === 0 && result.payUrl) || (result.resultCode === "00" && result.checkoutUrl) || (result.type === 'FORM_SUBMIT')) {
+                return { success: true, payUrl: result.payUrl || result.checkoutUrl, data: result };
             } else {
                 return {
                     success: false,
-                    message: result.message || `Lỗi MoMo: ${result.resultCode}`,
+                    message: result.message || `Lỗi: ${result.resultCode}`,
                     data: result
                 };
             }
@@ -81,31 +81,156 @@ const PaymentGateway = (function () {
                 const orderId = payload.code;
                 const cleanName = removeAccents(payload.name);
                 const orderInfo = "Ung ho quy TDP21: " + cleanName;
-                const redirectUrl = window.location.href.split('?')[0] + "?id=" + (payload.fundId || '') + "&orderId=" + orderId;
+                const redirectUrl = window.location.href.split('?')[0] + "?id=" + (payload.fundId || '') + "&orderId=" + orderId + "&gateway=momo";
 
                 const proxyPayload = {
+                    gateway: 'momo', // Explicit gateway flag
                     orderId: orderId,
                     amount: payload.amount,
                     orderInfo: orderInfo,
                     redirectUrl: redirectUrl,
-                    name: cleanName // For extra metadata
+                    name: cleanName
                 };
 
-
-                // Call API via POST (original method)
+                // Call API via POST
                 const result = await callProxyAPI(proxyPayload);
 
                 if (result.success && result.payUrl) {
                     console.log("[PaymentGateway] Redirecting to MoMo:", result.payUrl);
                     window.location.href = result.payUrl;
                 } else {
-                    console.error("[PaymentGateway] Error:", result.message);
+                    console.error("[PaymentGateway] MoMo Error:", result.message);
                     showQRCodeFallback(proxyPayload, orderId);
                 }
 
             } catch (e) {
                 console.error("[PaymentGateway] Exception:", e);
                 alert("Lỗi kết nối thanh toán: " + e.message);
+            }
+        },
+
+        /**
+         * Pay with NganLuong
+         * @param {Object} payload - { code, amount, name, fundId, email, phone }
+         */
+        payWithNganLuong: function (payload) {
+            console.log("[PaymentGateway] Initiating NganLuong Payment (Standard Redirect)...", payload);
+
+            try {
+                // CLIENT-SIDE CONFIG (Production)
+                const NL_CONFIG = {
+                    MERCHANT_ID: "69462",
+                    MERCHANT_PASSWORD: "00f29ea19b05aa00d27f377a31efe68b",
+                    RECEIVER_EMAIL: "hoangquy@imail.edu.vn",
+                    API_ENDPOINT: "https://www.nganluong.vn/checkout.php"
+                };
+
+                // Helper: Compute MD5
+                const computeMD5 = (str) => {
+                    if (typeof CryptoJS !== 'undefined') {
+                        return CryptoJS.MD5(str).toString();
+                    }
+                    console.error("CryptoJS not found!");
+                    return "";
+                };
+
+                // Prepare Parameters
+                const orderId = payload.code;
+                const amount = payload.amount.toString();
+                const cleanName = removeAccents(payload.name);
+                const orderInfo = "Ung ho quy TDP21: " + cleanName;
+                const returnUrl = window.location.href.split('?')[0] + "?id=" + (payload.fundId || '') + "&orderId=" + orderId + "&gateway=nganluong";
+                const cancelUrl = window.location.href.split('?')[0] + "?id=" + (payload.fundId || '') + "&orderId=" + orderId + "&gateway=nganluong&error_code=1006"; // 1006: Cancelled
+
+                // Standard Checkout Parameters
+                const merchant_site_code = NL_CONFIG.MERCHANT_ID;
+                const receiver = NL_CONFIG.RECEIVER_EMAIL;
+                const transaction_info = orderInfo;
+                const order_code = orderId;
+                const price = amount;
+                const currency = "vnd";
+                const quantity = "1";
+                const tax = "0";
+                const discount = "0";
+                const fee_cal = "0";
+                const fee_shipping = "0";
+                const order_description = orderInfo;
+                const buyer_info = (cleanName || "") + "*|*|*" + (payload.email || "") + "*" + (payload.phone || ""); // Format: name*|*address*|*email*mobile
+                const affiliate_code = "";
+
+                // Build checksum string 
+                // Formula: merchant_site_code + " " + return_url + " " + receiver + " " + transaction_info + " " + order_code + " " + price + " " + currency + " " + quantity + " " + tax + " " + discount + " " + fee_cal + " " + fee_shipping + " " + order_description + " " + buyer_info + " " + affiliate_code + " " + password
+                let checksumString = merchant_site_code + " " +
+                    returnUrl + " " +
+                    receiver + " " +
+                    transaction_info + " " +
+                    order_code + " " +
+                    price + " " +
+                    currency + " " +
+                    quantity + " " +
+                    tax + " " +
+                    discount + " " +
+                    fee_cal + " " +
+                    fee_shipping + " " +
+                    order_description + " " +
+                    buyer_info + " " +
+                    affiliate_code + " " +
+                    NL_CONFIG.MERCHANT_PASSWORD;
+
+                const secure_code = computeMD5(checksumString);
+
+                console.log("[NganLuong] Form Data:", { orderId, amount, returnUrl, cancelUrl });
+
+                // Create Form
+                const form = document.createElement("form");
+                form.method = "POST";
+                form.action = NL_CONFIG.API_ENDPOINT;
+
+                const params = {
+                    merchant_site_code,
+                    return_url: returnUrl,
+                    cancel_url: cancelUrl,
+                    receiver,
+                    transaction_info,
+                    order_code,
+                    price,
+                    currency,
+                    quantity,
+                    tax,
+                    discount,
+                    fee_cal,
+                    fee_shipping,
+                    order_description,
+                    buyer_info,
+                    affiliate_code,
+                    secure_code,
+                    lang: 'vi'
+                };
+
+                for (const key in params) {
+                    const input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = key;
+                    input.value = params[key];
+                    form.appendChild(input);
+                }
+                // Submit Form
+                console.log("[PaymentGateway] Submitting Form to NganLuong UI...");
+
+                // Form is already populated by the params loop above.
+                form.style.display = 'none';
+
+                document.body.appendChild(form);
+                form.submit();
+
+                // Cleanup
+                setTimeout(() => {
+                    if (document.body.contains(form)) document.body.removeChild(form);
+                }, 5000);
+
+            } catch (e) {
+                console.error("[PaymentGateway] Exception:", e);
+                alert("Lỗi kết nối thanh toán Ngân Lượng: " + e.message);
             }
         },
 
@@ -120,6 +245,7 @@ const PaymentGateway = (function () {
             if (resultCode !== null) {
                 return {
                     isReturn: true,
+                    gateway: 'momo',
                     success: resultCode === "0",
                     orderId: orderId,
                     message: params.get('message')
@@ -128,10 +254,53 @@ const PaymentGateway = (function () {
             return { isReturn: false };
         },
 
+        /**
+         * Check if returning from NganLuong
+         */
+        checkNganLuongPaymentStatus: function () {
+            const params = new URLSearchParams(window.location.search);
+            const gateway = params.get('gateway');
+            const transactionInfo = params.get('transaction_info');
+            const errorCode = params.get('error_code');
+            const orderId = params.get('orderId') || params.get('order_code');
+
+            // Check if this is a NganLuong return
+            if (gateway === 'nganluong' || transactionInfo !== null || errorCode !== null) {
+                const isCancelled = params.get('cancelled') === '1';
+                const isSuccess = errorCode === "00";
+
+                return {
+                    isReturn: true,
+                    gateway: 'nganluong',
+                    success: isSuccess && !isCancelled,
+                    orderId: orderId,
+                    transactionId: params.get('transaction_id'),
+                    message: isCancelled ? "Đã huỷ thanh toán" : (isSuccess ? "Thanh toán thành công" : "Thanh toán thất bại")
+                };
+            }
+            return { isReturn: false };
+        },
+
+        /**
+         * Check all gateway returns (unified)
+         */
+        checkAnyPaymentReturn: function () {
+            // Check MoMo first
+            const momoStatus = this.checkPaymentStatus();
+            if (momoStatus.isReturn) return momoStatus;
+
+            // Then check NganLuong
+            const nlStatus = this.checkNganLuongPaymentStatus();
+            if (nlStatus.isReturn) return nlStatus;
+
+            return { isReturn: false };
+        },
+
         getConfigInfo: function () {
             return {
                 mode: "SERVERLESS",
-                isConfigured: !GAS_WEB_APP_URL.includes('...')
+                isConfigured: !GAS_WEB_APP_URL.includes('...'),
+                supportedGateways: ['momo', 'nganluong']
             };
         }
     };
@@ -140,8 +309,8 @@ const PaymentGateway = (function () {
     // FALLBACK: QR CODE
     // ============================================================
     function showQRCodeFallback(payload, orderId) {
-        const bankId = "MB";
-        const accNo = "0904568973";
+        const bankId = "MSB";
+        const accNo = "968866975500";
         const content = `TDP21 ${orderId} ${removeAccents(payload.name)}`.toUpperCase();
         const qrUrl = `https://img.vietqr.io/image/${bankId}-${accNo}-compact2.png?amount=${payload.amount}&addInfo=${encodeURIComponent(content)}`;
 

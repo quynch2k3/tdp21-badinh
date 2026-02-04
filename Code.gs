@@ -1,7 +1,50 @@
 /**
- * MOMO PAYMENT GATEWAY - GOOGLE APPS SCRIPT PROXY
- * Ensures no CORS issues and secures the Secret Key.
+ * PAYMENT GATEWAY - GOOGLE APPS SCRIPT PROXY
+ * Supports: MoMo, NganLuong
+ * Ensures no CORS issues and secures credentials.
  */
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
+// MOMO CONFIG
+var MOMO_CONFIG = {
+  SANDBOX: {
+    PARTNER_CODE: "MOMO9LID20260123_TEST",
+    ACCESS_KEY: "vveSdoaTZmBo09ks",
+    SECRET_KEY: "zcSkh7dxPLyZXLurEVbZrTUYWz8IQIks",
+    API_ENDPOINT: "https://test-payment.momo.vn/v2/gateway/api/create"
+  },
+  PROD: {
+    PARTNER_CODE: "MOMO9LID20260123",
+    ACCESS_KEY: "vveSdoaTZmBo09ks",
+    SECRET_KEY: "zcSkh7dxPLyZXLurEVbZrTUYWz8IQIks",
+    API_ENDPOINT: "https://payment.momo.vn/v2/gateway/api/create"
+  }
+};
+
+// NGANLUONG CONFIG
+var NGANLUONG_CONFIG = {
+  SANDBOX: {
+    MERCHANT_ID: "53056",
+    MERCHANT_PASSWORD: "341f5c5467cff838ebffc8a3580c3189",
+    RECEIVER_EMAIL: "merchant_demo@nganluong.vn",
+    API_ENDPOINT: "https://sandbox.nganluong.vn/nl35/checkout.api.nganluong.post.php"
+  },
+  PROD: {
+    MERCHANT_ID: "53056", // Replace with production values
+    MERCHANT_PASSWORD: "341f5c5467cff838ebffc8a3580c3189",
+    RECEIVER_EMAIL: "merchant_demo@nganluong.vn",
+    API_ENDPOINT: "https://www.nganluong.vn/checkout.api.nganluong.post.php"
+  }
+};
+
+var ENV = 'SANDBOX'; // 'PROD' or 'SANDBOX'
+
+// ============================================================
+// MAIN HANDLER
+// ============================================================
 
 function doPost(e) {
   try {
@@ -13,82 +56,15 @@ function doPost(e) {
       data = e.parameter;
     }
     
-    // Config - KEEP SECRET_KEY HERE ONLY
-    var ENV = 'SANDBOX'; // 'PROD' or 'SANDBOX'
-    var CONFIG = {
-      SANDBOX: {
-        PARTNER_CODE: "MOMO9LID20260123_TEST",
-        ACCESS_KEY: "vveSdoaTZmBo09ks",
-        SECRET_KEY: "zcSkh7dxPLyZXLurEVbZrTUYWz8IQIks",
-        API_ENDPOINT: "https://test-payment.momo.vn/v2/gateway/api/create"
-      },
-      PROD: {
-        PARTNER_CODE: "MOMO9LID20260123",
-        ACCESS_KEY: "vveSdoaTZmBo09ks",
-        SECRET_KEY: "zcSkh7dxPLyZXLurEVbZrTUYWz8IQIks",
-        API_ENDPOINT: "https://payment.momo.vn/v2/gateway/api/create"
-      }
-    };
+    // 2. ROUTE TO APPROPRIATE GATEWAY
+    var gateway = data.gateway || 'momo';
     
-    var activeConfig = CONFIG[ENV];
+    if (gateway === 'nganluong') {
+      return handleNganLuong(data);
+    } else {
+      return handleMoMo(data);
+    }
     
-    // 2. PREPARE PARAMETERS (Strict Order for MoMo)
-    var orderId = data.orderId;
-    var requestId = data.requestId || orderId;
-    var amount = data.amount.toString();
-    var orderInfo = data.orderInfo || "Thanh toan MoMo";
-    var redirectUrl = data.redirectUrl;
-    var ipnUrl = data.ipnUrl || redirectUrl;
-    var extraData = data.extraData || "";
-    var requestType = "captureWallet";
-    
-    // 3. GENERATE SIGNATURE (Securely on Backend)
-    var rawSignature = "accessKey=" + activeConfig.ACCESS_KEY +
-                       "&amount=" + amount +
-                       "&extraData=" + extraData +
-                       "&ipnUrl=" + ipnUrl +
-                       "&orderId=" + orderId +
-                       "&orderInfo=" + orderInfo +
-                       "&partnerCode=" + activeConfig.PARTNER_CODE +
-                       "&redirectUrl=" + redirectUrl +
-                       "&requestId=" + requestId +
-                       "&requestType=" + requestType;
-                       
-    var signature = computeHmacSha256Signature(rawSignature, activeConfig.SECRET_KEY);
-    
-    // 4. CALL MOMO API
-    var requestBody = {
-        partnerCode: activeConfig.PARTNER_CODE,
-        partnerName: "To Dan Pho 21",
-        storeId: "TDP21",
-        requestId: requestId,
-        amount: amount,
-        orderId: orderId,
-        orderInfo: orderInfo,
-        redirectUrl: redirectUrl,
-        ipnUrl: ipnUrl,
-        lang: "vi",
-        requestType: requestType,
-        autoCapture: true,
-        extraData: extraData,
-        signature: signature
-    };
-    
-    var options = {
-        'method': 'post',
-        'contentType': 'application/json',
-        'payload': JSON.stringify(requestBody),
-        'muteHttpExceptions': true
-    };
-    
-    var response = UrlFetchApp.fetch(activeConfig.API_ENDPOINT, options);
-    var resultStr = response.getContentText();
-    var result = JSON.parse(resultStr);
-    
-    // 5. RETURN JSON RESPONSE TO FRONTEND
-    return ContentService.createTextOutput(JSON.stringify(result))
-                         .setMimeType(ContentService.MimeType.JSON);
-
   } catch (ex) {
     return ContentService.createTextOutput(JSON.stringify({ 
       resultCode: 99, 
@@ -96,6 +72,220 @@ function doPost(e) {
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
+
+// ============================================================
+// MOMO HANDLER
+// ============================================================
+
+function handleMoMo(data) {
+  var activeConfig = MOMO_CONFIG[ENV];
+  
+  // Prepare parameters
+  var orderId = data.orderId;
+  var requestId = data.requestId || orderId;
+  var amount = data.amount.toString();
+  var orderInfo = data.orderInfo || "Thanh toan MoMo";
+  var redirectUrl = data.redirectUrl;
+  var ipnUrl = data.ipnUrl || redirectUrl;
+  var extraData = data.extraData || "";
+  var requestType = "captureWallet";
+  
+  // Generate signature
+  var rawSignature = "accessKey=" + activeConfig.ACCESS_KEY +
+                     "&amount=" + amount +
+                     "&extraData=" + extraData +
+                     "&ipnUrl=" + ipnUrl +
+                     "&orderId=" + orderId +
+                     "&orderInfo=" + orderInfo +
+                     "&partnerCode=" + activeConfig.PARTNER_CODE +
+                     "&redirectUrl=" + redirectUrl +
+                     "&requestId=" + requestId +
+                     "&requestType=" + requestType;
+                     
+  var signature = computeHmacSha256Signature(rawSignature, activeConfig.SECRET_KEY);
+  
+  // Call MoMo API
+  var requestBody = {
+    partnerCode: activeConfig.PARTNER_CODE,
+    partnerName: "To Dan Pho 21",
+    storeId: "TDP21",
+    requestId: requestId,
+    amount: amount,
+    orderId: orderId,
+    orderInfo: orderInfo,
+    redirectUrl: redirectUrl,
+    ipnUrl: ipnUrl,
+    lang: "vi",
+    requestType: requestType,
+    autoCapture: true,
+    extraData: extraData,
+    signature: signature
+  };
+  
+  var options = {
+    'method': 'post',
+    'contentType': 'application/json',
+    'payload': JSON.stringify(requestBody),
+    'muteHttpExceptions': true
+  };
+  
+  var response = UrlFetchApp.fetch(activeConfig.API_ENDPOINT, options);
+  var result = JSON.parse(response.getContentText());
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================
+// NGANLUONG HANDLER
+// ============================================================
+
+function handleNganLuong(data) {
+  var activeConfig = NGANLUONG_CONFIG[ENV];
+  
+  // Prepare parameters
+  var orderId = data.orderId;
+  var amount = parseInt(data.amount);
+  var orderInfo = data.orderInfo || "Ung ho TDP21";
+  var returnUrl = data.redirectUrl;
+  var cancelUrl = data.cancelUrl || returnUrl;
+  var buyerName = data.buyerName || "";
+  var buyerEmail = data.buyerEmail || "";
+  var buyerPhone = data.buyerPhone || "";
+  var paymentMethod = data.paymentMethod || "ATM_ONLINE";
+  
+  // Build checksum string (MD5)
+  // Format: merchant_id + " " + receiver + " " + order_code + " " + total_amount + " " + currency + " " + return_url + " " + checksum_key
+  var checksumString = activeConfig.MERCHANT_ID + " " + 
+                       activeConfig.RECEIVER_EMAIL + " " + 
+                       orderId + " " + 
+                       amount + " " + 
+                       "vnd" + " " + 
+                       returnUrl + " " + 
+                       activeConfig.MERCHANT_PASSWORD;
+  
+  var checksum = computeMD5(checksumString);
+  
+  // RETURN FORM DATA TO CLIENT (For Browser Submit)
+  var result = {
+    success: true,
+    resultCode: 0,
+    checkoutUrl: null, // Client will submit form to API_ENDPOINT
+    type: 'FORM_SUBMIT',
+    endpoint: activeConfig.API_ENDPOINT,
+    formData: {
+      'func': 'SetExpressCheckout',
+      'version': '3.1',
+      'merchant_id': activeConfig.MERCHANT_ID,
+      'receiver_email': activeConfig.RECEIVER_EMAIL,
+      'merchant_password': computeMD5(activeConfig.MERCHANT_PASSWORD), // MD5 of pass needed in params too
+      'order_code': orderId,
+      'total_amount': amount.toString(),
+      'payment_method': paymentMethod,
+      'order_description': orderInfo,
+      'return_url': returnUrl,
+      'cancel_url': cancelUrl,
+      'buyer_fullname': buyerName,
+      'buyer_email': buyerEmail,
+      'buyer_mobile': buyerPhone,
+      'cur_code': 'vnd',
+      'lang_code': 'vi',
+      'checksum': checksum
+    }
+  };
+  
+  return ContentService.createTextOutput(JSON.stringify(result))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Parse NganLuong API Response
+ * NganLuong returns XML, we need to extract checkout_url and error_code
+ */
+function parseNganLuongResponse(responseText) {
+  try {
+    // Try JSON first (some versions return JSON)
+    if (responseText.trim().startsWith('{')) {
+      var json = JSON.parse(responseText);
+      return {
+        success: json.error_code === "00",
+        resultCode: json.error_code,
+        checkoutUrl: json.checkout_url || null,
+        token: json.token || null,
+        message: json.description || getErrorMessage(json.error_code)
+      };
+    }
+    
+    // Parse XML response
+    var errorCode = extractXmlValue(responseText, 'error_code');
+    var checkoutUrl = extractXmlValue(responseText, 'checkout_url');
+    var token = extractXmlValue(responseText, 'token');
+    var description = extractXmlValue(responseText, 'description');
+    
+    return {
+      success: errorCode === "00",
+      resultCode: errorCode,
+      checkoutUrl: checkoutUrl,
+      token: token,
+      message: description || getErrorMessage(errorCode)
+    };
+    
+  } catch (ex) {
+    return {
+      success: false,
+      resultCode: "99",
+      message: "Parse Error: " + ex.toString(),
+      rawResponse: responseText
+    };
+  }
+}
+
+/**
+ * Extract value from XML tag
+ */
+function extractXmlValue(xml, tagName) {
+  var regex = new RegExp('<' + tagName + '>([^<]*)</' + tagName + '>', 'i');
+  var match = xml.match(regex);
+  return match ? match[1] : null;
+}
+
+/**
+ * Get human-readable error message for NganLuong error codes
+ */
+function getErrorMessage(code) {
+  var messages = {
+    "00": "Thành công",
+    "01": "Merchant không được phép sử dụng phương thức này",
+    "02": "Thông tin merchant không hợp lệ",
+    "03": "Số tiền không hợp lệ",
+    "04": "Mã đơn hàng không hợp lệ",
+    "05": "Checksum không hợp lệ",
+    "06": "Phương thức thanh toán không hợp lệ",
+    "07": "Đơn hàng đã tồn tại",
+    "08": "Lỗi hệ thống NganLuong",
+    "99": "Lỗi không xác định"
+  };
+  return messages[code] || "Lỗi: " + code;
+}
+
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+
+function computeHmacSha256Signature(data, key) {
+  var byteSignature = Utilities.computeHmacSha256Signature(data, key);
+  return byteSignature.map(function(byte) {
+    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+  }).join('');
+}
+
+function computeMD5(input) {
+  var rawHash = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, input); 
+  return rawHash.map(function(byte) {
+    return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+  }).join('');
+}
+
 
 /**
  * Handle GET - Process Payment and Redirect to MoMo

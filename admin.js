@@ -1,30 +1,64 @@
 /**
  * ADMIN LOGIC - FIREBASE EDITION
- * Restored by User Request
+ * Restored & Consolidated
  */
+
+// Global State
+const paginationState = {
+    currentPage: 1,
+    itemsPerPage: 10,
+    totalItems: 0,
+    filteredRecords: []
+};
+let currentlySelectedFund = null;
+let currentDonationStatus = 'all';
 
 // --- AUTH SYSTEM ---
 
-// Check Auth State on Load
 document.addEventListener('DOMContentLoaded', async () => {
-    initEditor(); // TinyMCE
+    initEditor();
 
     firebase.auth().onAuthStateChanged((user) => {
-        if (user) {
-            // Logged in
-            onLoginSuccess(user.email);
-        } else {
-            // Not logged in -> Show Login Form
-            document.querySelector('.login-container').style.display = 'flex';
-        }
+        if (user) onLoginSuccess(user.email);
+        else document.querySelector('.login-container').style.display = 'flex';
     });
 
-    // Prevent accidental submit
-    document.addEventListener('submit', (e) => {
-        e.preventDefault();
-        console.log("Form submission prevented.");
-    });
+    document.addEventListener('submit', (e) => e.preventDefault());
 });
+
+/**
+ * UI HELPERS
+ */
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const mainContent = document.querySelector('.main-content');
+    if (!sidebar) return;
+
+    const isDesktop = window.innerWidth > 768;
+    if (isDesktop) {
+        const isCollapsed = sidebar.style.left === '-280px';
+        sidebar.style.left = isCollapsed ? '0' : '-280px';
+        if (mainContent) mainContent.style.marginLeft = isCollapsed ? 'var(--sidebar-width)' : '0';
+    } else {
+        sidebar.style.left = (sidebar.style.left === '0px') ? '-280px' : '0px';
+    }
+}
 
 async function attemptLogin() {
     let email = document.getElementById('login-input').value;
@@ -411,8 +445,7 @@ function updateDashboardStats() {
 }
 
 // 4. DONATIONS MANAGEMENT (Drill-Down Logic)
-let currentlySelectedFund = null;
-let currentDonationStatus = 'all';
+// Removed redundant declarations (moved to top)
 
 // Entry Point
 function loadDonations() {
@@ -497,7 +530,7 @@ async function selectDonationFund(fundId) {
     } catch (e) { }
 
     // Load Donations
-    refreshCurrentDonationList();
+    fetchFundDonations();
 }
 
 function backToFundList() {
@@ -505,113 +538,397 @@ function backToFundList() {
     loadDonationFundsMode();
 }
 
-function refreshCurrentDonationList() {
-    setDonationStatusFilter(currentDonationStatus); // Triggers fetch
+/**
+ * MASTER RENDERING: DONATION ROWS
+ */
+function renderDonationRows() {
+    const tbody = document.getElementById('donation-list');
+    const records = paginationState.filteredRecords;
+
+    if (!tbody) return;
+
+    if (records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center" style="padding:40px; color:#888;">Không có dữ liệu đóng góp nào.</td></tr>';
+        renderPaginationUI();
+        return;
+    }
+
+    // SLICE FOR PAGINATION
+    const start = (paginationState.currentPage - 1) * paginationState.itemsPerPage;
+    const end = start + paginationState.itemsPerPage;
+    const pageItems = records.slice(start, end);
+
+    tbody.innerHTML = pageItems.map(item => {
+        const id = item.id;
+        const isVerified = item.verified === true;
+
+        let statusBadge = `<span class="badge badge-warning"><i class="fa-solid fa-clock"></i> Chờ duyệt</span>`;
+        if (item.status === 'rejected') {
+            statusBadge = `<span class="badge" style="background:#fee2e2; color:#991b1b;"><i class="fa-solid fa-circle-xmark"></i> Từ chối</span>`;
+        } else if (isVerified) {
+            statusBadge = `<span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Đã duyệt</span>`;
+        } else if (item.status === 'hold') {
+            statusBadge = `<span class="badge" style="background:#fff7ed; color:#c2410c;"><i class="fa-solid fa-pause"></i> Tạm giữ</span>`;
+        }
+
+        return `
+        <tr id="row-${id}" style="${!isVerified ? 'background:#fffbeb;' : ''}">
+            <td style="text-align:center;"><input type="checkbox" class="don-select" value="${id}" onchange="updateDonationBulkActionState()"></td>
+            <td>
+                <div style="font-weight:bold;">${formatDateDisplay(item.timestamp).split(' ')[0]}</div>
+                <div style="font-size:11px; color:#666;">${formatTimeOnly(item.timestamp)}</div>
+            </td>
+            <td><code>${item.transactionCode || item.code || '---'}</code></td>
+            <td>
+                <div style="font-weight:600; color:#1e293b;">${item.name || 'Ẩn danh'}</div>
+                <div style="font-size:11px; color:#64748b;">${item.phone || ''} ${item.method ? `(${item.method.toUpperCase()})` : ''}</div>
+            </td>
+            <td style="color:#dc2626; font-weight:bold; font-size:14px;">${parseInt(item.amount || 0).toLocaleString('vi-VN')} đ</td>
+            <td>
+                <div style="font-size:12px; color:var(--primary-blue); font-style:italic; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${item.adminNote || ''}">
+                    ${item.adminNote || '<span style="color:#ccc;">(Trống)</span>'}
+                </div>
+            </td>
+            <td>${statusBadge}</td>
+            <td>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-secondary btn-sm" onclick="openEditDonationModal('${id}')" title="Sửa & Ghi chú" style="padding:4px 8px;"><i class="fa-solid fa-pen-to-square"></i></button>
+                    ${!isVerified ? `
+                        <button class="btn btn-success btn-sm" onclick="updateDonationStatus('${id}', 'approve')" title="Duyệt" style="padding:4px 8px;"><i class="fa-solid fa-check"></i></button>
+                        <button class="btn btn-danger btn-sm" onclick="updateDonationStatus('${id}', 'reject_no_money')" title="Từ chối" style="padding:4px 8px;"><i class="fa-solid fa-xmark"></i></button>
+                    ` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="deleteDonation('${id}')" title="Xóa" style="padding:4px 8px;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>
+        `;
+    }).join('');
+
+    renderPaginationUI();
+    updateDonationBulkActionState();
 }
 
-function setDonationStatusFilter(status) {
-    currentDonationStatus = status;
-    fetchFundDonations();
-}
 
+/**
+ * FETCH & FILTER LOGIC
+ */
 async function fetchFundDonations() {
     if (!currentlySelectedFund) return;
 
     const tbody = document.getElementById('donation-list');
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu...</td></tr>';
 
     try {
-        let query = db.collection('donations').where('fundId', '==', currentlySelectedFund);
+        let query = db.collection('donations')
+            .where('fundId', '==', currentlySelectedFund)
+            .orderBy('timestamp', 'desc');
 
-        if (currentDonationStatus === 'pending') {
-            query = query.where('verified', '==', false);
-        } else if (currentDonationStatus === 'verified') {
-            query = query.where('verified', '==', true);
+        const snap = await query.get();
+        let records = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Client-side Filter
+        if (currentDonationStatus !== 'all') {
+            const isVerified = currentDonationStatus === 'verified';
+            records = records.filter(r => r.verified === isVerified);
         }
 
-        const snapshot = await query.get();
-        let records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const payMethod = document.getElementById('filter-payment-method')?.value || 'all';
+        if (payMethod !== 'all') records = records.filter(r => r.method === payMethod);
 
-        // Sort Date Desc (Client side to avoid index hell)
-        records.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+        const dateStart = document.getElementById('filter-date-start')?.value;
+        const dateEnd = document.getElementById('filter-date-end')?.value;
+        if (dateStart) records = records.filter(r => r.timestamp >= new Date(dateStart).getTime());
+        if (dateEnd) records = records.filter(r => r.timestamp <= (new Date(dateEnd).getTime() + 86399999));
 
-        window.currentFundDonations = records; // Store for search
-        renderDonationRows(records);
+        window.currentFundDonations = records;
+        applySearchAndRender(); // Final pass
 
     } catch (e) {
         console.error("Fetch Error:", e);
-        if (e.code === 'failed-precondition') {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Lỗi Index Firebase (FundId + Status). <br> Vui lòng kiểm tra console.</td></tr>`;
-        } else {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Lỗi: ${e.message}</td></tr>`;
-        }
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Lỗi tải dữ liệu: ${e.message}</td></tr>`;
     }
-}
-
-function renderDonationRows(records) {
-    const tbody = document.getElementById('donation-list');
-
-    if (records.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:30px; color:#888;">Không có dữ liệu đóng góp nào.</td></tr>';
-        return;
-    }
-
-    tbody.innerHTML = records.map(item => `
-        <tr id="row-${item.id}" style="${!item.verified ? 'background:#fffbeb;' : ''}">
-            <td><input type="checkbox"></td>
-            <td>${formatDateDisplay(item.timestamp)} <br> <small style="color:#888;">${formatTimeOnly(item.timestamp)}</small></td>
-            <td><code>${item.transactionCode || item.code || '---'}</code></td>
-            <td style="font-weight:600;">${item.name || 'Ẩn danh'}</td>
-            <td style="color:#dc2626; font-weight:bold;">${parseInt(item.amount || 0).toLocaleString('vi-VN')} đ</td>
-            <td>
-                ${item.verified
-            ? '<span class="badge badge-success"><i class="fa-solid fa-check-circle"></i> Đã duyệt</span>'
-            : '<span class="badge badge-warning"><i class="fa-solid fa-hourglass-half"></i> Chờ duyệt</span>'}
-            </td>
-            <td>
-                ${!item.verified ? `
-                    <button class="btn btn-success btn-sm" onclick="verifyDonation('${item.id}')" title="Xác nhận"><i class="fa-solid fa-check"></i></button>
-                ` : ''}
-                <button class="btn btn-danger btn-sm" onclick="deleteDonation('${item.id}')" title="Xóa"><i class="fa-solid fa-trash"></i></button>
-            </td>
-        </tr>
-    `).join('');
 }
 
 function filterAdminDonations() {
-    const term = document.getElementById('admin-donation-search').value.toLowerCase();
-    if (!window.currentFundDonations) return;
-
-    const filtered = window.currentFundDonations.filter(item => {
-        const code = (item.transactionCode || item.code || '').toLowerCase();
-        const name = (item.name || '').toLowerCase();
-        const amt = (item.amount || '').toString();
-        return code.includes(term) || name.includes(term) || amt.includes(term);
-    });
-
-    renderDonationRows(filtered);
+    applySearchAndRender();
 }
 
-// Reuse verifyDonation and deleteDonation from before, but ensure they reload CORRECTLY
-async function verifyDonation(id) {
-    if (!confirm("Xác nhận khoản tiền này đã về tài khoản Quỹ?")) return;
+function applySearchAndRender() {
+    const term = document.getElementById('admin-donation-search')?.value.toLowerCase().trim() || '';
+    const all = window.currentFundDonations || [];
+
+    if (!term) {
+        paginationState.filteredRecords = all;
+    } else {
+        // Normalization
+        const normalize = (str) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+        const searchKey = normalize(term);
+
+        paginationState.filteredRecords = all.filter(d => {
+            return normalize(d.name).includes(searchKey) ||
+                normalize(d.code).includes(searchKey) ||
+                normalize(d.transactionCode).includes(searchKey) ||
+                normalize(d.amount?.toString()).includes(searchKey);
+        });
+    }
+
+    paginationState.currentPage = 1;
+    paginationState.totalItems = paginationState.filteredRecords.length;
+    renderDonationRows();
+}
+
+/**
+ * PAGINATION UI & LOGIC
+ */
+function renderPaginationUI() {
+    const container = document.getElementById('donation-pagination');
+    if (!container) return;
+
+    const totalPages = Math.ceil(paginationState.totalItems / paginationState.itemsPerPage);
+
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = `
+        <div class="pagination-wrapper">
+            <button class="btn btn-pagination" onclick="changePage(-1)" ${paginationState.currentPage === 1 ? 'disabled' : ''}>
+                <i class="fa-solid fa-chevron-left"></i> Trước
+            </button>
+            <span class="page-info">Trang <b>${paginationState.currentPage}</b> / ${totalPages}</span>
+            <button class="btn btn-pagination" onclick="changePage(1)" ${paginationState.currentPage === totalPages ? 'disabled' : ''}>
+                Tiếp <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+    `;
+    container.innerHTML = html;
+}
+
+function changePage(step) {
+    const totalPages = Math.ceil(paginationState.totalItems / paginationState.itemsPerPage);
+    const newPage = paginationState.currentPage + step;
+
+    if (newPage >= 1 && newPage <= totalPages) {
+        paginationState.currentPage = newPage;
+        renderDonationRows();
+        // Scroll to top of table
+        document.getElementById('donations-detail-list').scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// --- DONATION BULK ACTIONS ---
+
+function toggleSelectAllDonations(source) {
+    const checkboxes = document.querySelectorAll('.don-select');
+    checkboxes.forEach(cb => {
+        cb.checked = source.checked;
+    });
+    updateDonationBulkActionState();
+}
+
+function updateDonationBulkActionState() {
+    const selected = document.querySelectorAll('.don-select:checked');
+    const count = selected.length;
+    const toolbar = document.getElementById('bulk-donation-actions-toolbar');
+    const countDisplay = document.getElementById('selected-donation-count');
+
+    if (countDisplay) countDisplay.innerText = count;
+
+    if (toolbar) {
+        toolbar.style.display = (count > 0) ? 'flex' : 'none';
+    }
+}
+
+function clearDonationSelection() {
+    const checkboxes = document.querySelectorAll('.don-select');
+    checkboxes.forEach(cb => cb.checked = false);
+    const selectAll = document.getElementById('selectAllDonations');
+    if (selectAll) selectAll.checked = false;
+    updateDonationBulkActionState();
+}
+
+
+// --- ADVANCED TOOLS ---
+
+function openManualDonationModal() {
+    document.getElementById('m-don-name').value = '';
+    document.getElementById('m-don-amount').value = '';
+    document.getElementById('m-don-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('m-don-msg').value = '';
+    document.getElementById('m-don-note').value = 'Đã nhận trực tiếp.';
+    openModal('manual-donation-modal');
+}
+
+// --- RECALCULATE FUND TOTALS ---
+async function syncFundStats(fundId) {
+    if (!fundId) return;
     try {
-        await db.collection('donations').doc(id).update({ verified: true });
-        showToast("Đã duyệt thành công!", "success");
-        refreshCurrentDonationList();
+        const snap = await db.collection('donations')
+            .where('fundId', '==', fundId)
+            .where('verified', '==', true)
+            .get();
+
+        const donations = snap.docs.map(doc => doc.data());
+        const totalAmount = donations.reduce((sum, d) => sum + (parseInt(d.amount) || 0), 0);
+        const totalContributors = donations.length;
+
+        await db.collection('funds').doc(fundId).update({
+            currentAmount: totalAmount,
+            contributorCount: totalContributors,
+            updatedAt: new Date().toISOString()
+        });
+
+        console.log(`[Sync] Fund ${fundId} updated: ${totalAmount}đ, ${totalContributors} contributors.`);
+        return { totalAmount, totalContributors };
+    } catch (e) {
+        console.error("Sync Stats Error:", e);
+        return null;
+    }
+}
+
+async function syncAllFundsStats() {
+    if (!confirm("Bạn có muốn tính toán lại toàn bộ số liệu (Tổng tiền & Lượt đóng góp) của TẤT CẢ các quỹ dựa trên danh sách đóng góp thực tế không?")) return;
+
+    showToast("Đang đồng bộ toàn bộ dữ liệu... vui lòng chờ", "info");
+    try {
+        const snapshot = await db.collection('funds').get();
+        let count = 0;
+        for (const doc of snapshot.docs) {
+            await syncFundStats(doc.id);
+            count++;
+        }
+        showToast(`Đã đồng bộ thành công ${count} quỹ!`, "success");
+        loadFundsAdmin(); // Refresh UI
+    } catch (e) {
+        showToast("Lỗi đồng bộ: " + e.message, "error");
+    }
+}
+
+async function saveManualDonation() {
+    const name = document.getElementById('m-don-name').value;
+    const amount = parseInt(document.getElementById('m-don-amount').value);
+    const date = document.getElementById('m-don-date').value;
+    const method = document.getElementById('m-don-method').value;
+    const message = document.getElementById('m-don-msg').value;
+    const note = document.getElementById('m-don-note').value;
+
+    if (!name || isNaN(amount)) {
+        showToast("Vui lòng nhập tên và số tiền!", "error");
+        return;
+    }
+
+    try {
+        const timestamp = date ? new Date(date).getTime() : Date.now();
+        const code = "TDP21-CT" + Math.floor(Math.random() * 1000000); // Case-specific code
+
+        await db.collection('donations').add({
+            fundId: currentlySelectedFund,
+            name: name,
+            amount: amount,
+            message: message,
+            adminNote: note,
+            method: method,
+            timestamp: timestamp,
+            transactionCode: code,
+            verified: true, // Manual entries are usually verified
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        showToast("Đã lưu khoản đóng góp thủ công!", "success");
+        closeModal('manual-donation-modal');
+        fetchFundDonations();
+        syncFundStats(currentlySelectedFund); // Sync totals
+    } catch (e) {
+        console.error("Save Manual Error:", e);
+        showToast("Lỗi: " + e.message, "error");
+    }
+}
+
+/**
+ * EDIT DONATION LOGIC (OPTIMIZED)
+ */
+function openEditDonationModal(id) {
+    const record = window.currentFundDonations.find(r => r.id === id);
+    if (!record) return;
+
+    window.currentEditingDonationId = id;
+    document.getElementById('edit-donation-modal').style.display = 'flex';
+
+    document.getElementById('edit-don-name').value = record.name || '';
+    document.getElementById('edit-don-amount').value = record.amount || 0;
+    document.getElementById('edit-don-note').value = record.adminNote || '';
+    document.getElementById('edit-don-code').value = record.transactionCode || record.code || '';
+    document.getElementById('edit-don-message').value = record.message || '';
+}
+
+async function updateDonationDetail() {
+    const id = window.currentEditingDonationId;
+    if (!id) return;
+
+    const name = document.getElementById('edit-don-name').value;
+    const amount = parseInt(document.getElementById('edit-don-amount').value);
+    const adminNote = document.getElementById('edit-don-note').value;
+
+    try {
+        await db.collection('donations').doc(id).update({
+            name,
+            amount,
+            adminNote,
+            updatedAt: new Date().toISOString()
+        });
+        closeModal('edit-donation-modal');
+        showToast("Đã cập nhật thông tin đóng góp!", "success");
+        fetchFundDonations();
+        syncFundStats(currentlySelectedFund); // Sync totals
     } catch (e) {
         showToast("Lỗi: " + e.message, "error");
     }
 }
 
-// Re-declare to ensure scope logic is right
+
+function exportDonationsToCSV() {
+    if (!window.currentFundDonations || window.currentFundDonations.length === 0) {
+        showToast("Không có dữ liệu để xuất!", "warning");
+        return;
+    }
+
+    const fundName = document.getElementById('detail-fund-name').innerText;
+    let csv = "\uFEFF"; // UTF-8 BOM for Excel Vietnamese fix
+    csv += "Thời gian,Mã GD,Họ Tên,Số tiền,Lời nhắn,Ghi chú Admin,Phương thức,Trạng thái\n";
+
+    window.currentFundDonations.forEach(r => {
+        const time = formatDateDisplay(r.timestamp);
+        const code = r.transactionCode || r.code || '';
+        const name = (r.name || 'Ẩn danh').replace(/,/g, ' ');
+        const amt = r.amount || 0;
+        const msg = (r.message || '').replace(/,/g, ' ').replace(/\n/g, ' ');
+        const note = (r.adminNote || '').replace(/,/g, ' ').replace(/\n/g, ' ');
+        const method = (r.method || '').toUpperCase();
+        const status = r.verified ? "Đã duyệt" : "Chờ duyệt";
+
+        csv += `${time},${code},${name},${amt},${msg},${note},${method},${status}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Bao_cao_dong_gop_${fundName.replace(/\s+/g, '_')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    showToast("Đã bắt đầu tải file CSV!", "success");
+}
+
 async function deleteDonation(id) {
     if (!confirm("Bạn có chắc chắn muốn xóa bản ghi này?")) return;
     try {
         await db.collection('donations').doc(id).delete();
         showToast("Đã xóa bản ghi!", "success");
-        const row = document.getElementById(`row-${id}`);
-        if (row) row.remove();
+        fetchFundDonations();
     } catch (e) {
         showToast("Lỗi: " + e.message, "error");
     }
@@ -729,6 +1046,7 @@ async function openEditor(id = null) {
     document.getElementById('art-status').value = 'Published';
     document.getElementById('art-image').value = '';
     document.getElementById('art-img-preview').src = '';
+    document.getElementById('art-author').value = '';
     document.getElementById('gdoc-url').value = '';
 
     if (id) {
@@ -744,6 +1062,7 @@ async function openEditor(id = null) {
             tinymce.get('art-editor').setContent(item.content || '');
             document.getElementById('art-category').value = item.category;
             document.getElementById('art-status').value = item.status;
+            document.getElementById('art-author').value = item.author || '';
             document.getElementById('gdoc-url').value = item.doc_link || '';
 
             // Image Logic
@@ -790,6 +1109,7 @@ async function saveArticle() {
         const summaryEl = document.getElementById('art-summary');
         const imageEl = document.getElementById('art-image');
         const docEl = document.getElementById('gdoc-url');
+        const authorEl = document.getElementById('art-author');
         const dateEl = document.getElementById('art-date'); // New Date Field
 
         if (!titleEl || !categoryEl || !statusEl) {
@@ -812,6 +1132,7 @@ async function saveArticle() {
         const status = statusEl.value;
         const summary = summaryEl.value;
         const imageUrl = imageEl.value;
+        const author = authorEl ? authorEl.value : '';
         const docLink = docEl ? docEl.value.trim() : '';
 
         if (!title) return showToast("Vui lòng nhập tiêu đề!", "warning");
@@ -832,28 +1153,29 @@ async function saveArticle() {
             summary,
             doc_link: docLink,
             image: imageUrl, // Use URL directly
+            author: author
         };
 
         // Handle Date Field
         if (dateEl && dateEl.value) {
             // User selected a date
             // Append current time to make it a full ISO string (end of day or current time? Let's use current time for precision or 00:00)
-            // Better: Keep time if it was already set? 
+            // Better: Keep time if it was already set?
             // Simple approach: Use selected date at current time or 00:00.
             // Let's use Current Time's HH:mm:ss for the selected date to keep sort order relative to meaningful updates
             const timePart = new Date().toISOString().split('T')[1];
             data.date = dateEl.value + 'T' + timePart;
         } else {
-            // No date selected? 
+            // No date selected?
             if (!currentEditingId) {
                 // New article, default to now
                 data.date = new Date().toISOString();
             }
-            // If editing and cleared? Maybe keep existing. 
+            // If editing and cleared? Maybe keep existing.
             // But if specific delete is needed, that's complex. Assume empty = don't update/keep old or default to now.
         }
 
-        // Don't overwrite created date if editing? 
+        // Don't overwrite created date if editing?
         // Actually Firebase needs manual date field management compared to PB's auto created/updated.
         // For now, we update 'date' on every save or keep it?
         // Let's keep original date if editing.
@@ -1247,6 +1569,95 @@ function triggerImageUpload() {
     input.click();
 }
 
+/**
+ * Helper: Validate and Load Image
+ * Returns the usable URL (optimized or original) or throws error
+ */
+function validateGooglePhoto(url) {
+    return new Promise((resolve, reject) => {
+        let finalUrl = url;
+
+        // Try Optimize
+        if (url.includes('googleusercontent.com') && url.includes('=')) {
+            const baseUrl = url.split('=')[0];
+            finalUrl = baseUrl + '=w1920-h1080-no';
+        } else if (url.includes('googleusercontent.com')) {
+            finalUrl = url + '=w1920-h1080-no';
+        }
+
+        // Test Load
+        const img = new Image();
+        img.onload = () => resolve(finalUrl);
+        img.onerror = () => {
+            // If optimized failed, try original
+            const img2 = new Image();
+            img2.onload = () => resolve(url);
+            img2.onerror = () => reject("Không thể tải ảnh. Link có thể bị lỗi, hết hạn hoặc là ảnh riêng tư.");
+            img2.src = url;
+        };
+        img.src = finalUrl;
+    });
+}
+
+/**
+ * Handle Google Photos Direct Link
+ * Optimizes the URL for better performance and quality
+ */
+async function pasteGooglePhoto() {
+    const url = prompt("💡 HƯỚNG DẪN: \n1. Mở ảnh trên Google Photos.\n2. Chuột phải vào ảnh -> Chọn 'Copy Image Address' (Sao chép địa chỉ hình ảnh).\n3. Dán vào đây:");
+
+    if (!url) return;
+
+    // Check for common mistake: Sharing Link
+    if (url.includes('photos.app.goo.gl')) {
+        alert("❌ Lỗi: Bạn đang dùng Link Chia Sẻ.\n\nVui lòng KHÔNG copy link từ thanh địa chỉ.\nHãy chuột phải vào HIỂN THỊ CỦA ẢNH và chọn 'Copy Image Address' (Sao chép địa chỉ hình ảnh).");
+        return;
+    }
+
+    try {
+        showToast("Đang kiểm tra link ảnh...", "info");
+        const validUrl = await validateGooglePhoto(url);
+
+        const input = document.getElementById('art-image');
+        input.value = validUrl;
+        previewImageFromUrl(validUrl);
+
+        if (validUrl !== url) {
+            showToast("Đã tối ưu hóa link ảnh Google!", "success");
+        } else {
+            showToast("Link ảnh hợp lệ!", "success");
+        }
+    } catch (e) {
+        alert("❌ Lỗi: " + e + "\n\nĐảm bảo bạn đã chọn 'Copy Image Address' và ảnh có quyền truy cập.");
+    }
+}
+
+/**
+ * Insert Google Photo directly into Editor Body
+ */
+async function insertGooglePhotoToBody() {
+    const url = prompt("💡 HƯỚNG DẪN CHÈN VÀO BÀI VIẾT: \n1. Chuột phải vào ảnh trên Google Photos -> Chọn 'Copy Image Address'.\n2. Dán vào đây:");
+
+    if (!url) return;
+
+    if (url.includes('photos.app.goo.gl')) {
+        alert("❌ Lỗi: Vui lòng dùng 'Copy Image Address' (Sao chép địa chỉ hình ảnh), KHÔNG dùng link chia sẻ.");
+        return;
+    }
+
+    try {
+        showToast("Đang xử lý ảnh...", "info");
+        const validUrl = await validateGooglePhoto(url);
+
+        if (typeof tinymce !== 'undefined' && tinymce.activeEditor) {
+            tinymce.activeEditor.insertContent(`<img src="${validUrl}" alt="Ảnh minh họa" style="max-width:100%; height:auto; display:block; margin: 10px auto;" />`);
+            showToast("Đã chèn ảnh thành công!", "success");
+        }
+    } catch (e) {
+        alert("❌ Lỗi: " + e + "\n\nHãy thử lại với ảnh khác hoặc kiểm tra quyền truy cập.");
+    }
+}
+
 function removeImage(e) {
     e.stopPropagation(); // Prevent clicking box
     selectedImageFile = null;
@@ -1320,17 +1731,6 @@ function renderDashboardNews(data) {
 }
 
 // 5. SIDEBAR TOGGLE
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const main = document.querySelector('.main-content');
-
-    if (sidebar) {
-        // Toggle mobile active class
-        sidebar.classList.toggle('active');
-        // Toggle collapsed class for desktop/mobile consistency if needed
-        // sidebar.classList.toggle('collapsed');
-    }
-}
 
 
 /* --- GOOGLE DOCS IMPORT FEATURE --- */
@@ -1425,9 +1825,9 @@ async function importGoogleDoc() {
             // css = css.replace(/padding\s*:[^;}]+[;}]/gi, ''); // KEEP PADDING for lists!
 
             // Optional: Remove fixed font sizes if we want responsive text
-            // css = css.replace(/font-size\s*:[^;}]+[;}]/gi, ''); 
+            // css = css.replace(/font-size\s*:[^;}]+[;}]/gi, '');
             // Better to keep font-size for headers, but maybe strip basic paragraph size?
-            // For now, let's keep font-size as structure might rely on it, 
+            // For now, let's keep font-size as structure might rely on it,
             // but we can remove it if user complains text is too small/big.
 
             style.innerHTML = css;
@@ -1511,10 +1911,17 @@ async function loadFundsAdmin() {
         tbody.innerHTML = records.map(item => `
             <tr>
                 <td><strong>${item.title}</strong><br><small style="color:#666;">${item.id}</small></td>
-                <td><span class="badge badge-info">${getCatName(item.category)}</span></td>
+                <td>
+                    <span class="badge badge-info">${getCatName(item.category)}</span>
+                    <br>
+                    ${(item.type === 'BUDGET' || item.fundType === 'budget')
+                ? '<span class="badge badge-success" style="margin-top:4px;">💰 Ngân sách</span>'
+                : '<span class="badge badge-secondary" style="margin-top:4px;">❤️ Ủng hộ</span>'}
+                </td>
                 <td><span style="font-family:monospace; font-weight:bold; background:#f3f4f6; padding:2px 6px; border-radius:4px;">${item.code || '---'}</span></td>
                 <td>${item.isActive ? '<span style="color:green;">● Hoạt động</span>' : '<span style="color:#aaa;">○ Đã đóng</span>'}</td>
                 <td>
+                    <button class="btn btn-sm btn-info" onclick="syncFundStats('${item.id}').then(() => { showToast('Đã cập nhật số liệu!', 'success'); loadFundsAdmin(); })" title="Đồng bộ số liệu thực tế"><i class="fa-solid fa-arrows-rotate"></i></button>
                     <button class="btn btn-sm btn-secondary" onclick="editFund('${item.id}')"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn btn-sm btn-danger" onclick="deleteItem('funds', '${item.id}')"><i class="fa-solid fa-trash"></i></button>
                 </td>
@@ -1546,6 +1953,7 @@ function openFundModal() {
     document.getElementById('fund-id').value = '';
     document.getElementById('fund-title').value = '';
     document.getElementById('fund-category').value = 'ALL';
+    document.getElementById('fund-type').value = 'DONATION'; // Default
     document.getElementById('fund-code').value = '';
     document.getElementById('fund-target').value = ''; // New
     document.getElementById('fund-image').value = ''; // New
@@ -1567,6 +1975,7 @@ async function editFund(id) {
         document.getElementById('fund-id').value = id;
         document.getElementById('fund-title').value = data.title;
         document.getElementById('fund-category').value = data.category;
+        document.getElementById('fund-type').value = data.type || 'DONATION';
         document.getElementById('fund-summary').value = data.summary || '';
 
         if (tinymce.get('fund-editor')) {
@@ -1594,6 +2003,7 @@ async function editFund(id) {
 async function saveFund() {
     const title = document.getElementById('fund-title').value;
     const category = document.getElementById('fund-category').value;
+    const type = document.getElementById('fund-type').value;
     const summary = document.getElementById('fund-summary').value;
     const targetAmount = document.getElementById('fund-target').value; // New
     const image = document.getElementById('fund-image').value; // New
@@ -1604,12 +2014,24 @@ async function saveFund() {
         content = tinymce.get('fund-editor').getContent();
     }
 
-    const code = document.getElementById('fund-code').value;
+    const code = document.getElementById('fund-code').value.trim().toUpperCase().replace(/\s+/g, '');
     const contentTemplate = document.getElementById('fund-template').value;
     const isActive = document.getElementById('fund-active').checked;
 
+    // VALIDATION
     if (!title) {
         alert("Vui lòng nhập Tên quỹ!");
+        return;
+    }
+
+    if (code && !/^[A-Z0-9]+$/.test(code)) {
+        alert("Mã Tên Quỹ chỉ được chứa chữ cái không dấu và số (VD: QUY2025)!");
+        return;
+    }
+
+    const targetVal = targetAmount ? Number(targetAmount) : 0;
+    if (targetVal < 0) {
+        alert("Mục tiêu số tiền không được âm!");
         return;
     }
 
@@ -1618,8 +2040,10 @@ async function saveFund() {
         summary,
         content,
         category,
+        type,
+        fundType: type.toLowerCase(), // Save both case versions for compatibility
         code,
-        targetAmount: targetAmount ? Number(targetAmount) : 0,
+        targetAmount: targetVal,
         image,
         contentTemplate,
         isActive,
@@ -1630,6 +2054,15 @@ async function saveFund() {
         if (currentEditingFundId) {
             await db.collection('funds').doc(currentEditingFundId).update(data);
         } else {
+            // Check for duplicate code if code exists
+            if (code) {
+                const dupCheck = await db.collection('funds').where('code', '==', code).get();
+                if (!dupCheck.empty) {
+                    alert("Mã quỹ này đã tồn tại! Vui lòng chọn mã khác.");
+                    return;
+                }
+            }
+
             data.createdAt = new Date().toISOString();
             await db.collection('funds').add(data);
         }
@@ -1651,418 +2084,35 @@ loadAllData = async function () {
 };
 
 /* =========================================
-   DONATION MANAGEMENT (COMMUNITY)
-/* =========================================
-   DONATION MANAGEMENT (COMMUNITY) - REALTIME
-   ========================================= */
-let currentDonationFilter = 'pending'; // all, pending, approved, rejected
-let donationUnsubscribe = null; // Global listener reference
-
-/* LEGACY LOAD DONATIONS REMOVED - NOW HANDLING DRILL-DOWN IN loadDonations() AT TOP */
-/* 
-async function loadDonations() {
-    const list = document.getElementById('donation-list');
-    if (!list) return; 
-*/
-
-/* LEGACY CODE REMOVED successfully. */
-
-function toggleActionMenu(id) {
-    // 1. Reset ALL Dropdowns (Close & Reset Z-Index)
-    document.querySelectorAll('.dropdown-action').forEach(el => el.style.zIndex = 'auto');
-    document.querySelectorAll('.action-menu-content').forEach(el => el.style.display = 'none');
-
-    // 2. Toggle Current
-    const menu = document.getElementById(`action-menu-${id}`);
-    if (menu) {
-        // Check if it was already hidden (we just hid it above, so rely on check logic or just open it if the intent is toggle)
-        // Actually, the simple toggle logic "was open? close it" is tricky if we just forced everything closed.
-        // Better: Check if we clicked the SAME one that was open. 
-        // But since we don't track state easily, let's assume if the USER clicked, they want to OPEN it, unless it was just clicked.
-        // A simple way: add a 'showing' class or check style before hiding. 
-
-        // HOWEVER, to keep it simple and robust:
-        // If we want to toggle: We need to know if it WAS visible.
-        // But we just set display='none' above.
-        // Workaround: We can't know if it was open *after* we closed it. 
-        // So we should check *before* closing others? No, that's complex with one-click toggles.
-        // Actually, the typical UX is: Clicking a button OPENs it. Clicking it again CLOSEs it.
-        // Let's check visibility BEFORE resetting.
-
-        const isCurrentlyOpen = (menu.style.display === 'block');
-
-        // Now reset everything
-        document.querySelectorAll('.dropdown-action').forEach(el => el.style.zIndex = 'auto');
-        document.querySelectorAll('.action-menu-content').forEach(el => el.style.display = 'none');
-
-        if (!isCurrentlyOpen) {
-            // OPEN IT
-            menu.style.display = 'block';
-            if (menu.parentElement) {
-                menu.parentElement.style.zIndex = '1000'; // Bring to front
-            }
-
-            // Add Click Outside Listener
-            // Removing old listeners is hard without named function reference, but creating a new one works if it auto-removes.
-            setTimeout(() => {
-                const closeMenu = (e) => {
-                    if (!e.target.closest(`#action-menu-${id}`) && !e.target.closest(`button[onclick*="${id}"]`)) {
-                        menu.style.display = 'none';
-                        if (menu.parentElement) menu.parentElement.style.zIndex = 'auto';
-                        document.removeEventListener('click', closeMenu);
-                    }
-                };
-                document.addEventListener('click', closeMenu);
-            }, 0);
-        }
-    }
-}
-
-async function updateDonationStatus(id, action) {
-    let updateData = {};
-    let msg = "";
-
-    if (action === 'approve') {
-        if (!confirm('Xác nhận đã nhận được tiền và DUYỆT khoản đóng góp này?')) return;
-        updateData = { verified: true, status: 'approved', approvedAt: new Date().toISOString() };
-        msg = "Đã duyệt thành công!";
-    } else if (action === 'reject_no_money') {
-        if (!confirm('Xác nhận TỪ CHỐI vì chưa nhận được tiền? Khoản này sẽ bị đánh dấu Từ chối.')) return;
-        updateData = { verified: false, status: 'rejected', rejectReason: 'no_money', rejectedAt: new Date().toISOString() };
-        msg = "Đã từ chối: Chưa nhận tiền.";
-    } else if (action === 'reject_spam') {
-        if (!confirm('Đánh dấu là SPAM?')) return;
-        updateData = { verified: false, status: 'rejected', rejectReason: 'spam', rejectedAt: new Date().toISOString() };
-        msg = "Đã đánh dấu Spam.";
-    } else if (action === 'hold') {
-        updateData = { status: 'hold' }; // Still verified: false
-        msg = "Đã chuyển sang trạng thái tạm giữ.";
-    }
-
-    try {
-        await db.collection('donations').doc(id).update(updateData);
-        showToast(msg, "success");
-        // No reload needed for real-time
-    } catch (e) {
-        showToast("Lỗi: " + e.message, "error");
-    }
-}
-
-async function deleteDonation(id) {
-    if (!confirm("Bạn có chắc chắn muốn xóa vĩnh viễn khoản đóng góp này không? Hành động không thể hoàn tác.")) return;
-    try {
-        await db.collection('donations').doc(id).delete();
-        showToast("Đã xóa khoản đóng góp.", "success");
-        loadDonations(); // Reload list
-    } catch (e) {
-        showToast("Lỗi xóa: " + e.message, "error");
-    }
-}
-
-function setDonationFilter(filter) {
-    currentDonationFilter = filter;
-    // Update active button UI
-    document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
-    // Assuming buttons have ids or logic to add active class, simpler to just re-render for now or add IDs later.
-    // For now status buttons in HTML should call this.
-    loadDonations();
-}
-
-// Helper to Render
-function renderAdminDonationsTable(donations) {
-    const list = document.getElementById('donation-list');
-    if (!list) return;
-
-    let html = '';
-    donations.forEach(d => {
-        const id = d.id;
-
-        // 1. FILTER & SEARCH COMBINED LOGIC
-        // Normalization Helper (Same as CMS)
-        const normalize = (str) => {
-            if (!str) return '';
-            const noAccents = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D");
-            return noAccents.toLowerCase().replace(/[^a-z0-9]/g, '');
-        };
-
-        const rawSearchTerm = window.adminSearchTerm ? window.adminSearchTerm.trim() : '';
-        const searchKey = normalize(rawSearchTerm);
-        const searchKeyOriginal = rawSearchTerm.toLowerCase();
-
-        // LOGIC: If Searching -> Search Global (Ignore Tab Filter). If Not Searching -> Apply Tab Filter.
-        if (searchKey) {
-            // SEARCH MODE
-            const normName = normalize(d.name);
-            const normCode = normalize(d.code);
-            const normAmount = normalize(d.amount?.toString());
-
-            // Loose Match on original for simpler terms, Strict on Normalized for codes/complex
-            const isMatch = (normName.includes(searchKey)) ||
-                (normCode.includes(searchKey)) ||
-                (normAmount.includes(searchKey)) ||
-                (d.name && d.name.toLowerCase().includes(searchKeyOriginal));
-
-            if (!isMatch) return; // Skip if not matching
-
-        } else {
-            // FILTER MODE (Tabs)
-            if (currentDonationFilter === 'pending' && (d.verified || d.status === 'rejected')) return;
-            if (currentDonationFilter === 'approved' && !d.verified) return;
-        }
-
-        // Status Badge Logic
-        let statusBadge = '<span class="status-pill status-pending"><i class="fa-solid fa-clock"></i> Chờ duyệt</span>';
-        if (d.status === 'rejected') {
-            statusBadge = '<span class="status-pill status-inactive" style="background:#fee2e2; color:#991b1b;"><i class="fa-solid fa-circle-xmark"></i> Đã từ chối</span>';
-        } else if (d.verified) {
-            statusBadge = '<span class="status-pill status-active"><i class="fa-solid fa-circle-check"></i> Đã duyệt</span>';
-        } else if (d.status === 'hold') {
-            statusBadge = '<span class="status-pill status-warning" style="background:#fff7ed; color:#c2410c;"><i class="fa-solid fa-pause"></i> Tạm giữ</span>';
-        }
-
-        let rowClass = "";
-        if (window.newDonationIds && window.newDonationIds.has(id)) {
-            rowClass = "fresh-row";
-        }
-
-        // ACTION BUTTONS LOGIC
-        // 1. Primary: Approve/Reject (Quick Access for Pending)
-        let primaryActions = '';
-        if (!d.verified && d.status !== 'rejected') {
-            primaryActions = `
-                <button onclick="updateDonationStatus('${id}', 'approve')" class="btn btn-sm btn-success" title="Duyệt ngay" style="width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center;"><i class="fa-solid fa-check"></i></button>
-                <button onclick="updateDonationStatus('${id}', 'reject_no_money')" class="btn btn-sm btn-danger" title="Từ chối" style="width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center;"><i class="fa-solid fa-xmark"></i></button>
-            `;
-        }
-
-        html += `
-        <tr id="donation-${id}" class="${rowClass}">
-            <td style="text-align:center;"><input type="checkbox" class="donation-checkbox" value="${id}" onchange="checkSelection()" style="transform:scale(1.2); cursor:pointer;"></td>
-            <td>
-                <div style="font-size:13px; font-weight:bold; color:#334155;">${new Date(d.timestamp).toLocaleTimeString('vi-VN')}</div>
-                <div style="font-size:11px; color:#64748b;">${new Date(d.timestamp).toLocaleDateString('vi-VN')}</div>
-            </td>
-            <td style="text-align:center;">
-                <span style="font-family:monospace; font-weight:bold; color:#d97706; background:#fff7ed; padding:3px 8px; border-radius:4px; border:1px solid #ffedd5;">
-                    ${d.code || '---'}
-                </span>
-            </td>
-            <td>
-                <div style="font-weight:bold; color:#1e293b;">${d.name || 'Ẩn danh'}</div>
-                ${d.message ? `<div style="font-size:11px; color:#64748b; font-style:italic; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">"${d.message}"</div>` : ''}
-                ${d.bankCode ? `<div style="font-size:10px; color:#0e7490; margin-top:2px;"><i class="fa-solid fa-university"></i> ${d.bankCode}</div>` : ''}
-            </td>
-            <td style="font-weight:bold; color:#dc2626; font-size:14px;">${parseInt(d.amount).toLocaleString('vi-VN')} đ</td>
-            <td style="font-size:13px; color:#475569;">${d.fundTitle || 'Chiến dịch chung'}</td>
-            <td>${statusBadge}</td>
-            <td>
-                <div style="display:flex; gap:6px; align-items:center;">
-                    ${primaryActions}
-                    <div class="dropdown-action" style="position:relative;">
-                        <button onclick="toggleActionMenu(this, '${id}', ${d.verified}, '${d.status}')" class="btn btn-sm btn-light" style="color:#64748b; border:1px solid #e2e8f0; width:32px; height:32px; padding:0; display:inline-flex; align-items:center; justify-content:center;"><i class="fa-solid fa-ellipsis-vertical"></i></button>
-                    </div>
-                </div>
-            </td>
-        </tr>
-        `;
-    });
-
-    if (html === '') {
-        html = '<tr><td colspan="8" style="padding:40px; text-align:center; color:#94a3b8;">Không tìm thấy kết quả phù hợp.</td></tr>';
-    }
-
-    list.innerHTML = html;
-    checkSelection();
-}
-
-// 2. GLOBAL FLOATING MENU (PORTAL PATTERN)
-// 2. GLOBAL FLOATING MENU (PORTAL PATTERN)
-function toggleActionMenu(btn, id, verified, status) {
-    console.log('toggleActionMenu CLICKED', id, verified, status);
-
-    // Close existing
-    const existing = document.getElementById('global-admin-menu');
-    if (existing) existing.remove();
-
-    // Create Menu Element
-    const menu = document.createElement('div');
-    menu.id = 'global-admin-menu';
-    menu.style.position = 'fixed';
-    menu.style.background = '#ffffff';
-    menu.style.border = '1px solid #e2e8f0';
-    menu.style.borderRadius = '8px';
-    menu.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)';
-    menu.style.zIndex = '999999';
-    menu.style.minWidth = '200px';
-    menu.style.overflow = 'hidden';
-    menu.style.opacity = '1';
-    menu.style.transform = 'translateY(0) scale(1)';
-    menu.style.padding = '5px';
-
-    // Define Content
-    let content = '';
-    if (verified) {
-        content = `
-            <a href="javascript:void(0)" onclick="updateDonationStatus('${id}', 'hold'); closeGlobalMenu()" style="display:flex; align-items:center; gap:10px; padding:10px 12px; color:#d97706; text-decoration:none; font-size:13px; border-radius:6px; transition:background 0.1s;"><i class="fa-solid fa-rotate-left" style="width:16px;"></i> Hoàn tác (Treo lại)</a>
-            <a href="javascript:void(0)" onclick="deleteDonation('${id}'); closeGlobalMenu()" style="display:flex; align-items:center; gap:10px; padding:10px 12px; color:#ef4444; text-decoration:none; font-size:13px; border-radius:6px; transition:background 0.1s;"><i class="fa-solid fa-trash" style="width:16px;"></i> Xóa dữ liệu</a>
-        `;
-    } else {
-        content = `
-            <a href="javascript:void(0)" onclick="updateDonationStatus('${id}', 'approve'); closeGlobalMenu()" style="display:flex; align-items:center; gap:10px; padding:10px 12px; color:#16a34a; text-decoration:none; font-size:13px; border-radius:6px; transition:background 0.1s;"><i class="fa-solid fa-check" style="width:16px;"></i> Duyệt ngay</a>
-            <a href="javascript:void(0)" onclick="updateDonationStatus('${id}', 'reject_spam'); closeGlobalMenu()" style="display:flex; align-items:center; gap:10px; padding:10px 12px; color:#64748b; text-decoration:none; font-size:13px; border-radius:6px; transition:background 0.1s;"><i class="fa-solid fa-ban" style="width:16px;"></i> Đánh dấu Spam</a>
-            <a href="javascript:void(0)" onclick="updateDonationStatus('${id}', 'hold'); closeGlobalMenu()" style="display:flex; align-items:center; gap:10px; padding:10px 12px; color:#d97706; text-decoration:none; font-size:13px; border-radius:6px; transition:background 0.1s;"><i class="fa-solid fa-clock" style="width:16px;"></i> Treo / Tạm giữ</a>
-            <div style="height:1px; background:#f1f5f9; margin:4px 0;"></div>
-            <a href="javascript:void(0)" onclick="deleteDonation('${id}'); closeGlobalMenu()" style="display:flex; align-items:center; gap:10px; padding:10px 12px; color:#ef4444; text-decoration:none; font-size:13px; border-radius:6px; transition:background 0.1s;"><i class="fa-solid fa-trash" style="width:16px;"></i> Xóa vĩnh viễn</a>
-        `;
-    }
-
-    menu.innerHTML = content;
-    document.body.appendChild(menu);
-
-    // Hover Effect via JS
-    const links = menu.querySelectorAll('a');
-    links.forEach(a => {
-        a.onmouseenter = () => a.style.background = '#f8fafc';
-        a.onmouseleave = () => a.style.background = 'transparent';
-    });
-
-    // Positioning logic
-    if (btn && btn.getBoundingClientRect) {
-        const rect = btn.getBoundingClientRect();
-        const menuWidth = 200;
-
-        let left = rect.right - menuWidth;
-        let top = rect.bottom + 5;
-
-        if (left < 10) left = 10;
-        if (top + 200 > window.innerHeight) {
-            top = rect.top - 200;
-        }
-
-        menu.style.left = left + 'px';
-        menu.style.top = top + 'px';
-        console.log('Menu appended at', left, top);
-    } else {
-        console.error('Button element missing in toggleActionMenu');
-    }
-
-    // Click Outside
-    setTimeout(() => {
-        document.addEventListener('click', closeGlobalMenu);
-        document.addEventListener('scroll', closeGlobalMenu, true);
-    }, 100);
-}
-
-function closeGlobalMenu() {
-    const existing = document.getElementById('global-admin-menu');
-    if (existing) {
-        existing.style.opacity = '0';
-        existing.style.transform = 'translateY(5px) scale(0.95)';
-        setTimeout(() => existing.remove(), 200);
-    }
-    document.removeEventListener('click', closeGlobalMenu);
-    document.removeEventListener('scroll', closeGlobalMenu, true);
-}
-function toggleSelectAll(source) {
-    const checkboxes = document.querySelectorAll('.donation-checkbox');
-    checkboxes.forEach(cb => cb.checked = source.checked);
-    checkSelection();
-}
-
-function checkSelection() {
-    const selected = document.querySelectorAll('.donation-checkbox:checked');
-    const bulkDiv = document.getElementById('bulk-actions');
-    if (bulkDiv) {
-        bulkDiv.style.display = selected.length > 0 ? 'flex' : 'none';
-    }
-}
-
-async function bulkDonationAction(action) {
-    const selected = Array.from(document.querySelectorAll('.donation-checkbox:checked')).map(cb => cb.value);
-    if (selected.length === 0) return;
-
-    if (!confirm(`Bạn có chắc muốn thực hiện hành động này với ${selected.length} mục đã chọn ? `)) return;
-
-    showToast(`Đang xử lý ${selected.length} mục...`, "info");
-    const promises = selected.map(id => {
-        if (action === 'delete') return db.collection('donations').doc(id).delete();
-        if (action === 'approve') return db.collection('donations').doc(id).update({ verified: true, status: 'approved' });
-    });
-
-    try {
-        await Promise.all(promises);
-        showToast("Xử lý hàng loạt thành công!", "success");
-        // No need to reload manual if onSnapshot is active, but forcing re-render clears checks
-        const selectAll = document.querySelector('thead input[type="checkbox"]');
-        if (selectAll) selectAll.checked = false;
-        // Selection clears on re-render
-    } catch (e) {
-        showToast("Lỗi xử lý: " + e.message, "error");
-    }
-}
-
-function filterAdminDonations() {
-    const input = document.getElementById('admin-donation-search');
-    window.adminSearchTerm = input ? input.value : '';
-    console.log("Searching:", window.adminSearchTerm);
-    if (window.allAdminDonations) {
-        renderAdminDonationsTable(window.allAdminDonations);
-    }
-}
-
-// Override specifically the button clicks if needed
-window.filterDonations = function (type) {
-    currentDonationFilter = type;
-    if (window.allAdminDonations) {
-        renderAdminDonationsTable(window.allAdminDonations);
-    }
-};
-
-/* =========================================
    SECURE & USER MANAGEMENT
    ========================================= */
 
 // 1. FORGOT PASSWORD
 function toggleResetUI() {
-    const loginUI = document.querySelector('.login-header').nextElementSibling; // The input-groups
+    const bodies = document.querySelectorAll('.login-body');
     const resetUI = document.getElementById('reset-ui');
+    if (!bodies[0] || !resetUI) return;
 
-    // Toggle visibility logic
     if (resetUI.style.display === 'none') {
-        // Show Reset
-        // We need to hide the normal login body (which doesn't have an ID, so we might need to be specific)
-        // Actually, let's just use the classes since I didn't add an ID to the main login body in the replace.
-        // Workaround: Hide the inputs and button via DOM traversal or add a style rule.
-        // Inspecting admin.html again: The main login body has class "login-body". The reset has class "login-body" and ID "reset-ui".
-        // Use querySelectorAll to find all "login-body".
-        const bodies = document.querySelectorAll('.login-body');
-        bodies[0].style.display = 'none'; // The first one is the login form
+        bodies[0].style.display = 'none';
         resetUI.style.display = 'block';
     } else {
-        // Show Login
-        const bodies = document.querySelectorAll('.login-body');
         bodies[0].style.display = 'block';
         resetUI.style.display = 'none';
     }
 }
 
 async function sendResetEmail() {
-    const email = document.getElementById('reset-email').value;
+    const email = document.getElementById('reset-email')?.value;
     const msg = document.getElementById('reset-msg');
-
-    if (!email) {
-        msg.innerText = "Vui lòng nhập Email!";
-        return;
-    }
+    if (!email || !msg) return;
 
     msg.innerText = "Đang gửi yêu cầu...";
-
     try {
         await firebase.auth().sendPasswordResetEmail(email);
         msg.style.color = 'lightgreen';
-        msg.innerText = "Đã gửi link khôi phục! Vui lòng kiểm tra Email.";
+        msg.innerText = "Đã gửi link khôi phục! Kiểm tra Email.";
     } catch (e) {
-        console.error(e);
         msg.style.color = '#fca5a5';
         msg.innerText = "Lỗi: " + e.message;
     }
@@ -2074,7 +2124,6 @@ async function loadUsers() {
     if (!list) return;
 
     list.innerHTML = '<tr><td colspan="5" style="text-align:center;">Đang tải...</td></tr>';
-
     try {
         const snapshot = await db.collection('users').get();
         if (snapshot.empty) {
@@ -2086,8 +2135,6 @@ async function loadUsers() {
         snapshot.forEach(doc => {
             const u = doc.data();
             const id = doc.id;
-
-            // Avatar display logic
             const avatarUrl = u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name)}&background=random&color=fff`;
 
             html += `
@@ -2115,123 +2162,19 @@ async function loadUsers() {
             </tr>
             `;
         });
-
         list.innerHTML = html;
-
     } catch (e) {
-        console.error(e);
         list.innerHTML = '<tr><td colspan="5" style="color:red; text-align:center;">Lỗi tải: ' + e.message + '</td></tr>';
     }
 }
 
-function openUserModal() {
-    window.currentEditingUserId = null;
-    document.getElementById('user-modal').style.display = 'flex';
-    document.getElementById('user-modal-title').innerText = "Thêm Thành Viên";
-    // Clear form
-    document.getElementById('u-name').value = "";
-    document.getElementById('u-email').value = "";
-    document.getElementById('u-role').value = "";
-    document.getElementById('u-phone').value = "";
-    document.getElementById('u-avatar').value = "";
-    document.getElementById('u-active').checked = true;
-}
-
-function editUser(id, name, email, role, active, phone, avatar) {
-    window.currentEditingUserId = id;
-    document.getElementById('user-modal').style.display = 'flex';
-    document.getElementById('user-modal-title').innerText = "Sửa Thành Viên";
-
-    document.getElementById('u-name').value = name;
-    document.getElementById('u-email').value = email;
-    document.getElementById('u-role').value = role;
-    document.getElementById('u-phone').value = phone || "";
-    document.getElementById('u-avatar').value = avatar || "";
-    document.getElementById('u-active').checked = active;
-}
-
-function closeUserModal() {
-    document.getElementById('user-modal').style.display = 'none';
-}
-
-async function saveUser() {
-    const name = document.getElementById('u-name').value;
-    const email = document.getElementById('u-email').value;
-    const role = document.getElementById('u-role').value;
-    const phone = document.getElementById('u-phone').value;
-    const avatar = document.getElementById('u-avatar').value;
-    const active = document.getElementById('u-active').checked;
-
-    if (!name || !email) {
-        alert("Vui lòng nhập Tên và Email!");
-        return;
-    }
-
-    const data = {
-        name,
-        email,
-        role,
-        phone,
-        avatar,
-        active,
-        updatedAt: new Date().toISOString()
-    };
-
-    try {
-        if (window.currentEditingUserId) {
-            await db.collection('users').doc(window.currentEditingUserId).update(data);
-            showToast("Đã cập nhật thành viên!", "success");
-        } else {
-            data.createdAt = new Date().toISOString();
-            await db.collection('users').add(data);
-            showToast("Đã thêm thành viên mới!", "success");
-        }
-        closeUserModal();
-        loadUsers();
-    } catch (e) {
-        showToast("Lỗi lưu: " + e.message, "error");
-    }
-}
-
-async function deleteUser(id) {
-    if (!confirm("Xóa thành viên này khỏi danh sách quản lý?")) return;
-    try {
-        await db.collection('users').doc(id).delete();
-        showToast("Đã xóa thành viên.", "success");
-        loadUsers();
-    } catch (e) {
-        showToast("Lỗi: " + e.message, "error");
-    }
-}
-
-async function sendPasswordResetForUser() {
-    const email = document.getElementById('u-email').value;
-    if (!email) {
-        alert("Vui lòng nhập Email trước!");
-        return;
-    }
-    if (!confirm("Gửi link đổi mật khẩu đến: " + email + "?")) return;
-
-    try {
-        await firebase.auth().sendPasswordResetEmail(email);
-        alert("Đã gửi email thành công!");
-    } catch (e) {
-        alert("Lỗi: " + e.message);
-    }
-}
-
-// 3. HEADER & PROFILE LOGIC
+// 3. PROFILE & UI
 function toggleProfileMenu() {
     const menu = document.getElementById('profile-menu');
-    if (menu.style.display === 'block') {
-        menu.style.display = 'none';
-    } else {
-        menu.style.display = 'block';
-    }
+    if (menu) menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
 }
 
-// Close menu if clicked outside
-window.addEventListener('click', function (e) {
+window.addEventListener('click', (e) => {
     const avatar = document.getElementById('header-avatar');
     const menu = document.getElementById('profile-menu');
     if (avatar && menu && !avatar.contains(e.target) && !menu.contains(e.target)) {
@@ -2239,251 +2182,91 @@ window.addEventListener('click', function (e) {
     }
 });
 
-async function openMyProfile() {
-    const currentUser = firebase.auth().currentUser;
-    if (!currentUser) return;
-
-    // Check if user exists in 'users' collection by email to get extra data
-    let userData = {
-        name: currentUser.displayName || "Admin",
-        email: currentUser.email,
-        role: "admin"
-    };
-    let docId = null;
-
-    try {
-        const snapshot = await db.collection('users').where('email', '==', currentUser.email).limit(1).get();
-        if (!snapshot.empty) {
-            const d = snapshot.docs[0];
-            userData = d.data();
-            docId = d.id;
-        }
-    } catch (e) {
-        console.log("Profile fetch error", e);
-    }
-
-    // Reuse existing modal
-    toggleProfileMenu(); // Close dropdown
-    editUser(docId, userData.name, userData.email, userData.role, true, userData.phone, userData.avatar);
-    document.getElementById('user-modal-title').innerText = "Hồ sơ của tôi";
-}
-
-// 4. HELPERS
 function formatRole(role) {
-    if (role === 'admin') return 'Quản Trị Viên';
-    if (role === 'moderator') return 'Cán Bộ Xác Minh';
-    if (role === 'editor') return 'Ban Biên Tập';
-    return 'Thành viên';
+    const map = { admin: 'Quản Trị Viên', moderator: 'Cán Bộ Xác Minh', editor: 'Ban Biên Tập' };
+    return map[role] || 'Thành viên';
 }
 
-// 5. SIDEBAR TOGGLE
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const mainContent = document.querySelector('.main-content');
-
-    // Check screen size
-    const isDesktop = window.innerWidth > 768;
-
-    if (sidebar) {
-        if (isDesktop) {
-            // Desktop: Toggle collapsed class or change width
-            if (sidebar.style.left === '-280px') {
-                sidebar.style.left = '0';
-                if (mainContent) mainContent.style.marginLeft = 'var(--sidebar-width)';
-            } else {
-                sidebar.style.left = '-280px';
-                if (mainContent) mainContent.style.marginLeft = '0';
-            }
-        } else {
-            // Mobile: Slide in/out
-            if (sidebar.style.left === '0px') {
-                sidebar.style.left = '-280px';
-            } else {
-                sidebar.style.left = '0px';
-            }
-        }
-    }
-}
-
-// --- PUBLIC FEED PREVIEW LOGIC ---
-
-// Helper: Time Ago (Matched to Public Site)
-function formatTimeAgo(isoString) {
-    if (!isoString) return '';
-    const date = new Date(isoString);
-    const now = new Date();
-    const diffSeconds = Math.floor((now - date) / 1000);
-
-    if (diffSeconds < 60) return "Vừa xong";
-    const diffMinutes = Math.floor(diffSeconds / 60);
-    if (diffMinutes < 60) return `${diffMinutes} phút trước`;
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} giờ trước`;
-    const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays} ngày trước`;
-
-    return date.toLocaleDateString('vi-VN');
-}
-
-// Render Feed
-function renderAdminDonationFeed(donations) {
-    const feedContainer = document.getElementById('admin-donation-feed');
-    const countLabel = document.getElementById('feed-count');
-
-    if (!feedContainer) return;
-
-    // Filter Logic for Feed (Show Verified OR Pending/Hold, hide Rejected)
-    const displayList = donations.filter(d => d.verified || (!d.verified && d.status !== 'rejected'));
-
-    if (countLabel) countLabel.innerText = `${displayList.length} hiển thị`;
-
-    if (displayList.length === 0) {
-        feedContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#999; font-size:13px;">Chưa có dữ liệu hiển thị</div>';
-        return;
-    }
-
-    feedContainer.innerHTML = displayList.map(d => `
-        <div class="contributor-item">
-            <div style="text-align: left;">
-                <div style="font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 3px; display:flex; align-items:center; gap:5px;">
-                     <span style="background:#f1f5f9; padding:2px 6px; border-radius:4px; border:1px solid #e2e8f0;">
-                        <i class="fa-solid fa-hashtag" style="color:#d97706; font-size:10px;"></i> ${d.code || '---'}
-                    </span>
-                </div>
-                <div class="contributor-name">
-                    ${d.isAnonymous ? 'Nhà hảo tâm (Ẩn danh)' : (d.name || 'Ẩn danh')}
-                    ${d.verified
-            ? '<i class="fa-solid fa-circle-check" style="color:#16a34a; margin-left:4px;" title="Đã xác minh"></i>'
-            : '<i class="fa-regular fa-clock" style="color:#f59e0b; margin-left:4px;" title="Đang chờ"></i>'}
-                </div>
-                <div class="contributor-time">${formatTimeAgo(d.timestamp)}</div>
-            </div>
-            <div class="contributor-amount">
-                ${parseInt(d.amount).toLocaleString('vi-VN')} đ
-            </div>
-        </div>
-    `).join('');
-}
-
-// Filter Feed (Client Side)
-function filterAdminFeed(term) {
-    const rawTerm = term ? term.trim().toLowerCase() : '';
-    const all = window.allDonations || []; // Ensure loadDonations saves this
-
-    if (!rawTerm) {
-        renderAdminDonationFeed(all);
-        return;
-    }
-
-    // Simple normalization as requested before
-    const normalize = (str) => {
-        if (!str) return '';
-        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .replace(/[\s\-\.]/g, '');
-    };
-
-    const searchKey = normalize(rawTerm);
-    const searchKeyOriginal = rawTerm;
-
-    const filtered = all.filter(d => {
-        const normName = normalize(d.name);
-        const normCode = normalize(d.code);
-        const normAmount = normalize(d.amount?.toString());
-
-        return (normName.includes(searchKey)) ||
-            (normCode.includes(searchKey)) ||
-            (normAmount.includes(searchKey)) ||
-            (d.name && d.name.toLowerCase().includes(searchKeyOriginal));
-    });
-
-    renderAdminDonationFeed(filtered);
-}
-
-// -- DROPDOWN HELPER --
-function toggleActionMenu(id) {
-    const menu = document.getElementById(`action-menu-${id}`);
-    const allMenus = document.querySelectorAll('.action-menu-content');
-
-    // Close others
-    allMenus.forEach(el => {
-        if (el.id !== `action-menu-${id}`) {
-            el.style.display = 'none';
-        }
-    });
-
-    if (menu) {
-        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-    }
-}
-
-// Close Dropdowns on outside click
-window.addEventListener('click', function (e) {
-    if (!e.target.closest('.dropdown-action')) {
-        document.querySelectorAll('.action-menu-content').forEach(el => {
-            el.style.display = 'none';
-        });
-    }
-});
-
-
-
-
-
-// Don't remove existing code, just append
+/**
+ * CONSOLIDATED STATUS UPDATE
+ */
 window.updateDonationStatus = async function (id, action) {
-    let status = 'pending';
-    let verified = false;
-    let note = ''; // Public Note
+    let status = 'approved';
+    let verified = true;
+    let defaultNote = '';
 
-    // MAP ACTION TO STATUS
-    if (action === 'approve') {
-        status = 'approved';
-        verified = true;
-    } else if (action === 'reject_no_money') {
+    if (action === 'reject_no_money') {
+        if (!confirm('Xác nhận TỪ CHỐI vì chưa nhận được tiền?')) return;
         status = 'rejected';
         verified = false;
+        defaultNote = 'Chưa nhận được tiền';
     } else if (action === 'reject_spam') {
+        if (!confirm('Đánh dấu là SPAM?')) return;
         status = 'rejected';
         verified = false;
+        defaultNote = 'Spam / Không hợp lệ';
+    } else if (action === 'approve') {
+        if (!confirm('Xác nhận đã nhận tiền và DUYỆT khoản này?')) return;
     } else if (action === 'hold') {
         status = 'hold';
         verified = false;
     }
 
-    // PROMPT FOR NOTE (Optional or Required based on action?)
-    // User requested "Show note for rejected/spam".
-    // We will ask for note for ALL non-pending actions to be safe, or at least for Rejections.
-    // "Ở trên trang admin mục đấy cũng hiện thêm 1 tuỳ chọn để quản trị có thể nhập phụ chú"
-
-    let defaultNote = '';
-    if (action === 'reject_no_money') defaultNote = 'Chưa nhận được tiền';
-    if (action === 'reject_spam') defaultNote = 'Spam / Không hợp lệ';
-
-    const userNote = prompt("Nhập ghi chú công khai (nếu có):", defaultNote);
-    if (userNote === null) return; // Cancelled
-    note = userNote;
+    const userNote = prompt("Nhập ghi chú công khai:", defaultNote);
+    if (userNote === null) return;
 
     try {
-        const updateData = {
+        await db.collection('donations').doc(id).update({
             status: status,
             verified: verified,
-            note: note, // Save the note
+            adminNote: userNote,
             updatedAt: new Date().toISOString()
-        };
-
-        // If specific rejection reasons needed for internal logic (optional)
-        if (action === 'reject_no_money') updateData.rejectReason = 'no_money';
-        if (action === 'reject_spam') updateData.rejectReason = 'spam';
-
-        await db.collection('donations').doc(id).update(updateData);
-
-        showToast("Đã cập nhật trạng thái & ghi chú!", "success");
-        // Reload
-        if (typeof loadDonations === 'function') loadDonations(currentDonationFilter || 'all');
-
+        });
+        showToast("Đã cập nhật trạng thái!", "success");
+        fetchFundDonations();
+        syncFundStats(currentlySelectedFund); // Sync totals
     } catch (e) {
-        console.error(e);
-        showToast("Lỗi cập nhật: " + e.message, "error");
+        showToast("Lỗi: " + e.message, "error");
     }
 };
+
+/**
+ * BULK ACTIONS
+ */
+async function bulkVerifyDonations() {
+    const selected = Array.from(document.querySelectorAll('.don-select:checked')).map(cb => cb.value);
+    if (selected.length === 0) return;
+    if (!confirm(`Duyệt ${selected.length} mục đã chọn?`)) return;
+
+    showToast(`Đang duyệt...`, "info");
+    try {
+        const batch = db.batch();
+        selected.forEach(id => {
+            batch.update(db.collection('donations').doc(id), { verified: true, status: 'approved' });
+        });
+        await batch.commit();
+        showToast("Đã duyệt xong!", "success");
+        fetchFundDonations();
+    } catch (e) {
+        showToast("Lỗi: " + e.message, "error");
+    }
+}
+
+async function bulkDeleteDonations() {
+    const selected = Array.from(document.querySelectorAll('.don-select:checked')).map(cb => cb.value);
+    if (selected.length === 0) return;
+    if (!confirm(`XÓA VĨNH VIỄN ${selected.length} mục?`)) return;
+
+    showToast(`Đang xóa...`, "info");
+    try {
+        const batch = db.batch();
+        selected.forEach(id => {
+            batch.delete(db.collection('donations').doc(id));
+        });
+        await batch.commit();
+        showToast("Đã xóa xong!", "success");
+        fetchFundDonations();
+    } catch (e) {
+        showToast("Lỗi: " + e.message, "error");
+    }
+}

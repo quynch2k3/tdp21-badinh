@@ -167,6 +167,7 @@
             <div class="menu-item" onclick="switchView('view-users', this)">
                 <i class="fa-solid fa-users-gear"></i> <span>Quản lý thành viên</span>
             </div>
+
             <li class="nav-separator"></li>
             <li><a href="index.html" target="_blank"><i class="fa-solid fa-external-link-alt"></i> Xem Trang Chủ</a>
             </li>
@@ -460,6 +461,9 @@
                     <h3 style="margin:0;" id="editor-heading">Soạn Thảo Bài Viết</h3>
                 </div>
                 <div style="display:flex; gap:10px;">
+                    <button type="button" class="btn btn-outline-primary" onclick="insertGooglePhotoToBody()"
+                        title="Chèn ảnh Google Photos vào bài viết"><i class="fa-brands fa-google"></i> Chèn
+                        Ảnh</button>
                     <button type="button" class="btn btn-info" onclick="autoTranslate()"
                         title="Dịch tự động sang Tiếng Anh chuẩn"><i class="fa-solid fa-language"></i> Dịch & Chuẩn
                         Hóa</button>
@@ -630,9 +634,15 @@
                             <img id="art-img-preview" class="image-upload-preview">
                             <div class="remove-img-btn" onclick="removeImage(event)">&times;</div>
                         </div>
-                        <input type="text" id="art-image" class="form-control form-control-sm"
-                            placeholder="Hoặc dán URL ảnh..." style="margin-top:10px; font-size:12px;"
-                            onchange="previewImageFromUrl(this.value)">
+                        <div style="margin-top:10px; display:flex; gap:5px; align-items:center;">
+                            <input type="text" id="art-image" class="form-control form-control-sm"
+                                placeholder="Dán URL ảnh..." style="font-size:12px;"
+                                onchange="previewImageFromUrl(this.value)">
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="pasteGooglePhoto()"
+                                title="Hỗ trợ Google Photos" style="white-space:nowrap;">
+                                <i class="fa-brands fa-google"></i> Photos
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Section: Media & SEO -->
@@ -796,42 +806,89 @@
                             <small style="color:#666;" id="detail-fund-desc">---</small>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-secondary" onclick="refreshCurrentDonationList()"><i
-                            class="fa-solid fa-rotate"></i> Tải lại</button>
+                    <div style="display:flex; gap:10px;">
+                        <button type="button" class="btn btn-info" onclick="exportDonationsToCSV()"><i
+                                class="fa-solid fa-file-csv"></i> Xuất Excel (CSV)</button>
+                        <button type="button" class="btn btn-primary" onclick="openManualDonationModal()"><i
+                                class="fa-solid fa-plus-circle"></i> Nhập Thu Công</button>
+                        <button type="button" class="btn btn-secondary" onclick="refreshCurrentDonationList()"><i
+                                class="fa-solid fa-rotate"></i> Tải lại</button>
+                    </div>
+                </div>
+
+                <!-- Bulk Actions Toolbar for Donations -->
+                <div id="bulk-donation-actions-toolbar"
+                    style="display:none; gap: 10px; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; align-items:center; animation: slideDown 0.3s ease;">
+                    <span style="font-weight:bold; color:#1e293b; margin-right: 10px;">
+                        <i class="fa-solid fa-check-double" style="color:var(--primary-blue);"></i> Đang chọn:
+                        <span id="selected-donation-count" style="color:var(--primary-red); font-size: 16px;">0</span>
+                    </span>
+
+                    <button type="button" class="btn btn-success btn-sm" onclick="bulkVerifyDonations()">
+                        <i class="fa-solid fa-check"></i> Duyệt hàng loạt
+                    </button>
+
+                    <button type="button" class="btn btn-danger btn-sm" onclick="bulkDeleteDonations()">
+                        <i class="fa-solid fa-trash"></i> Xóa hàng loạt
+                    </button>
+
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearDonationSelection()"
+                        style="margin-left: auto;">
+                        Bỏ chọn
+                    </button>
                 </div>
 
                 <div class="card">
                     <div
                         style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; justify-content: space-between;">
-                        <div class="status-filters">
-                            <button class="btn btn-sm btn-primary" onclick="setDonationStatusFilter('all')">Tất
-                                cả</button>
-                            <button class="btn btn-sm btn-warning" onclick="setDonationStatusFilter('pending')">Chờ
-                                duyệt</button>
-                            <button class="btn btn-sm btn-success" onclick="setDonationStatusFilter('verified')">Đã
-                                duyệt</button>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <div class="status-filters">
+                                <button class="btn btn-sm btn-primary" onclick="setDonationStatusFilter('all')">Tất
+                                    cả</button>
+                                <button class="btn btn-sm btn-warning" onclick="setDonationStatusFilter('pending')">Chờ
+                                    duyệt</button>
+                                <button class="btn btn-sm btn-success" onclick="setDonationStatusFilter('verified')">Đã
+                                    duyệt</button>
+                            </div>
+                            <!-- Advanced Filters -->
+                            <select id="filter-payment-method" class="form-control form-control-sm" style="width:130px;"
+                                onchange="fetchFundDonations()">
+                                <option value="all">Mọi nguồn</option>
+                                <option value="momo">MoMo</option>
+                                <option value="bank">Chuyển khoản</option>
+                                <option value="cash">Tiền mặt</option>
+                            </select>
+                            <input type="date" id="filter-date-start" class="form-control form-control-sm"
+                                style="width:140px;" onchange="fetchFundDonations()" title="Từ ngày">
+                            <input type="date" id="filter-date-end" class="form-control form-control-sm"
+                                style="width:140px;" onchange="fetchFundDonations()" title="Đến ngày">
                         </div>
                         <input type="text" id="admin-donation-search" class="form-control" style="width: 250px;"
-                            placeholder="🔍 Tìm kiếm..." onkeyup="filterAdminDonations()">
+                            placeholder="🔍 Tìm mã/tên/số tiền..." onkeyup="filterAdminDonations()">
                     </div>
 
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th style="width:40px;"><input type="checkbox" onchange="toggleSelectAll(this)"></th>
-                                <th>Thời gian</th>
-                                <th>Mã GD</th>
-                                <th>Người ủng hộ</th>
-                                <th>Số tiền</th>
-                                <th>Trạng thái</th>
-                                <th>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody id="donation-list">
-                            <!-- Loaded via JS -->
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:40px;"><input type="checkbox" id="selectAllDonations"
+                                            onchange="toggleSelectAllDonations(this)"></th>
+                                    <th>Thời gian</th>
+                                    <th>Mã GD</th>
+                                    <th>Thông tin người nộp</th>
+                                    <th>Số tiền</th>
+                                    <th>Lưu ý công khai</th>
+                                    <th>T.Trạng</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="donation-list">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+                <div id="donation-pagination" class="pagination-container"></div>
             </div>
 
         </div>
@@ -846,20 +903,22 @@
             </div>
 
             <div class="card">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Họ và Tên</th>
-                            <th>Email (Tài khoản)</th>
-                            <th>Chức Vụ</th>
-                            <th>Trạng Thái</th>
-                            <th>Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-list">
-                        <!-- Loaded via JS -->
-                    </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Họ và Tên</th>
+                                <th>Email (Tài khoản)</th>
+                                <th>Chức Vụ</th>
+                                <th>Trạng Thái</th>
+                                <th>Hành Động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list">
+                            <!-- Loaded via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -920,9 +979,13 @@
 
         <!-- VIEW: FUNDS MANAGEMENT -->
         <div id="view-funds" class="tab-view">
-            <div class="actions-bar">
+            <div class="actions-bar" style="display:flex; gap:10px;">
                 <button type="button" class="btn btn-primary" onclick="openFundModal()"><i class="fa-solid fa-plus"></i>
                     Thêm Khoản Thu Mới</button>
+                <button type="button" class="btn btn-warning" onclick="syncAllFundsStats()"
+                    title="Tính toán lại toàn bộ số tiền & lượt đóng góp từ danh sách thực tế">
+                    <i class="fa-solid fa-arrows-rotate"></i> Làm mới toàn bộ số liệu
+                </button>
             </div>
             <div class="card">
                 <table class="data-table">
@@ -989,6 +1052,15 @@
                                         </select>
                                     </div>
 
+                                    <div class="form-group">
+                                        <label>Loại Hình Quỹ / Khoản Thu <span class="required"
+                                                style="color:red;">*</span></label>
+                                        <select id="fund-type" class="form-control">
+                                            <option value="DONATION">❤️ Đóng góp tự nguyện (Mặc định)</option>
+                                            <option value="BUDGET">💰 Thu ngân sách / Bắt buộc</option>
+                                        </select>
+                                    </div>
+
                                     <div
                                         style="padding: 15px; background: white; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 15px;">
                                         <h5
@@ -1013,7 +1085,8 @@
                                         <div class="form-group">
                                             <label>Mã Tên Quỹ (Dùng cho nội dung CK)</label>
                                             <input type="text" id="fund-code" class="form-control"
-                                                placeholder="VD: QUYNGUOINGHEO">
+                                                placeholder="VD: QUYNGUOINGHEO"
+                                                oninput="this.value = this.value.toUpperCase().replace(/\s/g, '')">
                                             <small style="color:#666; font-size: 11px;">Mã này sẽ được dùng trong cú
                                                 pháp chuyển khoản: UH [Mã Giao Dịch] [Tên Quỹ]</small>
                                         </div>
@@ -1052,12 +1125,97 @@
 
         </div>
 
+        <!-- MANUAL DONATION MODAL -->
+        <div id="manual-donation-modal" class="modal">
+            <div class="modal-content" style="max-width: 550px;">
+                <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;"><i
+                        class="fa-solid fa-plus-circle"></i> Nhập Đóng Góp Thủ Công</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                    <div class="form-group">
+                        <label>Họ Tên <span class="required">*</span></label>
+                        <input type="text" id="m-don-name" class="form-control" placeholder="Nguyễn Văn A">
+                    </div>
+                    <div class="form-group">
+                        <label>Số Tiền (VNĐ) <span class="required">*</span></label>
+                        <input type="number" id="m-don-amount" class="form-control" placeholder="100000">
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                    <div class="form-group">
+                        <label>Ngày Nhận</label>
+                        <input type="date" id="m-don-date" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Phương thức</label>
+                        <select id="m-don-method" class="form-control">
+                            <option value="cash">Tiền mặt</option>
+                            <option value="bank">Chuyển khoản trực tiếp</option>
+                            <option value="momo">MoMo (Thủ công)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nội dung / Lời nhắn</label>
+                    <textarea id="m-don-msg" class="form-control" rows="2"
+                        placeholder="Ví dụ: Ủng hộ bão lụt..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="color:var(--primary-blue);">Ghi chú công khai (Phản hồi từ Admin)</label>
+                    <input type="text" id="m-don-note" class="form-control"
+                        placeholder="Ví dụ: Đã nhận tiền mặt tại nhà văn hóa.">
+                    <small style="color:#666;">* Ghi chú này sẽ hiển thị công khai cho mọi người xem.</small>
+                </div>
+                <div style="text-align:right; margin-top:20px; gap:10px; display:flex; justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeModal('manual-donation-modal')">Hủy</button>
+                    <button type="button" class="btn btn-success" onclick="saveManualDonation()">Lưu Bản Ghi</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- EDIT DONATION MODAL -->
+        <div id="edit-donation-modal" class="modal">
+            <div class="modal-content" style="max-width: 550px;">
+                <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;"><i
+                        class="fa-solid fa-edit"></i> Chỉnh Sửa & Ghi Chú Công Khai</h3>
+                <input type="hidden" id="edit-don-id">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                    <div class="form-group">
+                        <label>Họ Tên</label>
+                        <input type="text" id="edit-don-name" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Số Tiền</label>
+                        <input type="number" id="edit-don-amount" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Lời nhắn của người dân</label>
+                    <textarea id="edit-don-msg" class="form-control" rows="2" readonly
+                        style="background:#f1f5f9; cursor:not-allowed;"></textarea>
+                </div>
+                <div class="form-group">
+                    <label style="color:var(--primary-blue);">Ghi chú công khai (Admin phản hồi)</label>
+                    <textarea id="edit-don-note" class="form-control" rows="3"
+                        placeholder="Phản hồi lại cho người dân thấy..."></textarea>
+                    <small style="color:#666;">* Ví dụ: "Đã nhận được tiền, cảm ơn gia đình bác!", "Tiền đã được chuyển
+                        vào quỹ khuyến học".</small>
+                </div>
+                <div style="text-align:right; margin-top:20px; gap:10px; display:flex; justify-content:flex-end;">
+                    <button type="button" class="btn btn-secondary"
+                        onclick="closeModal('edit-donation-modal')">Đóng</button>
+                    <button type="button" class="btn btn-primary" onclick="updateDonationDetail()">Cập Nhật Thay
+                        Đổi</button>
+                </div>
+            </div>
+        </div>
+
         <!-- UTILS: Toast Container -->
         <div id="toast-container"></div>
 
         <!-- App Logic -->
         <script src="lang.js?v=20260112_FIX_EMAIL"></script>
-        <script src="admin.js?v=FIX_SIDEBAR_V1"></script>
+        <script src="admin.js?v=AUTHOR_FIX_V1"></script>
 
         <!-- EMERGENCY LOGIN FIX (INLINE TO BYPASS CACHE) -->
         <script>

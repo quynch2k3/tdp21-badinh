@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đóng Góp & Ủng Hộ - Tổ Dân Phố 21</title>
-    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V8">
-    <link rel="stylesheet" href="donation.css?v=MOBILE_FINAL_v2">
+    <link rel="stylesheet" href="style.css?v=GOV_FINAL_REL_V10_STRICT">
+    <link rel="stylesheet" href="donation.css?v=DYNAMIC_LABELS_V4">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 
@@ -157,43 +157,125 @@
                 </div>
                 <div class="box-body"
                     style="min-height: 400px; padding: 40px; background: rgba(255,255,255,0.5); backdrop-filter: blur(10px);">
-                    <!-- INTRO TEXT WRAPPER -->
-                    <div id="donation-intro-text">
-                        <div
-                            style="margin-bottom: 35px; background: #fffcfc; border-left: 4px solid var(--primary-red); padding: 25px; border-radius: 0 12px 12px 0; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-                            <h2
-                                style="color: #be0000; font-size: 20px; font-weight: 800; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <i class="fa-solid fa-quote-left" style="opacity: 0.3; margin-right: 10px;"></i>
-                                Kính thưa toàn thể Nhân dân Tổ dân phố số 21,
-                            </h2>
-                            <p
-                                style="line-height: 1.8; color: #333; font-size: 16px; text-align: justify; margin-bottom: 15px;">
-                                Phát huy truyền thống "Tương thân, tương ái" và tinh thần đoàn kết tốt đẹp của dân
-                                tộc, trong những năm qua, cộng đồng dân cư Tổ dân phố số 21 luôn nỗ lực xây dựng đời
-                                sống văn hóa, tinh thần phong phú và cảnh quan đô thị văn minh, hiện đại. Để hiện
-                                thực hóa những mục tiêu chung vì lợi ích của tập thể, Ban Lãnh đạo Tổ dân phố cùng
-                                các Đoàn thể chính trị - xã hội trân trọng kêu gọi sự chung tay, góp sức từ toàn thể
-                                nhân dân.
-                            </p>
-                            <p
-                                style="line-height: 1.8; color: #333; font-size: 16px; text-align: justify; margin-bottom: 15px;">
-                                Mỗi sự đóng góp của Quý vị, dù ít hay nhiều, đều là nguồn động viên to lớn và là
-                                những "viên gạch hồng" quý giá, góp phần kiến thiết các công trình phúc lợi chung,
-                                cũng như sẻ chia, hỗ trợ những hoàn cảnh khó khăn trong khu dân cư. Chúng tôi tin
-                                tưởng sâu sắc rằng, sức mạnh từ sự đồng lòng và tấm lòng hảo tâm của Quý vị chính là
-                                nền tảng vững chắc để Tổ dân phố số 21 ngày càng phát triển bền vững, nghĩa tình.
-                            </p>
-                            <p
-                                style="line-height: 1.8; color: #444; font-size: 15px; font-style: italic; background: #fef2f2; padding: 15px; border-radius: 8px;">
-                                <i class="fa-solid fa-shield-halved" style="color: #be0000; margin-right: 8px;"></i>
-                                <strong>Cam kết minh bạch:</strong> Với phương châm "Dân biết, dân bàn, dân làm, dân
-                                kiểm tra", và nhằm nâng cao hiệu quả quản lý, Tổ dân phố triển khai hệ thống tiếp
-                                nhận đóng góp trực tuyến thông qua hệ thống <strong>Cổng Thanh Toán Điện Tử
-                                    MOMO</strong>. Mọi thông tin ủng hộ
-                                sẽ được hệ thống ghi nhận chính xác, cập nhật liên tục theo thời gian thực và công
-                                khai minh bạch trên Cổng thông tin điện tử cũng như tại Bảng tin cộng đồng, đảm bảo
-                                sự rõ ràng và tin cậy tuyệt đối.
-                            </p>
+                    <!-- HERO SECTION WITH STATISTICS -->
+                    <div class="donation-hero-modern" id="main-hero-section">
+                        <div class="hero-icon">🤝</div>
+                        <h1>Chương Trình Vận Động & Tri Ân Tấm Lòng Vàng</h1>
+                        <p class="hero-subtitle">Chung tay xây dựng cộng đồng vững mạnh, đoàn kết</p>
+                        <div class="hero-stats">
+                            <div class="stat-item">
+                                <div class="stat-number" data-target="0" id="stat-funds">0</div>
+                                <div class="stat-label">Quỹ Đang Mở</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" data-target="0" id="stat-amount">0</div>
+                                <div class="stat-label">Triệu VNĐ</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number" data-target="0" id="stat-contributors">0</div>
+                                <div class="stat-label">Người Đóng Góp</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABBED INTRO SECTION -->
+                    <div class="intro-section-modern animate-on-scroll" id="main-intro-section">
+                        <div class="intro-tabs">
+                            <button class="tab-btn active" data-tab="message">📜 Thông Điệp</button>
+                            <button class="tab-btn" data-tab="commitment">🛡️ Cam Kết</button>
+                            <button class="tab-btn" data-tab="process">📊 Quy Trình</button>
+                        </div>
+                        <div class="intro-content">
+                            <div class="tab-panel active" id="message">
+                                <div class="tab-panel-content">
+                                    <h3 style="color: #be0000; font-size: 18px; font-weight: 700; margin-bottom: 12px;">
+                                        <i class="fa-solid fa-quote-left" style="opacity: 0.3; margin-right: 8px;"></i>
+                                        Kính thưa toàn thể Nhân dân Tổ dân phố số 21
+                                    </h3>
+                                    <p
+                                        style="line-height: 1.7; color: #4b5563; margin-bottom: 12px; text-align: justify;">
+                                        Phát huy truyền thống "Tương thân, tương ái" và tinh thần đoàn kết tốt đẹp của
+                                        dân tộc,
+                                        trong những năm qua, cộng đồng dân cư Tổ dân phố số 21 luôn nỗ lực xây dựng đời
+                                        sống văn hóa,
+                                        tinh thần phong phú và cảnh quan đô thị văn minh, hiện đại.
+                                    </p>
+                                    <p
+                                        style="line-height: 1.7; color: #4b5563; margin-bottom: 0px; text-align: justify;">
+                                        Mỗi sự đóng góp của Quý vị, dù ít hay nhiều, đều là nguồn động viên to lớn và là
+                                        những "viên gạch hồng" quý giá,
+                                        góp phần kiến thiết các công trình phúc lợi chung, cũng như sẻ chia, hỗ trợ
+                                        những hoàn cảnh khó khăn trong khu dân cư.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="tab-panel" id="commitment">
+                                <ul style="list-style: none; padding: 0;">
+                                    <li
+                                        style="display: flex; gap: 10px; margin-bottom: 10px; align-items: start; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #eee;">
+                                        <i class="fa-solid fa-check-circle"
+                                            style="color: var(--success-green); margin-top: 3px;"></i>
+                                        <span style="font-size: 14px; color: #374151;"><strong>Minh bạch 100%:</strong>
+                                            Mọi khoản thu - chi đều được công khai trên website và bảng tin.</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; gap: 10px; margin-bottom: 10px; align-items: start; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #eee;">
+                                        <i class="fa-solid fa-check-circle"
+                                            style="color: var(--success-green); margin-top: 3px;"></i>
+                                        <span style="font-size: 14px; color: #374151;"><strong>Đúng mục đích:</strong>
+                                            Sử dụng nguồn quỹ đúng nội dung cam kết vận động.</span>
+                                    </li>
+                                    <li
+                                        style="display: flex; gap: 10px; margin-bottom: 0px; align-items: start; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #eee;">
+                                        <i class="fa-solid fa-check-circle"
+                                            style="color: var(--success-green); margin-top: 3px;"></i>
+                                        <span style="font-size: 14px; color: #374151;"><strong>Giám sát chặt
+                                                chẽ:</strong> Có Ban Thanh tra nhân dân và đại diện cư dân giám
+                                            sát.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="tab-panel" id="process">
+                                <div class="process-steps">
+                                    <div class="step">
+                                        <div class="step-num">1</div>
+                                        <div class="step-text">Quét QR / Chuyển khoản</div>
+                                    </div>
+                                    <div class="step-arrow">➝</div>
+                                    <div class="step">
+                                        <div class="step-num">2</div>
+                                        <div class="step-text">Hệ thống ghi nhận</div>
+                                    </div>
+                                    <div class="step-arrow">➝</div>
+                                    <div class="step">
+                                        <div class="step-num">3</div>
+                                        <div class="step-text">Công khai danh sách</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FILTER & SEARCH TOOLBAR -->
+                    <div class="funds-toolbar animate-on-scroll">
+                        <div class="search-box">
+                            <input type="text" id="fund-search" placeholder="Tìm kiếm quỹ...">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                        <div class="filter-pills">
+                            <span class="filter-pill" data-filter="all">📋 Tất Cả</span>
+                            <span class="filter-pill" data-filter="active">⚡ Đang Mở</span>
+                            <span class="filter-pill" data-filter="completed">✅ Hoàn Thành</span>
+                            <span class="filter-pill" data-filter="new">🆕 Mới</span>
+                        </div>
+                        <div class="sort-dropdown">
+                            <select id="fund-sort">
+                                <option value="default">Sắp xếp: Mặc định</option>
+                                <option value="newest">Mới nhất</option>
+                                <option value="highest">Số tiền cao nhất</option>
+                                <option value="mostContributors">Nhiều người nhất</option>
+                                <option value="nearCompletion">Gần hoàn thành</option>
+                            </select>
                         </div>
                     </div>
 
@@ -227,8 +309,9 @@
         <script src="db.js"></script>
         <!-- CryptoJS for MoMo Signature Generation -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-        <script src="payment-gateway.js?v=SANDBOX_FIX_V3"></script>
-        <script src="cms.js?v=FORCE_UPDATE_NOW"></script>
+        <script src="payment-gateway.js?v=PROD_FIX_V3"></script>
+        <script src="cms.js?v=STRICT_FINAL_V11"></script>
+        <script src="donation-animations.js?v=PHASE2_3_V3"></script>
         <style>
             /* PAGE SPECIFIC STYLES For Dong Gop */
             #all-funds-container .fund-widget-title {

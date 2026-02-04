@@ -438,6 +438,28 @@ a:hover {
     gap: 20px;
 }
 
+.left-col {
+    flex: 0 0 70%;
+    max-width: 70%;
+}
+
+.right-col {
+    flex: 0 0 30%;
+    max-width: 30%;
+}
+
+@media (max-width: 991px) {
+    .main-content {
+        flex-direction: column;
+    }
+
+    .left-col,
+    .right-col {
+        flex: 100%;
+        max-width: 100%;
+    }
+}
+
 .main-content.full-width-mode .right-col {
     display: none !important;
 }
@@ -1305,4 +1327,11 @@ footer {
 .premium-submit-btn.momo-btn:disabled {
     background: #cbd5e1;
     box-shadow: none;
+}
+
+/* OPTIMIZED VISIBILITY FOR DETAIL VIEW */
+body.detail-view-active #main-hero-section,
+body.detail-view-active #main-intro-section,
+body.detail-view-active .funds-toolbar {
+    display: none !important;
 }
